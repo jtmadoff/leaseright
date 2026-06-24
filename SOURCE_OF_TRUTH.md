@@ -1,48 +1,33 @@
 # LeaseRight Source of Truth
 
-## Current Decision
+This repository now uses the dark terminal-style LeaseRight prototype as the active product direction.
 
-LeaseRight is the product name. "Lease-up" remains the category term.
+## Active App
 
-Use this folder as the active project workspace:
+- `index.html`
+- `LeaseRight.html`
+- `components/`
 
-`/Volumes/HomeBase/Prospeer/Projects/Active/LeaseRight`
+This is a static React/Babel prototype intended for fast visual/product iteration and Netlify preview sharing.
 
-## Active Prototype
+## Archived Version
 
-`LeaseRight_Prototype_Source.jsx`
+The older light-sidebar Prospeer V5 app is preserved on:
 
-This file was seeded from the Prospeer V5 LeaseUp prototype because it has the stronger product architecture:
-
-- Command Center
-- Pre-Con DD
-- Leads
-- Applications
-- Listings
-- Tenants
-- Maintenance
-- Inbox
-- Rent Collection
-- Banking
-- Settings
-
-## Reference Prototype
-
-`/Users/jtm_mbp/Downloads/LeaseUp_v6/LeaseRight.html`
-
-Use this only as a visual/style reference. It has the sharper LeaseRight rename and richer dark command-center direction, but the Prospeer V5 prototype is the better product base.
+`archive/prospeer-v5-old`
 
 ## Brand Rules
 
 - Product name: LeaseRight
-- Domain: leaseright.app
+- Primary domain: leaseright.app
+- Preview/staging: leaserightbeta.netlify.app
 - Defensive domain: getleaseright.com
-- Category language: lease-up software, lease-up command center, lease-up oversight
-- Do not use "LeaseUp" as a product name.
+- Category language is still allowed: lease-up software, lease-up command center, lease-up phase
+- Do not use "LeaseUp" as the product name.
 
-## Immediate Product Gap
+## Product Focus
 
-The largest gap is leasing workflow depth. The current prototype has Leads, Applications, Listings, and Inbox, but the leasing surface needs to become the core daily workspace:
+The major product gap is leasing depth:
 
 - Lead intake from every source
 - SLA follow-up queue
