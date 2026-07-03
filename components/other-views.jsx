@@ -122,7 +122,8 @@ const PLACEHOLDERS = {
   messages: { tag: "Threads · 6 active", lines: ["4 unread from residents", "2 from prospects", "1 from vendor"] },
   collection: { tag: "April · 96.2% on-time", lines: ["$248,400 collected", "3 failed overnight · auto-retry scheduled", "Processing fees paid by renter — $0 to owner"] },
   ledger: { tag: "Two accounts · reconciled", lines: ["Operating · Chase ••4821 · $412,180", "Escrow · Chase ••6219 · $298,000", "Last sync 2 minutes ago"] },
-  precon: { tag: "Before you break ground", lines: ["Model absorption curves", "Plan lease-up staffing", "Export to lender"] },
+  model: { tag: "Before you break ground", lines: ["Model absorption curves", "Plan lease-up staffing", "Export lease-up model"] },
+  precon: { tag: "Before you break ground", lines: ["Model absorption curves", "Plan lease-up staffing", "Export lease-up model"] },
   settings: { tag: "Workspace", lines: ["Rent & compliance rules", "Listing connections", "Market data feeds", "Property config"] },
 };
 const Placeholder = ({ t, which }) => {

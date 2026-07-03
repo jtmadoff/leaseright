@@ -1,42 +1,12 @@
 # LeaseRight Source of Truth
 
-This repository now uses the dark terminal-style LeaseRight prototype as the active product direction.
+Confirmed on 2026-06-24: this folder is the clean prototype the user liked from the original Netlify Drop workflow.
 
-## Active App
+Important context:
 
-- `index.html`
-- `LeaseRight.html`
-- `components/`
+- The older Prospeer V1-V5 React prototypes are not the current design direction.
+- The GitHub repository was created later and should be aligned to this folder, not the other way around.
+- The current product name is LeaseRight because LeaseUp had trademark conflict risk.
+- The design direction is the dense dark operating console: Today, Pipeline, Inbox, Rents, Residents, Ledger, Applications, LP Reporting, Vendors, Documents, and related lease-up operations pages.
 
-This is a static React/Babel prototype intended for fast visual/product iteration and Netlify preview sharing.
-
-## Archived Version
-
-The older light-sidebar Prospeer V5 app is preserved on:
-
-`archive/prospeer-v5-old`
-
-## Brand Rules
-
-- Product name: LeaseRight
-- Primary domain: leaseright.app
-- Preview/staging: leaserightbeta.netlify.app
-- Defensive domain: getleaseright.com
-- Category language is still allowed: lease-up software, lease-up command center, lease-up phase
-- Do not use "LeaseUp" as the product name.
-
-## Product Focus
-
-The major product gap is leasing depth:
-
-- Lead intake from every source
-- SLA follow-up queue
-- Tour scheduling
-- Prospect timeline
-- Application handoff
-- Agent accountability
-- Lost-lead reasons
-- Pricing/concession feedback loop
-- Source ROI
-- Developer/owner visibility into PM performance
-
+Do not replace this with the older light-sidebar prototype.

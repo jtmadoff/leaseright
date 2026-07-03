@@ -443,7 +443,7 @@ const CONCESSIONS = [
 ];
 
 // ═══════════════════════════════════════════════════════════════
-//  PRE-CON — absorption model
+//  MODEL — pre-funding intake + absorption model
 // ═══════════════════════════════════════════════════════════════
 const PRECON = {
   assumptions: [
@@ -462,6 +462,79 @@ const PRECON = {
     { l: "Days on market",   actual: 22,  plan: 30,  delta: "−8d",   tone: "good" },
   ],
 };
+
+const PRECON_INTAKE = [
+  { step: "Project profile", status: "complete", fields: "Sponsor, address, delivery date, unit count", output: "Lease-up timeline initialized" },
+  { step: "Unit mix", status: "complete", fields: "Studios, 1BR, 2BR, 3BR, premiums", output: "Gross potential rent model" },
+  { step: "Comp set", status: "review", fields: "Mapped comps, concessions, fit score", output: "Market support model" },
+  { step: "Leasing budget", status: "review", fields: "Broker, in-house, hybrid staffing", output: "Cost comparison + execution plan" },
+  { step: "Model output", status: "draft", fields: "Base/downside/upside cases", output: "Lease-up model for review" },
+];
+
+const BROKER_ECONOMICS = {
+  units: 260,
+  avgRent: 2180,
+  brokerFeePct: 0.50,
+  inHouseMonthly: 18500,
+  months: 9,
+  hybridMonthly: 9500,
+  brokerCommission: 283400,
+  inHouseCost: 166500,
+  hybridCost: 198900,
+  savingsInHouse: 116900,
+  savingsHybrid: 84500,
+  recommendation: "Use in-house lead + broker overflow for 3BR and hard-to-fill units.",
+};
+
+const MARKET_RENT_INPUTS = [
+  { source: "Sponsor pro forma", confidence: 62, oneBed: 2050, twoBed: 2650, threeBed: 3300, note: "Preliminary underwriting" },
+  { source: "Live comp scrape", confidence: 84, oneBed: 2080, twoBed: 2740, threeBed: 3195, note: "6 comps · concessions normalized" },
+  { source: "Broker opinion", confidence: 71, oneBed: 2125, twoBed: 2800, threeBed: 3250, note: "Useful, but incentive-biased" },
+  { source: "LeaseRight aggregate", confidence: 89, oneBed: 2100, twoBed: 2785, threeBed: 3210, note: "Weighted by signed leases + current listings" },
+];
+
+const MODEL_FIELDS = [
+  { group: "Project", fields: [
+    ["Sponsor", "Mori Development"],
+    ["Project", "The Meridian"],
+    ["Submarket", "East Austin"],
+    ["Delivery", "Jan 15, 2025"],
+  ]},
+  { group: "Lease-up targets", fields: [
+    ["Units", "260"],
+    ["Target stabilized", "93%"],
+    ["Target date", "Jul 28, 2026"],
+    ["Lease-up window", "78 weeks"],
+  ]},
+  { group: "Budget", fields: [
+    ["Concession reserve", "$480K"],
+    ["Marketing budget", "$180K"],
+    ["Carry cost / mo", "$227K"],
+    ["Broker fee basis", "50% first-year rent"],
+  ]},
+];
+
+const MODEL_UNIT_MIX = [
+  { type: "Studio", units: 60, rent: 1650, conc: "1mo", velocity: 2.3, confidence: 88 },
+  { type: "1BR",    units: 100, rent: 2100, conc: "1mo", velocity: 2.9, confidence: 91 },
+  { type: "2BR",    units: 72, rent: 2800, conc: "1mo", velocity: 1.6, confidence: 86 },
+  { type: "3BR",    units: 28, rent: 3200, conc: "2mo", velocity: 0.4, confidence: 68 },
+];
+
+const MODEL_SCENARIOS = [
+  { name: "Base", active: true, leasesPerWeek: 3.3, stabilize: "Jul 28, 2026", concession: "$480K", carry: "$1.71M", note: "Lender underwriting case" },
+  { name: "Downside", active: false, leasesPerWeek: 2.4, stabilize: "Oct 6, 2026", concession: "$690K", carry: "$2.38M", note: "Slow traffic + 3BR drag" },
+  { name: "Aggressive", active: false, leasesPerWeek: 5.1, stabilize: "Mar 31, 2026", concession: "$390K", carry: "$1.10M", note: "In-house team + fast response" },
+];
+
+const LENDER_PACKAGE = [
+  { section: "Model summary", status: "ready", note: "Lease-up plan, target dates, current risk" },
+  { section: "Unit mix + rent matrix", status: "ready", note: "260 units · concession-normalized rents" },
+  { section: "Comp set support", status: "review", note: "Selected comps need final human review" },
+  { section: "Absorption scenarios", status: "ready", note: "Base, downside, aggressive cases" },
+  { section: "Strategy + budget", status: "review", note: "Broker, hybrid, and in-house comparison" },
+  { section: "Execution plan", status: "draft", note: "Marketing, staffing, concession reserve" },
+];
 
 // ═══════════════════════════════════════════════════════════════
 //  APPLICATIONS — screening pipeline

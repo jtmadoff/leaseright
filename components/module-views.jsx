@@ -1,5 +1,6 @@
 /* global React, THEMES, RESIDENTS, COLLECTION_KPIS, FAILED_PAYMENTS, AR_AGING, PAY_METHODS,
    WORK_ORDERS, MAINT_KPIS, ACCOUNTS, LEDGER_TAPE, LISTINGS, COMPS, CONCESSIONS, PRECON,
+   PRECON_INTAKE, BROKER_ECONOMICS, MARKET_RENT_INPUTS, MODEL_FIELDS, MODEL_UNIT_MIX, MODEL_SCENARIOS, LENDER_PACKAGE,
    APPLICATIONS, APP_KPIS, LP_REPORT, VENDORS, VENDOR_KPIS, DOC_FOLDERS, RECENT_DOCS,
    Dot, Tag, Btn, Eyebrow, Section, MicroBar, Kbd, PageKpis, Band, UnitChip, dataTH, dataTD,
    fmtUSD, fmtNum, fmtPct */
@@ -647,16 +648,99 @@ const ConcessionsView = ({ t }) => {
 };
 
 // ═══════════════════════════════════════════════════════════════
-//  PRE-CON — absorption model
+//  MODEL — sponsor intake + absorption model
 // ═══════════════════════════════════════════════════════════════
 const PreconView = ({ t }) => {
   const P = PRECON;
-  const kpis = [
-    { label: "Target CO",        value: "Jan 15", sub: "2025 · actual", tone: "good", mono: false },
-    { label: "Stabilization",    value: "Jul 28", sub: "2026 · 73-week plan", tone: "neutral", mono: false },
-    { label: "Leased vs model",  value: "+28", sub: "121 actual · 93 plan", tone: "good" },
-    { label: "Pace ahead",       value: "30", unit: "days", sub: "projected early stabilization", tone: "good" },
+  const B = BROKER_ECONOMICS;
+  const [modelSection, setModelSection] = useState("intake");
+  const [intakeStep, setIntakeStep] = useState("project");
+  const modelTabs = [
+    { id: "intake", label: "Intake", sub: "Guided setup", status: "in progress", tone: "warn" },
+    { id: "scenarios", label: "Scenarios", sub: "Base/downside/aggressive", status: "ready", tone: "good" },
+    { id: "rents", label: "Rents", sub: "Unit mix + market inputs", status: "review", tone: "warn" },
+    { id: "lender", label: "Model output", sub: "Lease-up model sections", status: "2 review", tone: "warn" },
+    { id: "launch", label: "Launch", sub: "Create live lease-up board", status: "locked", tone: "neutral" },
   ];
+  const activeTab = modelTabs.find(x => x.id === modelSection) || modelTabs[0];
+  const intakeComps = [
+    { name: "The Vance", dist: "0.4 mi", units: 312, rent: "$2,430", conc: "1 mo", fit: "92%" },
+    { name: "Eastline", dist: "0.7 mi", units: 198, rent: "$2,360", conc: "6 wk", fit: "88%" },
+    { name: "Foundry Row", dist: "1.1 mi", units: 244, rent: "$2,510", conc: "1 mo", fit: "84%" },
+    { name: "Alder", dist: "1.4 mi", units: 176, rent: "$2,290", conc: "2 mo", fit: "73%" },
+  ];
+  const strategyOptions = [
+    { label: "In-house", cost: "$166.5K", velocity: "4.1/wk", note: "Best economics if sponsor can staff onsite." },
+    { label: "Hybrid", cost: "$198.9K", velocity: "3.6/wk", note: "Internal lead plus broker overflow for hard units." },
+    { label: "Broker", cost: "$283.4K", velocity: "3.0/wk", note: "Lowest lift, highest cost, weakest data control." },
+  ];
+  const intakeSteps = [
+    {
+      id: "project",
+      label: "Property",
+      sub: "Address, market, timing",
+      prompt: "Start with the property we are modeling.",
+      fields: [["Project name", "The Meridian"], ["Sponsor", "Mori Development"], ["Address", "1212 E 6th St, Austin, TX"], ["Submarket", "East Austin"], ["Delivery date", "Jan 15, 2025"], ["Target stabilization", "Jul 28, 2026"]],
+      builds: ["Mapped property profile", "Submarket context", "Lease-up timeline"],
+    },
+    {
+      id: "units",
+      label: "Units",
+      sub: "Mix and availability",
+      prompt: "Next, define the building we need to lease.",
+      fields: [["Total units", "260"], ["Studios", "60"], ["1BR", "100"], ["2BR", "72"], ["3BR", "28"]],
+      builds: ["Unit inventory", "Availability board", "Rent matrix"],
+    },
+    {
+      id: "comps",
+      label: "Comps",
+      sub: "Choose market set",
+      prompt: "Select the actual comps this model should trust.",
+      fields: [["Search radius", "1.5 miles"], ["New delivery filter", "2022+"], ["Selected comps", "3 of 4"], ["Concession normalized", "Yes"], ["Rent confidence", "89%"]],
+      builds: ["Comp-backed rent support", "Submarket benchmark", "Confidence scoring"],
+    },
+    {
+      id: "rents",
+      label: "Rents",
+      sub: "Targets and concessions",
+      prompt: "Now give us your starting rent assumptions.",
+      fields: [["Avg target rent", "$2,385"], ["Concession reserve", "$480K"], ["Marketing budget", "$180K"], ["Comp set", "6 properties"], ["Rent confidence", "89%"]],
+      builds: ["Market rent support", "Concession plan", "Pricing alerts"],
+    },
+    {
+      id: "strategy",
+      label: "Strategy",
+      sub: "Budget and execution",
+      prompt: "Define how this building will actually get leased.",
+      fields: [["Recommended model", "Hybrid"], ["Target velocity", "3.6 leases/wk"], ["Staffing budget", "$96K"], ["Marketing budget", "$180K"], ["Concession reserve", "$480K"], ["Broker overflow", "$102.9K"]],
+      builds: ["Lease-up budget", "Broker savings model", "Absorption scenarios"],
+    },
+  ];
+  const currentIntake = intakeSteps.find(x => x.id === intakeStep) || intakeSteps[0];
+  const currentIntakeIndex = intakeSteps.findIndex(x => x.id === currentIntake.id);
+  const intakeProgress = Math.round(((currentIntakeIndex + 1) / intakeSteps.length) * 100);
+  const guidance = {
+    intake: {
+      head: "Start with a simple intake, not a spreadsheet.",
+      body: "LeaseRight collects the facts in plain English, then builds the model and dashboard from those answers.",
+    },
+    scenarios: {
+      head: "Compare lease-up paths and make the execution risk legible.",
+      body: "Base, downside, and upside should be explainable without opening a spreadsheet.",
+    },
+    rents: {
+      head: "Validate market rent assumptions before they hit the model.",
+      body: "Use sponsor pro forma, broker opinion, live comps, and LeaseRight aggregate confidence.",
+    },
+    lender: {
+      head: "Deliver the model, not an unsupervised financing packet.",
+      body: "LeaseRight should produce a sophisticated lease-up model with clear assumptions, comps, strategy, and budget for human review.",
+    },
+    launch: {
+      head: "Convert the approved model into the operating board.",
+      body: "The model becomes live Rents, Pipeline, Applications, and Reports without re-entry.",
+    },
+  }[modelSection];
   // simple sparkline for absorption curves
   const W = 640, H = 180;
   const maxUnits = 260;
@@ -667,10 +751,232 @@ const PreconView = ({ t }) => {
   const toPath = (pts) => pts.map((p,i) => (i===0?"M":"L") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
   return (
     <div>
-      <PageKpis t={t} items={kpis} />
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", minHeight: "calc(100vh - 44px - 96px)" }}>
-        <div style={{ borderRight: `1px solid ${t.rule}` }}>
-          <Band t={t} title="Absorption · 78-week model" right={<Btn t={t} size="xs">Adjust assumptions</Btn>} />
+      <div style={{ padding: "12px 24px", borderBottom: `1px solid ${t.rule}`, background: t.bg }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 18, minWidth: 0 }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
+              <Tag t={t} tone="accent">Pre-funding workspace</Tag>
+              <Tag t={t} tone="good">82% ready</Tag>
+              <span style={{ fontFamily: t.mono, fontSize: 10.5, color: t.inkMute, letterSpacing: 0.8, textTransform: "uppercase" }}>The Meridian · Austin TX · 260 units</span>
+            </div>
+            <div style={{ fontFamily: t.sans, fontSize: 20, lineHeight: 1.18, fontWeight: 650, color: t.ink, letterSpacing: -0.25 }}>
+              Build the high-end lease-up model.
+            </div>
+            <div style={{ fontFamily: t.sans, fontSize: 12.5, lineHeight: 1.45, color: t.inkSoft, marginTop: 5, maxWidth: 760 }}>
+              Work left to right: map the asset, choose comps, validate rents, define strategy, then produce the lease-up model.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "240px minmax(0, 1fr)", minHeight: "calc(100vh - 44px - 66px)" }}>
+        <div style={{ borderRight: `1px solid ${t.rule}`, background: t.surface, overflow: "auto" }}>
+          <div style={{ padding: "16px 18px", borderBottom: `1px solid ${t.rule}` }}>
+            <Eyebrow t={t} style={{ marginBottom: 10 }}>Work through</Eyebrow>
+            <div style={{ fontFamily: t.sans, fontSize: 12, color: t.inkSoft, lineHeight: 1.5 }}>
+              One step at a time. Each completed step feeds the lease-up model.
+            </div>
+          </div>
+          {modelTabs.map((s) => {
+            const active = modelSection === s.id;
+            const c = s.tone === "good" ? t.good : s.tone === "warn" ? t.warn : t.inkMute;
+            return (
+              <button key={s.id} onClick={() => setModelSection(s.id)} style={{ width: "100%", padding: "13px 18px", display: "grid", gridTemplateColumns: "16px 1fr", gap: 10, background: active ? t.hover : "transparent", border: "none", borderBottom: `1px solid ${t.ruleSoft}`, borderLeft: `2px solid ${active ? t.accent : "transparent"}`, textAlign: "left", cursor: "pointer" }}>
+                <span style={{ marginTop: 5 }}><Dot c={c} size={7} /></span>
+                <span>
+                  <span style={{ display: "block", fontFamily: t.sans, fontSize: 12.5, color: active ? t.ink : t.inkSoft, fontWeight: 600 }}>{s.label}</span>
+                  <span style={{ display: "block", fontFamily: t.sans, fontSize: 11, color: t.inkMute, marginTop: 3, lineHeight: 1.35 }}>{s.sub}</span>
+                  <span style={{ display: "block", fontFamily: t.mono, fontSize: 9.5, color: c, marginTop: 5, letterSpacing: 0.7, textTransform: "uppercase" }}>{s.status}</span>
+                </span>
+              </button>
+            );
+          })}
+          <div style={{ padding: 18, borderTop: `1px solid ${t.rule}` }}>
+            <div style={{ fontFamily: t.sans, fontSize: 11.5, color: t.inkMute, lineHeight: 1.45 }}>
+              The live app stays quiet until the model is ready to launch.
+            </div>
+          </div>
+        </div>
+
+        <div style={{ borderRight: `1px solid ${t.rule}`, minWidth: 0 }}>
+          <div style={{ padding: "16px 20px", borderBottom: `1px solid ${t.rule}`, background: t.bg, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+            <div>
+              <Eyebrow t={t} style={{ marginBottom: 7 }}>Currently working on</Eyebrow>
+              <div style={{ fontFamily: t.sans, fontSize: 18, fontWeight: 650, color: t.ink }}>{activeTab.label}</div>
+              <div style={{ fontFamily: t.sans, fontSize: 12, color: t.inkMute, marginTop: 4 }}>{activeTab.sub}</div>
+              <div style={{ fontFamily: t.sans, fontSize: 12, color: t.inkSoft, lineHeight: 1.45, marginTop: 10, maxWidth: 760 }}>
+                <strong style={{ color: t.ink }}>{guidance.head}</strong> {guidance.body}
+              </div>
+            </div>
+            <Btn t={t} size="xs" variant="primary">{modelSection === "launch" ? "Create live board" : "Save section"}</Btn>
+          </div>
+          {modelSection === "intake" && <>
+          <div style={{ padding: 20, borderBottom: `1px solid ${t.rule}` }}>
+            <div style={{ background: t.surface, border: `1px solid ${t.rule}`, borderRadius: 6, overflow: "hidden" }}>
+              <div style={{ padding: "16px 18px", borderBottom: `1px solid ${t.rule}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14 }}>
+                <div style={{ minWidth: 0 }}>
+                  <Eyebrow t={t} style={{ marginBottom: 7 }}>Guided intake</Eyebrow>
+                  <div style={{ fontFamily: t.sans, fontSize: 20, fontWeight: 650, color: t.ink }}>{currentIntake.prompt}</div>
+                  <div style={{ fontFamily: t.sans, fontSize: 12.5, color: t.inkSoft, lineHeight: 1.45, marginTop: 7, maxWidth: 760 }}>
+                    Keep this fast. The first pass should take about 10 minutes and build the custom dashboard in the background.
+                  </div>
+                </div>
+                <div style={{ width: 92, textAlign: "right", flexShrink: 0 }}>
+                  <div style={{ fontFamily: t.mono, fontSize: 22, color: t.accent, fontWeight: 650, fontVariantNumeric: "tabular-nums" }}>{intakeProgress}%</div>
+                  <div style={{ fontFamily: t.mono, fontSize: 9.5, color: t.inkMute, letterSpacing: 1, textTransform: "uppercase" }}>complete</div>
+                </div>
+              </div>
+              <div style={{ padding: "12px 18px", borderBottom: `1px solid ${t.rule}`, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {intakeSteps.map((s, i) => {
+                  const active = s.id === intakeStep;
+                  const done = i < currentIntakeIndex;
+                  return (
+                    <button key={s.id} onClick={() => setIntakeStep(s.id)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 9px", background: active ? t.hover : t.surfaceAlt, border: `1px solid ${active ? t.accent + "66" : t.rule}`, borderRadius: 4, color: active ? t.ink : t.inkSoft, cursor: "pointer" }}>
+                      <span style={{ width: 16, height: 16, borderRadius: 16, display: "inline-flex", alignItems: "center", justifyContent: "center", background: done ? t.good : active ? t.accent : t.bg, color: done || active ? "#0A0A0B" : t.inkMute, fontFamily: t.mono, fontSize: 9, fontWeight: 700 }}>{done ? "✓" : i + 1}</span>
+                      <span style={{ fontFamily: t.sans, fontSize: 12, fontWeight: 600 }}>{s.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ padding: 18 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(180px, 1fr))", gap: 12 }}>
+                  {currentIntake.fields.map(([k,v]) => (
+                    <label key={k} style={{ display: "block", padding: 13, background: t.surfaceAlt, border: `1px solid ${t.rule}`, borderRadius: 5 }}>
+                      <div style={{ fontFamily: t.sans, fontSize: 11.5, color: t.inkMute, marginBottom: 7 }}>{k}</div>
+                      <div style={{ minHeight: 30, display: "flex", alignItems: "center", padding: "0 10px", background: t.bg, border: `1px solid ${t.rule}`, borderRadius: 4, fontFamily: t.sans, fontSize: 13, color: t.ink }}>{v}</div>
+                    </label>
+                  ))}
+                </div>
+                {intakeStep === "project" && (
+                  <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 12 }}>
+                    <div style={{ minHeight: 126, padding: 14, background: t.bg, border: `1px solid ${t.rule}`, borderRadius: 5, position: "relative", overflow: "hidden" }}>
+                      <div style={{ position: "absolute", inset: 0, opacity: 0.28, backgroundImage: `linear-gradient(${t.ruleSoft} 1px, transparent 1px), linear-gradient(90deg, ${t.ruleSoft} 1px, transparent 1px)`, backgroundSize: "24px 24px" }} />
+                      <div style={{ position: "relative", width: 12, height: 12, borderRadius: 12, background: t.accent, boxShadow: `0 0 0 6px ${t.accentSoft}`, margin: "40px auto 10px" }} />
+                      <div style={{ position: "relative", textAlign: "center", fontFamily: t.sans, fontSize: 12.5, color: t.ink, fontWeight: 650 }}>1212 E 6th St</div>
+                      <div style={{ position: "relative", textAlign: "center", fontFamily: t.sans, fontSize: 11.5, color: t.inkMute, marginTop: 4 }}>Submarket and comp radius locked from address</div>
+                    </div>
+                    <div style={{ padding: 14, background: t.surfaceAlt, border: `1px solid ${t.rule}`, borderRadius: 5 }}>
+                      <div style={{ fontFamily: t.sans, fontSize: 12.5, color: t.ink, fontWeight: 650, marginBottom: 8 }}>What this unlocks</div>
+                      {["Map the property", "Suggest local comps", "Set market rent boundaries"].map((x, i) => (
+                        <div key={x} style={{ display: "flex", gap: 8, padding: "6px 0", borderBottom: i < 2 ? `1px solid ${t.ruleSoft}` : "none" }}>
+                          <Dot c={t.good} size={7} />
+                          <span style={{ fontFamily: t.sans, fontSize: 12, color: t.inkSoft }}>{x}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {intakeStep === "comps" && (
+                  <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 10 }}>
+                    {intakeComps.map((c, i) => (
+                      <button key={c.name} style={{ padding: 12, background: i < 3 ? t.accentSoft : t.surfaceAlt, border: `1px solid ${i < 3 ? t.accent + "55" : t.rule}`, borderRadius: 5, textAlign: "left", cursor: "pointer" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 9 }}>
+                          <span style={{ fontFamily: t.sans, fontSize: 13, color: t.ink, fontWeight: 650 }}>{c.name}</span>
+                          <Tag t={t} tone={i < 3 ? "good" : "neutral"}>{i < 3 ? "selected" : "add"}</Tag>
+                        </div>
+                        {[["Distance", c.dist], ["Units", c.units], ["Avg rent", c.rent], ["Conc.", c.conc], ["Fit", c.fit]].map(([k,v]) => (
+                          <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "3px 0", fontFamily: t.sans, fontSize: 11.5 }}>
+                            <span style={{ color: t.inkMute }}>{k}</span>
+                            <span style={{ color: k === "Fit" ? t.good : t.inkSoft, fontFamily: k === "Fit" ? t.mono : t.sans }}>{v}</span>
+                          </div>
+                        ))}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {intakeStep === "strategy" && (
+                  <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 }}>
+                    {strategyOptions.map((o) => {
+                      const active = o.label === "Hybrid";
+                      return (
+                        <button key={o.label} style={{ padding: 13, background: active ? t.accentSoft : t.surfaceAlt, border: `1px solid ${active ? t.accent + "66" : t.rule}`, borderRadius: 5, textAlign: "left", cursor: "pointer" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 10 }}>
+                            <span style={{ fontFamily: t.sans, fontSize: 14, color: t.ink, fontWeight: 650 }}>{o.label}</span>
+                            {active && <Tag t={t} tone="accent">recommended</Tag>}
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 9 }}>
+                            <div>
+                              <div style={{ fontFamily: t.mono, fontSize: 15, color: active ? t.accent : t.ink }}>{o.cost}</div>
+                              <div style={{ fontFamily: t.sans, fontSize: 10.5, color: t.inkMute }}>budget</div>
+                            </div>
+                            <div>
+                              <div style={{ fontFamily: t.mono, fontSize: 15, color: t.ink }}>{o.velocity}</div>
+                              <div style={{ fontFamily: t.sans, fontSize: 10.5, color: t.inkMute }}>velocity</div>
+                            </div>
+                          </div>
+                          <div style={{ fontFamily: t.sans, fontSize: 11.5, color: t.inkSoft, lineHeight: 1.4 }}>{o.note}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                <div style={{ marginTop: 14, padding: 12, background: t.accentSoft, border: `1px solid ${t.accent}33`, borderRadius: 5 }}>
+                  <div style={{ fontFamily: t.sans, fontSize: 12.5, color: t.ink, fontWeight: 650, marginBottom: 8 }}>LeaseRight is building from this section</div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    {currentIntake.builds.map((b) => (
+                      <Tag key={b} t={t} tone="good">{b}</Tag>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16 }}>
+                  <Btn t={t} variant="primary" onClick={() => setIntakeStep(intakeSteps[Math.min(currentIntakeIndex + 1, intakeSteps.length - 1)].id)}>
+                    {currentIntakeIndex === intakeSteps.length - 1 ? "Build lease-up model" : "Next section"}
+                  </Btn>
+                  <Btn t={t} variant="ghost">Save and finish later</Btn>
+                  <div style={{ flex: 1 }} />
+                  <span style={{ fontFamily: t.sans, fontSize: 11.5, color: t.inkMute }}>No spreadsheet required</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <Band t={t} title="System outputs · generated after structured intake" />
+          <div style={{ padding: "0 20px 16px" }}>
+            {PRECON_INTAKE.map((s, i) => {
+              const tone = s.status === "complete" ? "good" : s.status === "review" ? "warn" : "neutral";
+              const c = tone === "good" ? t.good : tone === "warn" ? t.warn : t.inkMute;
+              return (
+                <div key={s.step} style={{ display: "grid", gridTemplateColumns: "132px 1fr 220px", gap: 16, padding: "12px 0", borderBottom: i < PRECON_INTAKE.length - 1 ? `1px solid ${t.ruleSoft}` : "none", alignItems: "center" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <Dot c={c} size={7} />
+                    <span style={{ fontFamily: t.sans, fontSize: 12.5, fontWeight: 600, color: t.ink }}>{s.step}</span>
+                  </div>
+                  <div>
+                    <div style={{ fontFamily: t.sans, fontSize: 12, color: t.inkSoft }}>{s.fields}</div>
+                    <div style={{ fontFamily: t.mono, fontSize: 10.5, color: t.inkMute, marginTop: 3, textTransform: "uppercase", letterSpacing: 0.7 }}>{s.status}</div>
+                  </div>
+                  <div style={{ fontFamily: t.sans, fontSize: 12, color: t.inkSoft }}>{s.output}</div>
+                </div>
+              );
+            })}
+          </div>
+          </>}
+
+          {modelSection === "scenarios" && <>
+          <Band t={t} title="Scenario comparison" right={<Btn t={t} size="xs">Add scenario</Btn>} />
+          <div style={{ padding: 20, display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 14 }}>
+            {MODEL_SCENARIOS.map(sc => (
+              <div key={sc.name} style={{ background: sc.active ? t.accentSoft : t.surface, border: `1px solid ${sc.active ? t.accent + "66" : t.rule}`, borderRadius: 5, padding: 14 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                  <div style={{ fontFamily: t.sans, fontSize: 14, color: t.ink, fontWeight: 650 }}>{sc.name}</div>
+                  {sc.active ? <Tag t={t} tone="accent">active</Tag> : <Tag t={t}>compare</Tag>}
+                </div>
+                {[
+                  ["Velocity", sc.leasesPerWeek + "/wk"],
+                  ["Stabilized", sc.stabilize],
+                  ["Concessions", sc.concession],
+                  ["Carry", sc.carry],
+                ].map(([k,v], i) => (
+                  <div key={k} style={{ display: "flex", justifyContent: "space-between", gap: 10, padding: "6px 0", borderBottom: i < 3 ? `1px solid ${t.ruleSoft}` : "none" }}>
+                    <span style={{ fontFamily: t.sans, fontSize: 11.5, color: t.inkMute }}>{k}</span>
+                    <span style={{ fontFamily: t.mono, fontSize: 11.5, color: t.ink, fontVariantNumeric: "tabular-nums" }}>{v}</span>
+                  </div>
+                ))}
+                <div style={{ fontFamily: t.sans, fontSize: 11.5, color: t.inkSoft, lineHeight: 1.4, marginTop: 10 }}>{sc.note}</div>
+              </div>
+            ))}
+          </div>
+
+          <Band t={t} title="Lease-up model · 78-week absorption plan" right={<Btn t={t} size="xs">Adjust assumptions</Btn>} />
           <div style={{ padding: 20 }}>
             <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: 220, display: "block" }}>
               {[0, 0.25, 0.5, 0.75, 1].map(f => (
@@ -691,6 +997,7 @@ const PreconView = ({ t }) => {
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: t.inkSoft }}><span style={{ width: 14, borderTop: `1.5px dashed ${t.inkFaint}` }} /> Pro-forma plan</span>
             </div>
           </div>
+
           <Band t={t} title="Variance vs pro forma" />
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead><tr>
@@ -710,10 +1017,125 @@ const PreconView = ({ t }) => {
               ))}
             </tbody>
           </table>
+          </>}
+
+          {modelSection === "rents" && <>
+          <Band t={t} title="Unit mix · rents feeding the model" right={<Btn t={t} size="xs">Edit unit mix</Btn>} />
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead><tr>
+              <th style={dataTH(t)}>Type</th>
+              <th style={dataTH(t, "right")}>Units</th>
+              <th style={dataTH(t, "right")}>Target rent</th>
+              <th style={dataTH(t)}>Concession</th>
+              <th style={dataTH(t, "right")}>Velocity</th>
+              <th style={dataTH(t, "right")}>Confidence</th>
+            </tr></thead>
+            <tbody>
+              {MODEL_UNIT_MIX.map(u => (
+                <tr key={u.type}>
+                  <td style={dataTD(t)}>{u.type}</td>
+                  <td style={dataTD(t, { align: "right", mono: true })}>{u.units}</td>
+                  <td style={dataTD(t, { align: "right", mono: true })}>${fmtNum(u.rent)}</td>
+                  <td style={dataTD(t, { color: u.conc === "2mo" ? t.warn : t.inkSoft })}>{u.conc}</td>
+                  <td style={dataTD(t, { align: "right", mono: true })}>{u.velocity}/wk</td>
+                  <td style={dataTD(t, { align: "right", mono: true, color: u.confidence >= 85 ? t.good : t.warn })}>{u.confidence}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <Band t={t} title="Market rent inputs · source confidence" />
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead><tr>
+              <th style={dataTH(t)}>Source</th>
+              <th style={dataTH(t, "right")}>Conf.</th>
+              <th style={dataTH(t, "right")}>1BR</th>
+              <th style={dataTH(t, "right")}>2BR</th>
+              <th style={dataTH(t, "right")}>3BR</th>
+              <th style={dataTH(t)}>Signal</th>
+            </tr></thead>
+            <tbody>
+              {MARKET_RENT_INPUTS.map((m, i) => (
+                <tr key={m.source} style={{ background: m.source === "LeaseRight aggregate" ? t.surfaceAlt : "transparent" }}>
+                  <td style={dataTD(t)}>{m.source}</td>
+                  <td style={dataTD(t, { align: "right", mono: true, color: m.confidence >= 85 ? t.good : m.confidence >= 70 ? t.warn : t.inkSoft })}>{m.confidence}%</td>
+                  <td style={dataTD(t, { align: "right", mono: true })}>${fmtNum(m.oneBed)}</td>
+                  <td style={dataTD(t, { align: "right", mono: true })}>${fmtNum(m.twoBed)}</td>
+                  <td style={dataTD(t, { align: "right", mono: true })}>${fmtNum(m.threeBed)}</td>
+                  <td style={dataTD(t, { color: t.inkSoft })}>{m.note}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          </>}
+
+          {modelSection === "lender" && <>
+          <Band t={t} title="Lease-up model preview" right={<Btn t={t} size="xs" variant="primary">Preview model</Btn>} />
+          <div style={{ padding: 20, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            {LENDER_PACKAGE.map((p) => {
+              const tone = p.status === "ready" ? "good" : p.status === "review" ? "warn" : "neutral";
+              const c = tone === "good" ? t.good : tone === "warn" ? t.warn : t.inkMute;
+              return (
+                <div key={p.section} style={{ padding: 14, background: t.surface, border: `1px solid ${t.rule}`, borderRadius: 5 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
+                    <div style={{ fontFamily: t.sans, fontSize: 13, color: t.ink, fontWeight: 650 }}>{p.section}</div>
+                    <Tag t={t} tone={tone}>{p.status}</Tag>
+                  </div>
+                  <div style={{ fontFamily: t.sans, fontSize: 12, color: t.inkSoft, lineHeight: 1.45 }}>{p.note}</div>
+                </div>
+              );
+            })}
+          </div>
+          <Band t={t} title="Model outputs" />
+          <div style={{ padding: 20, display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <Btn t={t} variant="primary">Generate lease-up model</Btn>
+            <Btn t={t}>Export model workbook</Btn>
+            <Btn t={t} variant="ghost">Mark ready for review</Btn>
+          </div>
+          </>}
+
+          {modelSection === "launch" && <>
+          <Band t={t} title="Launch lease-up board" right={<Btn t={t} size="xs" variant="primary">Create live board</Btn>} />
+          <div style={{ padding: 20, display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 14 }}>
+            {[
+              ["Rents", "Create unit availability and rent matrix from approved model."],
+              ["Pipeline", "Create lead stages, SLA rules, and owner/leasing assignments."],
+              ["Applications", "Prepare approval checklist, deposit status, and lease packet workflow."],
+              ["Reports", "Start weekly sponsor reporting against the locked model."],
+            ].map(([title, detail]) => (
+              <div key={title} style={{ padding: 14, background: t.surface, border: `1px solid ${t.rule}`, borderRadius: 5 }}>
+                <div style={{ fontFamily: t.sans, fontSize: 13, color: t.ink, fontWeight: 650 }}>{title}</div>
+                <div style={{ fontFamily: t.sans, fontSize: 12, color: t.inkSoft, lineHeight: 1.45, marginTop: 6 }}>{detail}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ padding: "0 20px 20px" }}>
+            <div style={{ padding: 14, background: t.goodSoft, border: `1px solid ${t.good}33`, borderRadius: 5 }}>
+              <div style={{ fontFamily: t.sans, fontSize: 13, color: t.ink, fontWeight: 650 }}>Ready when funding is set</div>
+              <div style={{ fontFamily: t.sans, fontSize: 12, color: t.inkSoft, lineHeight: 1.45, marginTop: 6 }}>Lock the model, invite the leasing team, and convert assumptions into the live workflow.</div>
+            </div>
+          </div>
+          </>}
         </div>
 
-        <div style={{ overflow: "auto", background: t.surface }}>
+        <div style={{ display: "none", overflow: "auto", background: t.surface }}>
           <div style={{ padding: "18px 20px", borderBottom: `1px solid ${t.rule}` }}>
+            <Eyebrow t={t} style={{ marginBottom: 10 }}>{activeTab.label} guidance</Eyebrow>
+            <div style={{ fontFamily: t.sans, fontSize: 13, color: t.ink, fontWeight: 600, lineHeight: 1.35 }}>
+              {modelSection === "intake" && "Get the basic facts clean before touching the model."}
+              {modelSection === "scenarios" && "Compare lease-up paths and make the execution risk legible."}
+              {modelSection === "rents" && "Validate market rent assumptions before they hit the model."}
+              {modelSection === "lender" && "Package the model into something a capital partner can actually review."}
+              {modelSection === "launch" && "Convert the approved model into the operating board."}
+            </div>
+            <div style={{ fontFamily: t.sans, fontSize: 12, color: t.inkSoft, lineHeight: 1.5, marginTop: 8 }}>
+              {modelSection === "intake" && "This step should feel like setup, not analysis. Keep it simple: project, target dates, budget, and key assumptions."}
+              {modelSection === "scenarios" && "The sponsor should be able to explain base, downside, and upside without opening a spreadsheet."}
+              {modelSection === "rents" && "Use sponsor pro forma, broker opinion, live comps, and LeaseRight aggregate data to create a confidence score."}
+              {modelSection === "lender" && "The output should answer: how fast can this lease, what can go wrong, and what is the plan if it does?"}
+              {modelSection === "launch" && "Nothing should be re-entered. The model should become the live Rents, Pipeline, Applications, and Reports workspace."}
+            </div>
+          </div>
+          {(modelSection === "intake" || modelSection === "scenarios") && <div style={{ padding: "18px 20px", borderBottom: `1px solid ${t.rule}` }}>
             <Eyebrow t={t} style={{ marginBottom: 10 }}>Assumptions</Eyebrow>
             {P.assumptions.map((a,i) => (
               <div key={i} style={{ padding: "8px 0", borderBottom: i < P.assumptions.length - 1 ? `1px solid ${t.ruleSoft}` : "none" }}>
@@ -724,15 +1146,56 @@ const PreconView = ({ t }) => {
                 <div style={{ fontFamily: t.sans, fontSize: 11, color: t.inkMute, marginTop: 3 }}>{a.d}</div>
               </div>
             ))}
-          </div>
-          <div style={{ padding: "14px 20px" }}>
-            <Eyebrow t={t} style={{ marginBottom: 10 }}>Export</Eyebrow>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              <Btn t={t} size="xs" variant="primary">Lender PDF</Btn>
-              <Btn t={t} size="xs">LP one-pager</Btn>
-              <Btn t={t} size="xs" variant="ghost">Model .xlsx</Btn>
+          </div>}
+          {modelSection === "scenarios" && <div style={{ padding: "14px 20px", borderBottom: `1px solid ${t.rule}` }}>
+            <Eyebrow t={t} style={{ marginBottom: 10 }}>Broker economics</Eyebrow>
+            {[
+              ["Traditional broker", "$" + fmtNum(B.brokerCommission), "50% of first-year rent assumption"],
+              ["In-house leasing", "$" + fmtNum(B.inHouseCost), "2 FT + weekend support · " + B.months + " months"],
+              ["Hybrid model", "$" + fmtNum(B.hybridCost), "Internal lead + broker overflow"],
+            ].map(([k,v,d],i) => (
+              <div key={k} style={{ padding: "9px 0", borderBottom: i < 2 ? `1px solid ${t.ruleSoft}` : "none" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                  <span style={{ fontFamily: t.sans, fontSize: 12, color: t.inkMute }}>{k}</span>
+                  <span style={{ fontFamily: t.mono, fontSize: 13, color: i === 0 ? t.bad : t.ink, fontVariantNumeric: "tabular-nums" }}>{v}</span>
+                </div>
+                <div style={{ fontFamily: t.sans, fontSize: 11, color: t.inkMute, marginTop: 3 }}>{d}</div>
+              </div>
+            ))}
+            <div style={{ marginTop: 12, padding: 12, background: t.goodSoft, border: `1px solid ${t.good}33`, borderRadius: 4 }}>
+              <div style={{ fontFamily: t.mono, fontSize: 18, fontWeight: 600, color: t.good, fontVariantNumeric: "tabular-nums" }}>${fmtNum(B.savingsInHouse)} saved</div>
+              <div style={{ fontFamily: t.sans, fontSize: 12, color: t.inkSoft, marginTop: 5, lineHeight: 1.45 }}>{B.recommendation}</div>
             </div>
-          </div>
+          </div>}
+          {modelSection === "rents" && <div style={{ padding: "14px 20px", borderBottom: `1px solid ${t.rule}` }}>
+            <Eyebrow t={t} style={{ marginBottom: 10 }}>Rent confidence</Eyebrow>
+            {[["Studios", "88%"],["1BR", "91%"],["2BR", "86%"],["3BR", "68% · review"]].map(([k,v],i) => (
+              <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: i < 3 ? `1px solid ${t.ruleSoft}` : "none" }}>
+                <span style={{ fontFamily: t.sans, fontSize: 12, color: t.inkMute }}>{k}</span>
+                <span style={{ fontFamily: t.mono, fontSize: 12, color: v.includes("68") ? t.warn : t.good }}>{v}</span>
+              </div>
+            ))}
+          </div>}
+          {modelSection === "lender" && <div style={{ padding: "14px 20px", borderBottom: `1px solid ${t.rule}` }}>
+            <Eyebrow t={t} style={{ marginBottom: 10 }}>Review queue</Eyebrow>
+            {LENDER_PACKAGE.filter(p => p.status !== "ready").map((p, i) => (
+              <div key={p.section} style={{ padding: "9px 0", borderBottom: i === 0 ? `1px solid ${t.ruleSoft}` : "none" }}>
+                <div style={{ fontFamily: t.sans, fontSize: 12, color: t.ink, fontWeight: 600 }}>{p.section}</div>
+                <div style={{ fontFamily: t.sans, fontSize: 11.5, color: t.inkMute, marginTop: 3, lineHeight: 1.4 }}>{p.note}</div>
+              </div>
+            ))}
+          </div>}
+          {modelSection === "launch" && <div style={{ padding: "14px 20px" }}>
+            <Eyebrow t={t} style={{ marginBottom: 10 }}>Launch handoff</Eyebrow>
+            <div style={{ fontFamily: t.sans, fontSize: 12, color: t.inkSoft, lineHeight: 1.5, marginBottom: 10 }}>
+              When funding is set, convert approved assumptions into the live lease-up workspace.
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              <Btn t={t} size="xs" variant="primary">Create live board</Btn>
+              <Btn t={t} size="xs">Invite team</Btn>
+              <Btn t={t} size="xs" variant="ghost">Lock model</Btn>
+            </div>
+          </div>}
         </div>
       </div>
     </div>
@@ -940,7 +1403,7 @@ const LPReportingView = ({ t }) => {
             <Eyebrow t={t} style={{ marginBottom: 10 }}>Exports</Eyebrow>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               <Btn t={t} size="xs" variant="primary">LP letter · PDF</Btn>
-              <Btn t={t} size="xs">Lender package</Btn>
+              <Btn t={t} size="xs">Lease-up model</Btn>
               <Btn t={t} size="xs">Investor deck</Btn>
               <Btn t={t} size="xs" variant="ghost">Raw GL · .xlsx</Btn>
             </div>

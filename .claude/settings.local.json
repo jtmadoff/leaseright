@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:api.anthropic.com)",
+      "Bash(mkdir -p /tmp/design_pkg)",
+      "Read(//tmp/**)",
+      "Bash(tar -xzf /Users/jtm_mbp/.claude/projects/-Users-jtm-mbp-Downloads-LeaseUp-v6/2005745d-9ed8-4a06-babe-97de87fec925/tool-results/webfetch-1776748365515-a7fmxb.bin)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(find /Users/jtm_mbp -maxdepth 5 -type d -iname \"*leaseright*\" 2>/dev/null | head -30)",
+      "Bash(find /Users/jtm_mbp/Downloads /Users/jtm_mbp/Desktop /Users/jtm_mbp/Documents /Volumes/HomeBase -maxdepth 4 -type d \\\\\\( -name \".git\" \\\\\\) 2>/dev/null | head -30)",
+      "Bash(git --version)",
+      "Bash(git config *)"
+    ]
+  }
+}

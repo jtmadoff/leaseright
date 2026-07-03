@@ -2,6 +2,11 @@
   publish = "."
 
 [[redirects]]
-  from = "/"
-  to = "/index.html"
+  from = "/leaseright"
+  to = "/LeaseRight.html"
+  status = 200
+
+[[redirects]]
+  from = "/app"
+  to = "/LeaseRight.html"
   status = 200

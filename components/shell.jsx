@@ -7,45 +7,46 @@ const { useState, useEffect, useRef, useMemo } = React;
 // ═══════════════════════════════════════════════════════════════
 const NAV = [
   { section: null, items: [
-    ["today",    "Today",    "F1"],
-    ["pipeline", "Pipeline", "F2"],
-    ["inbox",    "Inbox",    "F3"],
+    ["model",    "Model",    "F1"],
+    ["today",    "Today",    "F2"],
+    ["pipeline", "Pipeline", "F3"],
+    ["inbox",    "Inbox",    "F4"],
   ]},
   { section: "Lease-up", items: [
-    ["rents",        "Rents",        "F4"],
-    ["applications", "Applications", null],
+    ["rents",        "Rents",        "F5"],
+    ["applications", "Applications", "F6"],
     ["concessions",  "Concessions",  null],
     ["listings",     "Listings",     null],
     ["market",       "Market",       null],
   ]},
   { section: "Operations", items: [
-    ["residents",   "Residents",   "F5"],
+    ["residents",   "Residents",   null],
     ["maintenance", "Maintenance", null],
     ["vendors",     "Vendors",     null],
   ]},
   { section: "Money", items: [
     ["collection", "Collection", null],
-    ["ledger",     "Ledger",     "F6"],
-    ["lp",         "LP Reporting", null],
+    ["ledger",     "Ledger",     null],
+    ["lp",         "Reports",    "F7"],
   ]},
   { section: "Admin", items: [
     ["documents", "Documents", null],
-    ["precon",    "Pre-Con",   null],
     ["settings",  "Settings",  null],
   ]},
 ];
 
 // Primary nav (with F-keys) shown in the header
 const PRIMARY = [
-  ["today",     "Today",     "F1"],
-  ["pipeline",  "Pipeline",  "F2"],
-  ["inbox",     "Inbox",     "F3"],
-  ["rents",     "Rents",     "F4"],
-  ["residents", "Residents", "F5"],
-  ["ledger",    "Ledger",    "F6"],
+  ["model",        "Model",        "F1"],
+  ["today",        "Today",        "F2"],
+  ["pipeline",     "Pipeline",     "F3"],
+  ["inbox",        "Inbox",        "F4"],
+  ["rents",        "Rents",        "F5"],
+  ["applications", "Applications", "F6"],
+  ["lp",           "Reports",      "F7"],
 ];
 
-const NAV_BADGES = { inbox: 4, pipeline: 2, today: 3, maintenance: 1 };
+const NAV_BADGES = { model: 2, inbox: 4, pipeline: 2, today: 3, applications: 5, maintenance: 1 };
 
 // ═══════════════════════════════════════════════════════════════
 //  LIVE TAPE — scrolling transactions bar (Bloomberg-style)
@@ -105,6 +106,16 @@ const LiveTape = ({ t }) => {
 //  NAV PEEK — hover panel w/ live counts + recent items
 // ═══════════════════════════════════════════════════════════════
 const PEEK_DATA = {
+  model: {
+    title: "LEASE-UP MODEL",
+    counts: [["READY", "82%", "good"], ["OPEN", 2, "warn"], ["SAVINGS", "$117K", "good"]],
+    items: [
+      { l: "Intake", r: "Market rents + leasing model need review", tone: "warn" },
+      { l: "Broker economics", r: "$116.9K saved in-house", tone: "good" },
+      { l: "Model output", r: "Base/downside/upside draft", tone: "neutral" },
+      { l: "Rent signal", r: "LeaseRight aggregate confidence 89%", tone: "good" },
+    ],
+  },
   today: {
     title: "TODAY",
     counts: [["DECISIONS", 3, "warn"], ["QUEUE", 3, "neutral"], ["CLEARED", 7, "good"]],
@@ -158,6 +169,26 @@ const PEEK_DATA = {
       { l: "Deposit",    r: "+$14,200 · Yardi",            tone: "good" },
       { l: "Fee",        r: "−$620 · Stripe",              tone: "neutral" },
       { l: "Transfer",   r: "$50K · Ops→Reserve",          tone: "neutral" },
+    ],
+  },
+  applications: {
+    title: "APPLICATIONS",
+    counts: [["PENDING", 5, "warn"], ["APPROVED", 2, "good"], ["LEASES", 3, "good"]],
+    items: [
+      { l: "Approve", r: "Kira Weston · 2BR-0914", tone: "good" },
+      { l: "Verify", r: "Miguel Torres · income pending", tone: "warn" },
+      { l: "Review", r: "Luka Petrov · cosigner required", tone: "bad" },
+      { l: "Deposit", r: "2 paid · 1 pending", tone: "neutral" },
+    ],
+  },
+  lp: {
+    title: "REPORTS",
+    counts: [["LENDER", "DRAFT", "warn"], ["LP", "APR", "neutral"], ["PACE", "+30D", "good"]],
+    items: [
+      { l: "Lender", r: "Lease-up package ready for review", tone: "warn" },
+      { l: "Owner", r: "Weekly velocity summary", tone: "good" },
+      { l: "Broker", r: "Performance scorecard", tone: "neutral" },
+      { l: "Export", r: "PDF + model workbook", tone: "neutral" },
     ],
   },
 };
@@ -306,8 +337,14 @@ const TopBar = ({ t, tab, setTab, onCmdK, layout, setLayout, propIdx, setPropIdx
           {propMenu && <PropertyPeek t={t} propIdx={propIdx} setPropIdx={setPropIdx} onClose={() => setPropMenu(false)} />}
         </div>
 
-        {/* Live tape — scrolling ticker */}
-        <LiveTape t={t} />
+        {/* Live tape — quieted on Model so first-time users understand the workflow. */}
+        {tab === "model" ? (
+          <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", padding: "0 14px", fontFamily: t.sans, fontSize: 11.5, color: t.inkSoft, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            Start with the model. Live leasing, applications, deposits, and reporting turn on after launch.
+          </div>
+        ) : (
+          <LiveTape t={t} />
+        )}
 
         {/* Clock */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 14px", borderLeft: `1px solid ${t.rule}` }}>
@@ -473,6 +510,9 @@ const CmdK = ({ t, open, onClose, setTab }) => {
 
   const entries = useMemo(() => [
     ...NAV.flatMap(g => g.items.map(([id, label]) => ({ kind: "Go", label, id, action: () => setTab(id) }))),
+    { kind: "Do", label: "Finish sponsor intake · market rents",       id: "model",        action: () => setTab("model") },
+    { kind: "Do", label: "Compare broker vs in-house lease-up cost",   id: "model",        action: () => setTab("model") },
+    { kind: "Do", label: "Export lease-up model",     id: "model",        action: () => setTab("model") },
     { kind: "Do", label: "Adjust 3BR asking to $3,200",           id: "rents",        action: () => setTab("rents") },
     { kind: "Do", label: "Extend 1-month-free through Jul 31",    id: "concessions",  action: () => setTab("concessions") },
     { kind: "Do", label: "Call Alex Rivera (SLA past)",           id: "pipeline",     action: () => setTab("pipeline") },
@@ -482,9 +522,8 @@ const CmdK = ({ t, open, onClose, setTab }) => {
     { kind: "Do", label: "Dispatch maintenance · U-312 AC",       id: "maintenance",  action: () => setTab("maintenance") },
     { kind: "Do", label: "Send renewal offer · U-312",            id: "residents",    action: () => setTab("residents") },
     { kind: "Do", label: "Reconnect Facebook Marketplace",        id: "listings",     action: () => setTab("listings") },
-    { kind: "Do", label: "Generate April LP letter",              id: "lp",           action: () => setTab("lp") },
+    { kind: "Do", label: "Generate weekly sponsor report",        id: "lp",           action: () => setTab("lp") },
     { kind: "Do", label: "Request new COI · Citywide Plumbing",   id: "vendors",      action: () => setTab("vendors") },
-    { kind: "Do", label: "Export lender package · Pre-Con",       id: "precon",       action: () => setTab("precon") },
     { kind: "Prop", label: "Switch to Luminary Midtown", id: "today", action: () => setTab("today") },
     { kind: "Prop", label: "Switch to Brix on Sixth",    id: "today", action: () => setTab("today") },
   ], [setTab]);

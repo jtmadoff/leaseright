@@ -64,7 +64,10 @@ const App = () => {
     try { return { ...TWEAK_DEFAULTS, ...JSON.parse(localStorage.getItem("leaseright_tweaks_v1") || "{}") }; } catch { return TWEAK_DEFAULTS; }
   });
   const [editMode, setEditMode] = useState(false);
-  const [tab, setTab] = useState(() => localStorage.getItem("leaseright_tab_v1") || "today");
+  const [tab, setTab] = useState(() => {
+    const saved = localStorage.getItem("leaseright_tab_v1");
+    return saved === "precon" ? "model" : (saved || "model");
+  });
   const [propIdx, setPropIdx] = useState(0);
   const [cmdK, setCmdK] = useState(false);
   const [sidebar, setSidebar] = useState(false);
@@ -124,7 +127,7 @@ const App = () => {
   else if (tab === "listings") body = <ListingsView t={t} />;
   else if (tab === "market") body = <MarketView t={t} />;
   else if (tab === "concessions") body = <ConcessionsView t={t} />;
-  else if (tab === "precon") body = <PreconView t={t} />;
+  else if (tab === "model" || tab === "precon") body = <PreconView t={t} />;
   else if (tab === "settings") body = <SettingsView t={t} />;
   else if (tab === "applications") body = <ApplicationsView t={t} />;
   else if (tab === "lp") body = <LPReportingView t={t} />;
