@@ -63,12 +63,18 @@ tour → application → approve → e-sign lease → deposit to escrow → resi
 tab moves in lockstep, and the weekly sponsor/lender report writes itself because plan (beat 1) and
 actuals (beats 4–11) are the same numbers. See `20_JOURNEYS_AND_NARRATIVE.md`.
 
-## Still open for Justin
+## Decisions — CONFIRMED by Justin, 2026-07-03
 
-- **O1 — Asset Manager:** a distinct launch role to design deeply, or just a permission tier for now? (Lean: permission tier.)
-- **O2 — Lender access:** a login/observer seat, or exports-only for the prototype? (Lean: exports-only.)
-- **O3 — Confirm D2 and D3** (derived status + freeze-and-diff) — they're technical but shape the whole rebuild.
-- **O4 — Which views survive the cut** for the "perfect prototype": all three specs agree the 7 primary surfaces stay and Maintenance / Vendors / full Ledger / Collections / full Residents / standalone Documents get demoted or deferred. Confirm we build the prototype around the 7.
+- **O1 — Asset Manager: permission tier** for now, not a deeply-designed launch role.
+- **O2 — Lender access: exports-only** for the prototype. No observer seat.
+- **O3 — D2 and D3 CONFIRMED:** drag in Pipeline performs the real underlying state
+  transition, and Launch freezes the active scenario as an immutable baseline plan.
+- **O4 — The prototype is built around the 7 primary surfaces** (Model, Today, Pipeline,
+  Inbox, Rents, Applications, Reports). Maintenance / Vendors / Ledger / Collections /
+  Residents / Documents are demoted or deferred.
+
+The foundation is locked. Phase 2 (Model & underwriting depth, UX system, strategy) and
+the rebuild plan (`70_REBUILD_PLAN.md`) proceed from these decisions.
 
 ## What Phase 2 would cover (if we proceed)
 
