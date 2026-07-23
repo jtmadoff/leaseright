@@ -4,6 +4,24 @@
 > Resolves the cross-cutting conflicts the three specialists surfaced. Conceptual only.
 > Created 2026-07-01. Read the three source specs for full detail; this is the reconciliation layer.
 
+## Decisions confirmed (2026-07-08, Justin)
+
+- **D1–D7: all confirmed.** One canonical person-object; derived status (drag = a real
+  transition); Launch = freeze-and-diff; plan-vs-actual is structural; role = permission lens
+  over one owner dataset with outsider scoping; decisions write through with approval-gating for
+  lower-trust roles; create-project → intake → model → launch first-run.
+- **Lender (was O2): export-only, NO app access.** The lender never gets a seat; they receive a
+  generated package/export. Remove any notion of a lender login.
+- **Roles (was O1): expanded.** Asset Manager is promoted from a permission tier to a **first-class
+  role**. **Lead Broker** is added as a role that activates **only on the broker-assisted route**.
+  Canonical role set: Owner · Asset Manager · Leasing Agent · Lead Broker (conditional) · Property
+  Manager · Lender-observer (export-only).
+- **Surfaces (was O4): confirmed.** Build the prototype around the 7 primary surfaces — Model,
+  Today, Pipeline, Inbox, Rents, Applications, Reports — and demote/defer the rest.
+- **Ripple to propagate:** the expanded role set changes the role × permission × surface matrix in
+  `10_PERSONAS_AND_ROLES.md` and the role-scoping model in `30_DATA_MODEL_AND_SYSTEMS.md`. Refresh
+  both to carry Asset Manager and Lead Broker before the prototype rebuild.
+
 ## Headline
 
 The three specs agree on the core diagnosis: **v6 is a set of beautiful, disconnected surfaces
