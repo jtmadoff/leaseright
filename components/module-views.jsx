@@ -722,8 +722,8 @@ const LeaseRightWelcome = ({ t, onComplete }) => {
           <div style={{ fontFamily: t.mono, fontSize: 11, letterSpacing: 1.2, color: t.accent, marginBottom: 14 }}>PROJECT SETUP</div>
           <h1 style={{ fontSize: 34, letterSpacing: -0.7, margin: 0 }}>Where is this project today?</h1>
           <p style={{ color: t.inkSoft, fontSize: 15, lineHeight: 1.55, margin: "12px 0 30px" }}>Your answer sets the starting workflow and the baseline we need.</p>
-          <div style={{ display: "grid", gap: 10 }}>
-            {stages.map(s => { const active = stage === s.id; return <button key={s.id} onClick={() => setStage(s.id)} style={{ padding: "20px 22px", display: "grid", gridTemplateColumns: "24px 180px 1fr", gap: 16, alignItems: "center", background: active ? t.accentSoft : t.surface, border: `1px solid ${active ? t.accent : t.rule}`, borderRadius: 5, color: t.ink, textAlign: "left", cursor: "pointer" }}><span style={{ width: 16, height: 16, borderRadius: 16, border: `1px solid ${active ? t.accent : t.inkFaint}`, display: "grid", placeItems: "center" }}>{active && <span style={{ width: 8, height: 8, borderRadius: 8, background: t.accent }} />}</span><strong style={{ fontSize: 14 }}>{s.label}</strong><span style={{ fontSize: 13, color: t.inkSoft, lineHeight: 1.45 }}>{s.detail}</span></button>; })}
+          <div style={{ borderTop: `1px solid ${t.rule}`, borderBottom: `1px solid ${t.rule}` }}>
+            {stages.map((s, i) => { const active = stage === s.id; return <button key={s.id} onClick={() => setStage(s.id)} style={{ width: "100%", padding: "22px 18px", display: "grid", gridTemplateColumns: "58px 190px 1fr 26px", gap: 18, alignItems: "center", background: active ? t.surface : "transparent", border: "none", borderBottom: i < stages.length - 1 ? `1px solid ${t.rule}` : "none", borderLeft: `3px solid ${active ? t.accent : "transparent"}`, color: t.ink, textAlign: "left", cursor: "pointer" }}><span style={{ fontFamily: t.mono, fontSize: 11, color: active ? t.accent : t.inkMute, letterSpacing: 1 }}>{String(i + 1).padStart(2, "0")}</span><strong style={{ fontSize: 14, fontWeight: 650 }}>{s.label}</strong><span style={{ fontSize: 13, color: t.inkSoft, lineHeight: 1.5 }}>{s.detail}</span><span style={{ fontFamily: t.mono, fontSize: 15, color: active ? t.accent : t.inkFaint }}>{active ? "●" : "○"}</span></button>; })}
           </div>
           <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 28 }}><button onClick={() => onComplete(stage)} style={{ padding: "12px 18px", border: "none", borderRadius: 4, background: t.accent, color: "#0A0A0B", fontWeight: 700, cursor: "pointer" }}>Continue to property intake →</button></div>
         </main>
@@ -911,7 +911,7 @@ const PreconView = ({ t, onLaunched }) => {
           </div>
           {modelSection === "intake" && <>
           <div style={{ padding: 20, borderBottom: `1px solid ${t.rule}` }}>
-            <div style={{ background: t.surface, border: `1px solid ${t.rule}`, borderRadius: 6, overflow: "hidden" }}>
+            <div style={{ background: t.surface, border: `1px solid ${t.rule}`, overflow: "hidden" }}>
               <div style={{ padding: "16px 18px", borderBottom: `1px solid ${t.rule}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14 }}>
                 <div style={{ minWidth: 0 }}>
                   <Eyebrow t={t} style={{ marginBottom: 7 }}>Guided intake</Eyebrow>
@@ -922,37 +922,37 @@ const PreconView = ({ t, onLaunched }) => {
                   <div style={{ fontFamily: t.mono, fontSize: 9.5, color: t.inkMute, letterSpacing: 1, textTransform: "uppercase" }}>complete</div>
                 </div>
               </div>
-              <div style={{ padding: "12px 18px", borderBottom: `1px solid ${t.rule}`, display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <div style={{ padding: "0 18px", borderBottom: `1px solid ${t.rule}`, display: "grid", gridTemplateColumns: `repeat(${intakeSteps.length}, minmax(0, 1fr))` }}>
                 {intakeSteps.map((s, i) => {
                   const active = s.id === intakeStep;
                   const done = i < currentIntakeIndex;
                   return (
-                    <button key={s.id} disabled={i > completedSteps.size} onClick={() => setIntakeStep(s.id)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 9px", background: active ? t.hover : t.surfaceAlt, border: `1px solid ${active ? t.accent + "66" : t.rule}`, borderRadius: 4, color: active ? t.ink : t.inkSoft, cursor: i > completedSteps.size ? "default" : "pointer", opacity: i > completedSteps.size ? 0.45 : 1 }}>
-                      <span style={{ width: 16, height: 16, borderRadius: 16, display: "inline-flex", alignItems: "center", justifyContent: "center", background: done ? t.good : active ? t.accent : t.bg, color: done || active ? "#0A0A0B" : t.inkMute, fontFamily: t.mono, fontSize: 9, fontWeight: 700 }}>{done ? "✓" : i + 1}</span>
-                      <span style={{ fontFamily: t.sans, fontSize: 12, fontWeight: 600 }}>{s.label}</span>
+                    <button key={s.id} disabled={i > completedSteps.size} onClick={() => setIntakeStep(s.id)} style={{ minWidth: 0, display: "flex", alignItems: "center", gap: 8, padding: "13px 8px", background: "transparent", border: "none", borderBottom: `2px solid ${active ? t.accent : "transparent"}`, color: active ? t.ink : t.inkSoft, cursor: i > completedSteps.size ? "default" : "pointer", opacity: i > completedSteps.size ? 0.36 : 1 }}>
+                      <span style={{ fontFamily: t.mono, fontSize: 9, color: done ? t.good : active ? t.accent : t.inkMute }}>{done ? "✓" : String(i + 1).padStart(2, "0")}</span>
+                      <span style={{ fontFamily: t.sans, fontSize: 11.5, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.label}</span>
                     </button>
                   );
                 })}
               </div>
               <div style={{ padding: 18 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(180px, 1fr))", gap: 12 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(180px, 1fr))", columnGap: 28, rowGap: 4 }}>
                   {currentIntake.fields.map(([k,v]) => (
-                    <label key={k} style={{ display: "block", padding: 13, background: t.surfaceAlt, border: `1px solid ${t.rule}`, borderRadius: 5 }}>
-                      <div style={{ fontFamily: t.sans, fontSize: 11.5, color: t.inkMute, marginBottom: 7 }}>{k}</div>
-                      <input value={intakeValues[`${intakeStep}:${k}`] ?? v} placeholder={fieldPlaceholders[k] || "Enter value"} onChange={e => setIntakeValues(values => ({ ...values, [`${intakeStep}:${k}`]: e.target.value }))} aria-label={k} style={{ width: "100%", minHeight: 34, padding: "0 10px", background: t.bg, border: `1px solid ${t.rule}`, borderRadius: 4, fontFamily: t.sans, fontSize: 13, color: t.ink, outline: "none" }} />
+                    <label key={k} style={{ display: "block", padding: "15px 0 13px", borderBottom: `1px solid ${t.rule}` }}>
+                      <div style={{ fontFamily: t.mono, fontSize: 9.5, letterSpacing: 0.75, textTransform: "uppercase", color: t.inkMute, marginBottom: 8 }}>{k}</div>
+                      <input value={intakeValues[`${intakeStep}:${k}`] ?? v} placeholder={fieldPlaceholders[k] || "Enter value"} onChange={e => setIntakeValues(values => ({ ...values, [`${intakeStep}:${k}`]: e.target.value }))} aria-label={k} style={{ width: "100%", minHeight: 30, padding: 0, background: "transparent", border: "none", borderRadius: 0, fontFamily: t.sans, fontSize: 14, color: t.ink, outline: "none" }} />
                     </label>
                   ))}
                 </div>
                 {intakeStep === "project" && (
                   <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 12 }}>
-                    <div style={{ minHeight: 126, padding: 14, background: t.bg, border: `1px solid ${t.rule}`, borderRadius: 5, position: "relative", overflow: "hidden" }}>
+                    <div style={{ minHeight: 126, padding: 14, background: t.bg, border: `1px solid ${t.rule}`, position: "relative", overflow: "hidden" }}>
                       <div style={{ position: "absolute", inset: 0, opacity: 0.28, backgroundImage: `linear-gradient(${t.ruleSoft} 1px, transparent 1px), linear-gradient(90deg, ${t.ruleSoft} 1px, transparent 1px)`, backgroundSize: "24px 24px" }} />
                       <div style={{ position: "relative", width: 12, height: 12, borderRadius: 12, background: t.accent, boxShadow: `0 0 0 6px ${t.accentSoft}`, margin: "40px auto 10px" }} />
                       <div style={{ position: "relative", textAlign: "center", fontFamily: t.sans, fontSize: 12.5, color: t.ink, fontWeight: 650 }}>{intakeValues["project:Address"] || "Add an address"}</div>
                       <div style={{ position: "relative", textAlign: "center", fontFamily: t.sans, fontSize: 11.5, color: t.inkMute, marginTop: 4 }}>{intakeValues["project:Address"] ? "Ready to map the property and comp radius" : "We will map the property here"}</div>
                     </div>
-                    <div style={{ padding: 14, background: t.surfaceAlt, border: `1px solid ${t.rule}`, borderRadius: 5 }}>
-                      <div style={{ fontFamily: t.sans, fontSize: 12.5, color: t.ink, fontWeight: 650, marginBottom: 8 }}>What this unlocks</div>
+                    <div style={{ padding: "10px 6px 10px 20px", borderLeft: `1px solid ${t.rule}` }}>
+                      <div style={{ fontFamily: t.mono, fontSize: 9.5, letterSpacing: 0.8, textTransform: "uppercase", color: t.inkMute, fontWeight: 650, marginBottom: 10 }}>Downstream use</div>
                       {["Map the property", "Suggest local comps", "Set market rent boundaries"].map((x, i) => (
                         <div key={x} style={{ display: "flex", gap: 8, padding: "6px 0", borderBottom: i < 2 ? `1px solid ${t.ruleSoft}` : "none" }}>
                           <Dot c={t.good} size={7} />
@@ -1006,8 +1006,8 @@ const PreconView = ({ t, onLaunched }) => {
                     })}
                   </div>
                 )}
-                <div style={{ marginTop: 14, padding: 12, background: t.accentSoft, border: `1px solid ${t.accent}33`, borderRadius: 5 }}>
-                  <div style={{ fontFamily: t.sans, fontSize: 12.5, color: t.ink, fontWeight: 650, marginBottom: 8 }}>LeaseRight is building from this section</div>
+                <div style={{ marginTop: 20, padding: "12px 0", borderTop: `1px solid ${t.rule}`, borderBottom: `1px solid ${t.rule}`, display: "grid", gridTemplateColumns: "180px 1fr", alignItems: "center", gap: 16 }}>
+                  <div style={{ fontFamily: t.mono, fontSize: 9.5, letterSpacing: 0.8, textTransform: "uppercase", color: t.inkMute, fontWeight: 650 }}>Model contribution</div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                     {currentIntake.builds.map((b) => (
                       <Tag key={b} t={t} tone="good">{b}</Tag>
