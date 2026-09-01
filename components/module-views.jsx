@@ -682,30 +682,46 @@ const LeaseRightWelcome = ({ t, onComplete }) => {
         <div style={{ width: 24, height: 24, background: t.accent, color: "#0A0A0B", display: "grid", placeItems: "center", fontFamily: t.mono, fontWeight: 800, fontSize: 13 }}>L</div>
         <div style={{ marginLeft: 10, fontSize: 14, fontWeight: 650 }}>LeaseRight</div>
         <div style={{ flex: 1 }} />
-        <div style={{ fontSize: 12, color: t.inkMute }}>Lease-up decisions, from model to stabilization</div>
+        <div style={{ fontSize: 12, color: t.inkMute }}>Built for the lease-up.</div>
       </div>
       {step === "welcome" ? (
-        <main style={{ maxWidth: 1080, margin: "0 auto", padding: "96px 40px 72px" }}>
-          <div style={{ maxWidth: 760 }}>
-            <div style={{ fontFamily: t.mono, fontSize: 11, letterSpacing: 1.4, color: t.accent, marginBottom: 20 }}>MODEL ONCE · OPERATE FROM THE SAME PLAN</div>
-            <h1 style={{ fontSize: 52, lineHeight: 1.04, letterSpacing: -1.8, margin: 0, maxWidth: 720 }}>Make the lease-up plan clear before the pressure starts.</h1>
-            <p style={{ fontSize: 18, lineHeight: 1.6, color: t.inkSoft, margin: "24px 0 34px", maxWidth: 680 }}>LeaseRight turns property facts, market evidence, and execution choices into one approved model—then carries that baseline into daily leasing decisions.</p>
-            <button onClick={() => setStep("stage")} style={{ padding: "13px 20px", border: "none", borderRadius: 4, background: t.accent, color: "#0A0A0B", fontFamily: t.sans, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Create a lease-up plan →</button>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1, marginTop: 92, background: t.rule }}>
-            {[
-              ["01", "Model", "Set the property, unit mix, comps, rents, and execution strategy."],
-              ["02", "Approve", "Compare scenarios and freeze the baseline everyone will measure against."],
-              ["03", "Operate", "Turn on Pipeline, Applications, Rents, Today, and Reports without re-entry."],
-            ].map(([n,h,b]) => <div key={n} style={{ padding: 26, background: t.surface }}><div style={{ fontFamily: t.mono, fontSize: 10, color: t.accent, marginBottom: 18 }}>{n}</div><div style={{ fontSize: 17, fontWeight: 650, marginBottom: 9 }}>{h}</div><div style={{ fontSize: 13, color: t.inkSoft, lineHeight: 1.55 }}>{b}</div></div>)}
-          </div>
+        <main style={{ maxWidth: 1180, margin: "0 auto", padding: "68px 40px 56px", display: "grid", gridTemplateColumns: "0.82fr 1.18fr", gap: 64, alignItems: "center" }}>
+          <section style={{ paddingBottom: 18 }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 9, marginBottom: 26, color: t.inkSoft, fontSize: 12 }}><span style={{ width: 7, height: 7, background: t.good }} />Purpose-built for multifamily developers</div>
+            <h1 style={{ fontSize: 58, lineHeight: 0.98, letterSpacing: -2.2, margin: 0, maxWidth: 520 }}>Know what stabilization will take.</h1>
+            <p style={{ fontSize: 17, lineHeight: 1.65, color: t.inkSoft, margin: "26px 0 32px", maxWidth: 500 }}>Model rents, concessions, staffing and weekly absorption. Lock the approved case. Run leasing against it.</p>
+            <button onClick={() => setStep("stage")} style={{ padding: "14px 21px", border: "none", borderRadius: 3, background: t.accent, color: "#0A0A0B", fontFamily: t.sans, fontSize: 14, fontWeight: 750, cursor: "pointer" }}>Start a project</button>
+            <div style={{ marginTop: 42, display: "flex", gap: 26, color: t.inkMute, fontSize: 11.5 }}><span>Model</span><span>Baseline</span><span>Lease-up</span><span>Reporting</span></div>
+          </section>
+          <section style={{ border: `1px solid ${t.rule}`, background: t.surface, boxShadow: "0 30px 80px rgba(0,0,0,0.35)" }}>
+            <div style={{ height: 46, padding: "0 16px", display: "flex", alignItems: "center", borderBottom: `1px solid ${t.rule}` }}>
+              <div style={{ fontSize: 12.5, fontWeight: 650 }}>The Meridian</div><div style={{ marginLeft: 10, fontFamily: t.mono, fontSize: 9.5, color: t.inkMute }}>AUSTIN, TX · 260 UNITS</div><div style={{ flex: 1 }} /><div style={{ fontFamily: t.mono, fontSize: 9.5, color: t.good }}>BASE CASE</div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", borderBottom: `1px solid ${t.rule}` }}>
+              {[["STABILIZED", "Jul 2026", "93% occupancy"], ["VELOCITY", "3.3 / wk", "approved pace"], ["TOTAL CARRY", "$1.71M", "$670K below downside"]].map(([k,v,s],i) => <div key={k} style={{ padding: "18px 16px", borderLeft: i ? `1px solid ${t.rule}` : "none" }}><div style={{ fontFamily: t.mono, fontSize: 9, color: t.inkMute, letterSpacing: 0.8 }}>{k}</div><div style={{ fontFamily: t.mono, fontSize: 19, color: t.ink, marginTop: 9 }}>{v}</div><div style={{ fontSize: 10.5, color: i === 2 ? t.good : t.inkMute, marginTop: 5 }}>{s}</div></div>)}
+            </div>
+            <div style={{ padding: "18px 18px 14px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}><span style={{ fontSize: 11.5, color: t.inkSoft }}>78-week absorption</span><span style={{ fontFamily: t.mono, fontSize: 9.5, color: t.inkMute }}>242 LEASES TO TARGET</span></div>
+              <svg viewBox="0 0 560 210" style={{ width: "100%", height: 230, display: "block" }}>
+                {[35,75,115,155,195].map(y => <line key={y} x1="0" x2="560" y1={y} y2={y} stroke={t.ruleSoft} />)}
+                <line x1="0" x2="560" y1="49" y2="49" stroke={t.warn} strokeDasharray="3 5" opacity="0.7" />
+                <text x="556" y="43" textAnchor="end" fill={t.warn} fontSize="9" fontFamily={t.mono}>93% TARGET</text>
+                <path d="M0 196 C70 190 102 174 142 151 C200 116 254 82 324 60 C390 39 470 31 560 27" fill="none" stroke={t.inkFaint} strokeWidth="1.5" strokeDasharray="5 5" />
+                <path d="M0 196 C62 190 108 167 150 137 C194 106 226 84 270 70" fill="none" stroke={t.good} strokeWidth="2.5" />
+                <path d="M270 70 C342 45 430 32 560 27" fill="none" stroke={t.accent} strokeWidth="2" strokeDasharray="4 4" />
+                <circle cx="270" cy="70" r="4" fill={t.accent} />
+                <text x="280" y="62" fill={t.ink} fontSize="10" fontFamily={t.mono}>121 LEASED</text>
+              </svg>
+              <div style={{ display: "flex", gap: 20, borderTop: `1px solid ${t.ruleSoft}`, paddingTop: 12, fontSize: 10.5, color: t.inkMute }}><span><b style={{ color: t.good }}>━━</b> Actual</span><span><b style={{ color: t.accent }}>┅┅</b> Approved projection</span><span><b style={{ color: t.inkFaint }}>┅┅</b> Downside</span></div>
+            </div>
+          </section>
         </main>
       ) : (
         <main style={{ maxWidth: 900, margin: "0 auto", padding: "76px 40px" }}>
           <button onClick={() => setStep("welcome")} style={{ border: "none", background: "transparent", color: t.inkMute, fontSize: 12, cursor: "pointer", padding: 0, marginBottom: 32 }}>← Back</button>
           <div style={{ fontFamily: t.mono, fontSize: 11, letterSpacing: 1.2, color: t.accent, marginBottom: 14 }}>PROJECT SETUP</div>
           <h1 style={{ fontSize: 34, letterSpacing: -0.7, margin: 0 }}>Where is this project today?</h1>
-          <p style={{ color: t.inkSoft, fontSize: 15, lineHeight: 1.55, margin: "12px 0 30px" }}>We’ll tailor the model and only show the tools that matter at this stage.</p>
+          <p style={{ color: t.inkSoft, fontSize: 15, lineHeight: 1.55, margin: "12px 0 30px" }}>Your answer sets the starting workflow and the baseline we need.</p>
           <div style={{ display: "grid", gap: 10 }}>
             {stages.map(s => { const active = stage === s.id; return <button key={s.id} onClick={() => setStage(s.id)} style={{ padding: "20px 22px", display: "grid", gridTemplateColumns: "24px 180px 1fr", gap: 16, alignItems: "center", background: active ? t.accentSoft : t.surface, border: `1px solid ${active ? t.accent : t.rule}`, borderRadius: 5, color: t.ink, textAlign: "left", cursor: "pointer" }}><span style={{ width: 16, height: 16, borderRadius: 16, border: `1px solid ${active ? t.accent : t.inkFaint}`, display: "grid", placeItems: "center" }}>{active && <span style={{ width: 8, height: 8, borderRadius: 8, background: t.accent }} />}</span><strong style={{ fontSize: 14 }}>{s.label}</strong><span style={{ fontSize: 13, color: t.inkSoft, lineHeight: 1.45 }}>{s.detail}</span></button>; })}
           </div>
