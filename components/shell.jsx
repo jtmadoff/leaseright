@@ -284,16 +284,6 @@ const TopBar = ({ t, tab, setTab, onCmdK, layout, setLayout, propIdx, setPropIdx
 
   const p = PROPERTIES[propIdx];
 
-  // Live clock — hh:mm:ss
-  const [now, setNow] = useState(new Date());
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(id);
-  }, []);
-  const hh = String(now.getHours()).padStart(2, "0");
-  const mm = String(now.getMinutes()).padStart(2, "0");
-  const ss = String(now.getSeconds()).padStart(2, "0");
-
   // F-key routing
   useEffect(() => {
     const h = (e) => {
@@ -313,15 +303,14 @@ const TopBar = ({ t, tab, setTab, onCmdK, layout, setLayout, propIdx, setPropIdx
 
   return (
     <div style={{ borderBottom: `1px solid ${t.rule}`, background: t.bg, position: "sticky", top: 0, zIndex: 50 }}>
-      {/* ROW 1 — brand · property · tape · clock · user */}
-      <div style={{ height: 40, display: "flex", alignItems: "stretch", padding: "0 0 0 0", borderBottom: `1px solid ${t.rule}` }}>
+      {/* Calm identity row: context without ticker motion or a live clock. */}
+      <div style={{ height: 48, display: "flex", alignItems: "stretch", borderBottom: `1px solid ${t.rule}` }}>
         {/* Brand */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 14px", borderRight: `1px solid ${t.rule}` }}>
           <div style={{ width: 20, height: 20, background: t.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <span style={{ fontFamily: t.mono, fontSize: 12, fontWeight: 700, color: "#0A0A0B", letterSpacing: 0 }}>L</span>
           </div>
           <span style={{ fontFamily: t.sans, fontSize: 13, fontWeight: 600, color: t.ink, letterSpacing: -0.1 }}>LeaseRight</span>
-          <span style={{ fontFamily: t.mono, fontSize: 9, color: t.inkMute, letterSpacing: 0.6, padding: "1px 5px", border: `1px solid ${t.rule}` }}>PRO</span>
         </div>
 
         {/* Property switcher — hover to peek, click to lock */}
@@ -331,27 +320,13 @@ const TopBar = ({ t, tab, setTab, onCmdK, layout, setLayout, propIdx, setPropIdx
           <button style={{ height: "100%", display: "flex", alignItems: "center", gap: 10, padding: "0 14px", background: propMenu ? t.surfaceAlt : "transparent", border: "none", cursor: "pointer", fontFamily: t.sans }}>
             <span style={{ width: 7, height: 7, background: p.pace === "ahead" ? t.good : p.pace === "behind" ? t.bad : t.inkMute }} />
             <span style={{ fontSize: 12.5, fontWeight: 600, color: t.ink }}>{p.name}</span>
-            <span style={{ fontFamily: t.mono, fontSize: 10, color: t.inkMute, letterSpacing: 0.3 }}>{p.leased}/{p.units} · {((p.leased/p.units)*100).toFixed(1)}%</span>
+            <span style={{ fontSize: 11, color: t.inkMute }}>{p.city}</span>
             <svg width={8} height={8} viewBox="0 0 10 10" style={{ marginLeft: 2 }}><path d="M2 4l3 3 3-3" stroke={t.inkMute} strokeWidth={1.2} fill="none" strokeLinecap="round" /></svg>
           </button>
           {propMenu && <PropertyPeek t={t} propIdx={propIdx} setPropIdx={setPropIdx} onClose={() => setPropMenu(false)} />}
         </div>
 
-        {/* Live tape — quieted on Model so first-time users understand the workflow. */}
-        {tab === "model" ? (
-          <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", padding: "0 14px", fontFamily: t.sans, fontSize: 11.5, color: t.inkSoft, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-            Start with the model. Live leasing, applications, deposits, and reporting turn on after launch.
-          </div>
-        ) : (
-          <LiveTape t={t} />
-        )}
-
-        {/* Clock */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 14px", borderLeft: `1px solid ${t.rule}` }}>
-          <span style={{ width: 6, height: 6, background: t.good, animation: "pulseDot 2s ease-out infinite", flexShrink: 0 }} />
-          <span style={{ fontFamily: t.mono, fontSize: 11, color: t.ink, fontVariantNumeric: "tabular-nums", letterSpacing: 0.4 }}>{hh}:{mm}<span style={{ color: t.inkMute }}>:{ss}</span></span>
-          <span style={{ fontFamily: t.mono, fontSize: 9.5, color: t.inkMute, letterSpacing: 0.8, fontWeight: 600 }}>LIVE</span>
-        </div>
+        <div style={{ flex: 1 }} />
 
         {/* Search / cmd-k */}
         <button onClick={onCmdK}
@@ -388,32 +363,27 @@ const TopBar = ({ t, tab, setTab, onCmdK, layout, setLayout, propIdx, setPropIdx
         </div>
       </div>
 
-      {/* ROW 2 — function-key nav */}
-      <div style={{ height: 32, display: "flex", alignItems: "stretch", padding: "0" }}>
+      {/* Primary navigation: labels first; shortcuts remain available but stay out of view. */}
+      <div style={{ height: 42, display: "flex", alignItems: "stretch", padding: "0 8px" }}>
         {/* Sidebar toggle */}
         <button onClick={onToggleSidebar}
           style={{ padding: "0 12px", background: "transparent", border: "none", borderRight: `1px solid ${t.rule}`, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
           onMouseEnter={e => e.currentTarget.style.background = t.surfaceAlt}
           onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
           <svg width={11} height={11} viewBox="0 0 11 11"><path d="M1.5 2h8M1.5 5.5h8M1.5 9h8" stroke={t.inkSoft} strokeWidth={1.1} strokeLinecap="round" /></svg>
-          <Kbd t={t}>⌘\</Kbd>
         </button>
         {PRIMARY.map(([id, label, fkey]) => {
           const active = tab === id;
           const hovered = hoverTab === id;
-          const badge = NAV_BADGES[id];
           return (
             <div key={id} style={{ position: "relative" }}
               onMouseEnter={() => setHoverTab(id)}
               onMouseLeave={() => setHoverTab(null)}>
               <button onClick={() => setTab(id)}
-                style={{ height: "100%", padding: "0 14px", background: active ? t.surfaceAlt : hovered ? t.hover : "transparent", border: "none", borderRight: `1px solid ${t.rule}`, cursor: "pointer", fontFamily: t.sans, fontSize: 12, fontWeight: active ? 600 : 500, color: active ? t.ink : t.inkSoft, display: "flex", alignItems: "center", gap: 8, position: "relative", letterSpacing: 0.1, transition: "background 80ms" }}>
-                <span style={{ fontFamily: t.mono, fontSize: 9.5, color: active ? t.accent : t.inkMute, fontWeight: 600, letterSpacing: 0.3 }}>{fkey}</span>
+                style={{ height: "100%", padding: "0 16px", background: active ? t.surfaceAlt : hovered ? t.hover : "transparent", border: "none", cursor: "pointer", fontFamily: t.sans, fontSize: 12.5, fontWeight: active ? 600 : 500, color: active ? t.ink : t.inkSoft, display: "flex", alignItems: "center", gap: 8, position: "relative", letterSpacing: 0.1, transition: "background 80ms" }}>
                 <span>{label}</span>
-                {badge && <span style={{ background: t.bad, color: "#0A0A0B", fontFamily: t.mono, fontSize: 9, fontWeight: 700, padding: "1px 5px", letterSpacing: 0.2 }}>{badge}</span>}
                 {active && <span style={{ position: "absolute", left: 0, right: 0, bottom: -1, height: 2, background: t.accent }} />}
               </button>
-              {hovered && !active && PEEK_DATA[id] && <NavPeek t={t} tab={id} />}
             </div>
           );
         })}
@@ -421,28 +391,14 @@ const TopBar = ({ t, tab, setTab, onCmdK, layout, setLayout, propIdx, setPropIdx
         {/* Overflow spacer */}
         <div style={{ flex: 1 }} />
 
-        {/* Today-only layout switch */}
-        {tab === "today" && (
-          <div style={{ display: "flex", alignItems: "center", padding: "0 10px", borderLeft: `1px solid ${t.rule}`, gap: 6 }}>
-            <span style={{ fontFamily: t.mono, fontSize: 9.5, color: t.inkMute, letterSpacing: 1, fontWeight: 600 }}>VIEW</span>
-            {[["grid", "GRID"], ["queue", "QUEUE"], ["table", "TABLE"]].map(([id, lbl]) => (
-              <button key={id} onClick={() => setLayout(id)}
-                style={{ padding: "3px 8px", fontFamily: t.mono, fontSize: 10, fontWeight: 600, border: `1px solid ${layout === id ? t.accent : "transparent"}`, background: layout === id ? t.accentSoft : "transparent", color: layout === id ? t.accent : t.inkSoft, cursor: "pointer", letterSpacing: 0.6 }}>
-                {lbl}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Notifications */}
-        <button style={{ padding: "0 12px", background: "transparent", border: "none", borderLeft: `1px solid ${t.rule}`, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
+        {/* Notifications stay quiet until opened. */}
+        <button aria-label="Notifications" style={{ padding: "0 14px", background: "transparent", border: "none", borderLeft: `1px solid ${t.rule}`, cursor: "pointer", display: "flex", alignItems: "center" }}
           onMouseEnter={e => e.currentTarget.style.background = t.surfaceAlt}
           onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
           <span style={{ position: "relative", display: "inline-flex" }}>
             <svg width={12} height={12} viewBox="0 0 14 14"><path d="M7 1.5a3.5 3.5 0 00-3.5 3.5v2.5L2.5 9v.5h9V9l-1-1.5V5A3.5 3.5 0 007 1.5zM5.5 10.5a1.5 1.5 0 003 0" stroke={t.inkSoft} strokeWidth={1.1} fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            <span style={{ position: "absolute", top: -2, right: -2, width: 6, height: 6, background: t.bad }} />
+            <span style={{ position: "absolute", top: -2, right: -2, width: 5, height: 5, borderRadius: 5, background: t.warn }} />
           </span>
-          <span style={{ fontFamily: t.mono, fontSize: 10, color: t.ink, fontWeight: 600 }}>4</span>
         </button>
       </div>
     </div>

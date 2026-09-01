@@ -769,30 +769,25 @@ const PreconView = ({ t }) => {
   const toPath = (pts) => pts.map((p,i) => (i===0?"M":"L") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
   return (
     <div>
-      <div style={{ padding: "12px 24px", borderBottom: `1px solid ${t.rule}`, background: t.bg }}>
+      <div style={{ padding: "26px 32px 24px", borderBottom: `1px solid ${t.rule}`, background: t.bg }}>
         <div style={{ display: "flex", alignItems: "center", gap: 18, minWidth: 0 }}>
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
-              <Tag t={t} tone="accent">Pre-funding workspace</Tag>
-              <Tag t={t} tone="good">82% ready</Tag>
-              <span style={{ fontFamily: t.mono, fontSize: 10.5, color: t.inkMute, letterSpacing: 0.8, textTransform: "uppercase" }}>The Meridian · Austin TX · 260 units</span>
+              <span style={{ fontFamily: t.sans, fontSize: 12, color: t.inkMute }}>The Meridian · Pre-funding</span>
             </div>
             <div style={{ fontFamily: t.sans, fontSize: 20, lineHeight: 1.18, fontWeight: 650, color: t.ink, letterSpacing: -0.25 }}>
-              Build the high-end lease-up model.
+              Build your lease-up plan.
             </div>
             <div style={{ fontFamily: t.sans, fontSize: 12.5, lineHeight: 1.45, color: t.inkSoft, marginTop: 5, maxWidth: 760 }}>
-              Work left to right: map the asset, choose comps, validate rents, define strategy, then produce the lease-up model.
+              Complete each section at your own pace. LeaseRight will turn the approved plan into the live operating board.
             </div>
           </div>
         </div>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "240px minmax(0, 1fr)", minHeight: "calc(100vh - 44px - 66px)" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "220px minmax(0, 1fr)", minHeight: "calc(100vh - 90px - 92px)" }}>
         <div style={{ borderRight: `1px solid ${t.rule}`, background: t.surface, overflow: "auto" }}>
-          <div style={{ padding: "16px 18px", borderBottom: `1px solid ${t.rule}` }}>
-            <Eyebrow t={t} style={{ marginBottom: 10 }}>Work through</Eyebrow>
-            <div style={{ fontFamily: t.sans, fontSize: 12, color: t.inkSoft, lineHeight: 1.5 }}>
-              One step at a time. Each completed step feeds the lease-up model.
-            </div>
+          <div style={{ padding: "20px 18px", borderBottom: `1px solid ${t.rule}` }}>
+            <Eyebrow t={t}>Plan sections</Eyebrow>
           </div>
           {modelTabs.map((s) => {
             const active = modelSection === s.id;
@@ -802,28 +797,19 @@ const PreconView = ({ t }) => {
                 <span style={{ marginTop: 5 }}><Dot c={c} size={7} /></span>
                 <span>
                   <span style={{ display: "block", fontFamily: t.sans, fontSize: 12.5, color: active ? t.ink : t.inkSoft, fontWeight: 600 }}>{s.label}</span>
-                  <span style={{ display: "block", fontFamily: t.sans, fontSize: 11, color: t.inkMute, marginTop: 3, lineHeight: 1.35 }}>{s.sub}</span>
                   <span style={{ display: "block", fontFamily: t.mono, fontSize: 9.5, color: c, marginTop: 5, letterSpacing: 0.7, textTransform: "uppercase" }}>{s.status}</span>
                 </span>
               </button>
             );
           })}
-          <div style={{ padding: 18, borderTop: `1px solid ${t.rule}` }}>
-            <div style={{ fontFamily: t.sans, fontSize: 11.5, color: t.inkMute, lineHeight: 1.45 }}>
-              The live app stays quiet until the model is ready to launch.
-            </div>
-          </div>
         </div>
 
         <div style={{ borderRight: `1px solid ${t.rule}`, minWidth: 0 }}>
-          <div style={{ padding: "16px 20px", borderBottom: `1px solid ${t.rule}`, background: t.bg, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+          <div style={{ padding: "22px 32px", borderBottom: `1px solid ${t.rule}`, background: t.bg, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24 }}>
             <div>
               <Eyebrow t={t} style={{ marginBottom: 7 }}>Currently working on</Eyebrow>
               <div style={{ fontFamily: t.sans, fontSize: 18, fontWeight: 650, color: t.ink }}>{activeTab.label}</div>
-              <div style={{ fontFamily: t.sans, fontSize: 12, color: t.inkMute, marginTop: 4 }}>{activeTab.sub}</div>
-              <div style={{ fontFamily: t.sans, fontSize: 12, color: t.inkSoft, lineHeight: 1.45, marginTop: 10, maxWidth: 760 }}>
-                <strong style={{ color: t.ink }}>{guidance.head}</strong> {guidance.body}
-              </div>
+              <div style={{ fontFamily: t.sans, fontSize: 12.5, color: t.inkSoft, lineHeight: 1.5, marginTop: 7, maxWidth: 620 }}>{guidance.head}</div>
             </div>
             <Btn t={t} size="xs" variant="primary">{modelSection === "launch" ? "Create live board" : "Save section"}</Btn>
           </div>
@@ -834,9 +820,6 @@ const PreconView = ({ t }) => {
                 <div style={{ minWidth: 0 }}>
                   <Eyebrow t={t} style={{ marginBottom: 7 }}>Guided intake</Eyebrow>
                   <div style={{ fontFamily: t.sans, fontSize: 20, fontWeight: 650, color: t.ink }}>{currentIntake.prompt}</div>
-                  <div style={{ fontFamily: t.sans, fontSize: 12.5, color: t.inkSoft, lineHeight: 1.45, marginTop: 7, maxWidth: 760 }}>
-                    Keep this fast. The first pass should take about 10 minutes and build the custom dashboard in the background.
-                  </div>
                 </div>
                 <div style={{ width: 92, textAlign: "right", flexShrink: 0 }}>
                   <div style={{ fontFamily: t.mono, fontSize: 22, color: t.accent, fontWeight: 650, fontVariantNumeric: "tabular-nums" }}>{intakeProgress}%</div>

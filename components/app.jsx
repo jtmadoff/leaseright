@@ -6,7 +6,7 @@ const { useState, useEffect } = React;
 
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "theme": "terminal",
-  "layout": "grid",
+  "layout": "queue",
   "density": "normal"
 }/*EDITMODE-END*/;
 
@@ -31,7 +31,7 @@ const TweaksPanel = ({ open, onClose, state, onChange, t }) => {
   );
   const th = THEMES[state.theme];
   const hints = {
-    terminal: "Deep-black shell, saturated accents, dense data. Bloomberg-terminal energy.",
+    terminal: "Warm charcoal, restrained signals, and room to think.",
     graphite: "Near-mono grayscale, indigo accent. Flat, keyboard-first — Linear energy.",
     quant: "Neutral cool, Stripe blue, surgical color. Modern dashboard energy.",
   };
@@ -63,7 +63,7 @@ const App = () => {
   const { state, dispatch } = useStore();
   const [tweaks, setTweaks] = useState(() => {
     // v8 — new terminal theme, reset stored tweaks
-    try { return { ...TWEAK_DEFAULTS, ...JSON.parse(localStorage.getItem("leaseright_tweaks_v1") || "{}") }; } catch { return TWEAK_DEFAULTS; }
+    try { return { ...TWEAK_DEFAULTS, ...JSON.parse(localStorage.getItem("leaseright_tweaks_v2") || "{}") }; } catch { return TWEAK_DEFAULTS; }
   });
   const [editMode, setEditMode] = useState(false);
   const [tab, setTab] = useState(() => {
@@ -77,7 +77,7 @@ const App = () => {
   const [toast, setToast] = useState(null);
 
   useEffect(() => { localStorage.setItem("leaseright_tab_v1", tab); }, [tab]);
-  useEffect(() => { localStorage.setItem("leaseright_tweaks_v1", JSON.stringify(tweaks)); }, [tweaks]);
+  useEffect(() => { localStorage.setItem("leaseright_tweaks_v2", JSON.stringify(tweaks)); }, [tweaks]);
 
   // Remove splash once we've rendered.
   useEffect(() => {
@@ -142,7 +142,7 @@ const App = () => {
     <div style={{ minHeight: "100vh", background: t.bg, color: t.ink, display: "flex", flexDirection: "column", fontFamily: t.sans, fontSize: t.baseSize }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-        @keyframes pulseDot { 0% { transform: scale(0.8); opacity: 0.4; } 100% { transform: scale(2.4); opacity: 0; } }
+        @keyframes pulseDot { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
         @keyframes toastIn { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
         @keyframes slideIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes tickGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(91,91,214,0); } 50% { box-shadow: 0 0 0 4px rgba(91,91,214,0.15); } }

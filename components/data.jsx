@@ -4,28 +4,28 @@ const { useState, useEffect, useRef, useMemo } = React;
 const THEMES = {
   terminal: {
     name: "Terminal",
-    // Layered blacks: bg < surface < surfaceAlt (lighter = closer to you)
-    bg: "#0A0A0B",          // app shell
-    surface: "#111113",      // panels on top of bg
-    surfaceAlt: "#17171A",   // inset / hover
-    hover: "#1D1D21",
+    // Calm dark neutrals: softer contrast keeps the console analytical, not urgent.
+    bg: "#101315",
+    surface: "#161A1D",
+    surfaceAlt: "#1C2125",
+    hover: "#23292E",
     // Text
-    ink: "#F4F4F5",          // primary text, numbers
-    inkSoft: "#A1A1AA",      // secondary labels
-    inkMute: "#6B6B74",      // tertiary, eyebrows
-    inkFaint: "#3F3F46",     // disabled, faint rules
+    ink: "#ECE9E3",
+    inkSoft: "#AAA7A0",
+    inkMute: "#777A78",
+    inkFaint: "#4A4F50",
     // Rules — whisper-thin white at low alpha
-    rule: "rgba(255,255,255,0.08)",
-    ruleSoft: "rgba(255,255,255,0.04)",
+    rule: "rgba(236,233,227,0.10)",
+    ruleSoft: "rgba(236,233,227,0.055)",
     // Saturated accent palette — true Bloomberg terminal
-    accent: "#F5A524",       // amber "action" primary (Bloomberg orange)
-    accentSoft: "rgba(245,165,36,0.12)",
-    good: "#22C55E",         // saturated green
-    goodSoft: "rgba(34,197,94,0.14)",
-    warn: "#F5A524",         // amber
-    warnSoft: "rgba(245,165,36,0.14)",
-    bad: "#EF4444",          // saturated red
-    badSoft: "rgba(239,68,68,0.14)",
+    accent: "#D4A85E",
+    accentSoft: "rgba(212,168,94,0.12)",
+    good: "#72A486",
+    goodSoft: "rgba(114,164,134,0.13)",
+    warn: "#C39A5A",
+    warnSoft: "rgba(195,154,90,0.13)",
+    bad: "#C7736C",
+    badSoft: "rgba(199,115,108,0.13)",
     // Extra Bloomberg accents for tape, tickers
     cyan: "#22D3EE",
     magenta: "#E879F9",
