@@ -1,6 +1,7 @@
 /* global React, THEMES, TodayView, RentOptimizer, PipelineView, InboxView, Placeholder, TopBar, Sidebar, CmdK,
    ResidentsView, CollectionView, MaintenanceView, LedgerView, ListingsView, MarketView, ConcessionsView,
-   PreconView, SettingsView, ApplicationsView, LPReportingView, VendorsView, DocumentsView */
+   PreconView, SettingsView, ApplicationsView, LPReportingView, VendorsView, DocumentsView,
+   StoreProvider, useStore */
 const { useState, useEffect } = React;
 
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
@@ -59,6 +60,7 @@ const TweaksPanel = ({ open, onClose, state, onChange, t }) => {
 };
 
 const App = () => {
+  const { state, dispatch } = useStore();
   const [tweaks, setTweaks] = useState(() => {
     // v8 — new terminal theme, reset stored tweaks
     try { return { ...TWEAK_DEFAULTS, ...JSON.parse(localStorage.getItem("leaseright_tweaks_v1") || "{}") }; } catch { return TWEAK_DEFAULTS; }
@@ -68,7 +70,8 @@ const App = () => {
     const saved = localStorage.getItem("leaseright_tab_v1");
     return saved === "precon" ? "model" : (saved || "model");
   });
-  const [propIdx, setPropIdx] = useState(0);
+  const propIdx = Math.max(0, state.projects.findIndex(p => p.id === state.activeProjectId));
+  const setPropIdx = (idx) => dispatch({ type: "setActiveProject", projectId: state.projects[idx]?.id });
   const [cmdK, setCmdK] = useState(false);
   const [sidebar, setSidebar] = useState(false);
   const [toast, setToast] = useState(null);
@@ -166,4 +169,4 @@ const App = () => {
   );
 };
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+ReactDOM.createRoot(document.getElementById("root")).render(<StoreProvider><App /></StoreProvider>);

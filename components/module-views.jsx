@@ -3,34 +3,52 @@
    PRECON_INTAKE, BROKER_ECONOMICS, MARKET_RENT_INPUTS, MODEL_FIELDS, MODEL_UNIT_MIX, MODEL_SCENARIOS, LENDER_PACKAGE,
    APPLICATIONS, APP_KPIS, LP_REPORT, VENDORS, VENDOR_KPIS, DOC_FOLDERS, RECENT_DOCS,
    Dot, Tag, Btn, Eyebrow, Section, MicroBar, Kbd, PageKpis, Band, UnitChip, dataTH, dataTD,
-   fmtUSD, fmtNum, fmtPct */
+   fmtUSD, fmtNum, fmtPct, useSelector */
 const { useState, useMemo } = React;
 
 // ═══════════════════════════════════════════════════════════════
 //  RESIDENTS — active lease roster with delinquency + renewal
 // ═══════════════════════════════════════════════════════════════
 const ResidentsView = ({ t }) => {
-  const [sel, setSel] = useState(2); // Jamie Patel default
+  const residentRows = useSelector(state => state.residents.map(resident => {
+    const lead = state.leads.find(row => row.id === resident.leadId) || {};
+    const unit = state.units.find(row => row.id === resident.unitId) || {};
+    const lease = state.leases.find(row => row.id === resident.activeLeaseId) || {};
+    const payments = state.payments.filter(row => row.leadId === lead.id);
+    const failed = payments.find(row => ["failed", "retrying"].includes(row.status));
+    const deposit = payments.find(row => row.kind === "security_deposit");
+    return {
+      id: resident.id, unit: `U-${unit.number || "—"}`, name: lead.name || "Unknown resident",
+      beds: unit.beds === 0 ? "Studio" : `${unit.beds || "—"}BR`, start: lease.startDate || "—", end: lease.endDate || "—",
+      rent: lease.rent || unit.effectiveRent || 0, lastPaid: deposit?.status === "succeeded" ? "Deposit paid" : "—",
+      pay: failed ? "failed" : deposit?.status === "succeeded" ? "current" : resident.moveInStatus === "pending_movein" ? "upcoming" : "current",
+      onTime: resident.onTimeRecord || "—", renewal: resident.renewalStatus || "—", tenure: resident.tenure || 0,
+      moveInStatus: resident.moveInStatus, depositStatus: deposit?.status || "missing", note: resident.note || lead.note || "—",
+    };
+  }));
+  const [sel, setSel] = useState(0);
   const [filter, setFilter] = useState("all");
   const payTone = (p) => p === "current" ? "good" : p === "late" ? "warn" : p === "failed" ? "bad" : p === "upcoming" ? "neutral" : "neutral";
   const payDot = (p) => p === "current" ? t.good : p === "late" ? t.warn : p === "failed" ? t.bad : t.inkMute;
-  const rows = RESIDENTS.filter(r => filter === "all" ? true : filter === "late" ? (r.pay === "late" || r.pay === "failed") : filter === "renewal" ? r.renewal !== "—" : filter === "ntv" ? r.renewal === "ntv" : true);
-  const R = RESIDENTS[sel];
+  const rows = residentRows.filter(r => filter === "all" ? true : filter === "movein" ? r.moveInStatus === "pending_movein" : filter === "deposit" ? r.depositStatus !== "succeeded" : r.pay === "failed");
+  const R = residentRows[sel] || residentRows[0];
+  const depositsPaid = residentRows.filter(r => r.depositStatus === "succeeded").length;
+  const moveIns = residentRows.filter(r => r.moveInStatus === "pending_movein").length;
 
   const kpis = [
-    { label: "Active leases", value: "121",  sub: "46.5% occupancy · 260 total", tone: "neutral" },
-    { label: "Payments current", value: "117", unit: "/ 121", sub: "3 failed · 1 late", tone: "good" },
-    { label: "Renewal window", value: "14", sub: "Jun 1 – Aug 31 · 4 NTVs filed", tone: "warn" },
-    { label: "Avg tenure", value: "0.8", unit: "yrs", sub: "earliest Mar 2024", tone: "neutral" },
+    { label: "Resident handoffs", value: residentRows.length, sub: "Converted from signed applicants", tone: "neutral" },
+    { label: "Move-ins pending", value: moveIns, sub: "Keys · insurance · first rent", tone: moveIns ? "warn" : "good" },
+    { label: "Deposits recorded", value: depositsPaid, unit: `/ ${residentRows.length}`, sub: "Shared payment record", tone: depositsPaid === residentRows.length ? "good" : "warn" },
+    { label: "Payment attention", value: residentRows.filter(r => r.pay === "failed").length, sub: "Failed or retrying", tone: "bad" },
   ];
-  const filters = [["all","All · 121"],["late","Delinquent · 4"],["renewal","Renewal ·  5"],["ntv","NTV · 1"]];
+  const filters = [["all",`All · ${residentRows.length}`],["movein",`Move-in · ${moveIns}`],["deposit",`Deposit missing · ${residentRows.length - depositsPaid}`],["attention",`Attention · ${residentRows.filter(r => r.pay === "failed").length}`]];
 
   return (
     <div>
       <PageKpis t={t} items={kpis} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", minHeight: "calc(100vh - 44px - 96px)" }}>
         <div style={{ borderRight: `1px solid ${t.rule}`, display: "flex", flexDirection: "column", minWidth: 0 }}>
-          <Band t={t} title={`Residents · ${rows.length} of ${RESIDENTS.length}`}
+          <Band t={t} title={`Resident handoff · ${rows.length} of ${residentRows.length}`}
             right={
               <div style={{ display: "flex", gap: 4 }}>
                 {filters.map(([v,l]) => (
@@ -51,7 +69,7 @@ const ResidentsView = ({ t }) => {
             </tr></thead>
             <tbody>
               {rows.map((r, i) => {
-                const idx = RESIDENTS.indexOf(r);
+                const idx = residentRows.indexOf(r);
                 const selected = idx === sel;
                 return (
                   <tr key={r.id} onClick={() => setSel(idx)}
@@ -113,10 +131,10 @@ const ResidentsView = ({ t }) => {
           <div style={{ padding: "14px 20px", borderBottom: `1px solid ${t.rule}` }}>
             <Eyebrow t={t} style={{ marginBottom: 10 }}>Quick actions</Eyebrow>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              <Btn t={t} size="xs">Open ledger</Btn>
-              <Btn t={t} size="xs">Open tickets</Btn>
-              <Btn t={t} size="xs">Send renewal offer</Btn>
-              <Btn t={t} size="xs" variant="ghost">Start NTV</Btn>
+              <Btn t={t} size="xs">Review deposit</Btn>
+              <Btn t={t} size="xs">Move-in checklist</Btn>
+              <Btn t={t} size="xs">Message resident</Btn>
+              <Btn t={t} size="xs" variant="ghost">Open lease</Btn>
             </div>
           </div>
           <div style={{ padding: "14px 20px" }}>
