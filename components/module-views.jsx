@@ -716,15 +716,19 @@ const LeaseRightWelcome = ({ t, onComplete }) => {
   );
 };
 
-const PreconView = ({ t }) => {
+const PreconView = ({ t, onLaunched }) => {
   const P = PRECON;
   const B = BROKER_ECONOMICS;
   const { dispatch } = useStore();
   const activeProject = useSelector(state => state.projects.find(p => p.id === state.activeProjectId) || state.projects[0]);
+  const activeModel = useSelector(state => state.model.find(m => m.projectId === state.activeProjectId));
   const stageLabel = { pre_funding: "Pre-funding", funded_prelaunch: "Funded · pre-launch", active_leaseup: "Active lease-up" }[activeProject?.stage] || "Pre-funding";
   const [modelSection, setModelSection] = useState("intake");
   const [intakeStep, setIntakeStep] = useState("project");
   const [intakeValues, setIntakeValues] = useState({});
+  const [completedSteps, setCompletedSteps] = useState(new Set());
+  const [scenarioApproved, setScenarioApproved] = useState(false);
+  const [launched, setLaunched] = useState(false);
   const saveProperty = () => dispatch({ type: "updateProject", projectId: activeProject.id, patch: {
     name: intakeValues["project:Project name"] || activeProject.name,
     address: intakeValues["project:Address"] || activeProject.address,
@@ -732,12 +736,25 @@ const PreconView = ({ t }) => {
     deliveryDate: intakeValues["project:Delivery date"] || activeProject.deliveryDate,
     targetStabilizationDate: intakeValues["project:Target stabilization"] || activeProject.targetStabilizationDate,
   }});
+  const saveCurrentStep = () => {
+    if (intakeStep === "project") saveProperty();
+    if (intakeStep === "units") dispatch({ type: "updateProject", projectId: activeProject.id, patch: { unitCount: Number(intakeValues["units:Total units"] || activeProject.unitCount) } });
+    const values = Object.fromEntries(currentIntake.fields.map(([key, fallback]) => [key, intakeValues[`${intakeStep}:${key}`] ?? fallback]));
+    dispatch({ type: "updateModel", modelId: activeModel.id, patch: { intake: { ...(activeModel.intake || {}), [intakeStep]: values } } });
+    setCompletedSteps(done => new Set([...done, intakeStep]));
+  };
+  const continueIntake = () => {
+    saveCurrentStep();
+    if (currentIntakeIndex < intakeSteps.length - 1) setIntakeStep(intakeSteps[currentIntakeIndex + 1].id);
+    else setModelSection("scenarios");
+  };
+  const approveScenario = () => { setScenarioApproved(true); setModelSection("lender"); };
+  const launch = () => { dispatch({ type: "launchProject", projectId: activeProject.id }); setLaunched(true); };
   const modelTabs = [
-    { id: "intake", label: "Intake", sub: "Guided setup", status: "in progress", tone: "warn" },
-    { id: "scenarios", label: "Scenarios", sub: "Base/downside/aggressive", status: "ready", tone: "good" },
-    { id: "rents", label: "Rents", sub: "Unit mix + market inputs", status: "review", tone: "warn" },
-    { id: "lender", label: "Model output", sub: "Lease-up model sections", status: "2 review", tone: "warn" },
-    { id: "launch", label: "Launch", sub: "Create live lease-up board", status: "locked", tone: "neutral" },
+    { id: "intake", label: "Plan", sub: "Property through strategy", status: `${completedSteps.size}/5`, tone: completedSteps.size === 5 ? "good" : "warn" },
+    { id: "scenarios", label: "Scenarios", sub: "Choose the baseline", status: scenarioApproved ? "approved" : completedSteps.size === 5 ? "ready" : "locked", tone: scenarioApproved ? "good" : "warn" },
+    { id: "lender", label: "Review", sub: "Model output", status: scenarioApproved ? "ready" : "locked", tone: scenarioApproved ? "good" : "neutral" },
+    { id: "launch", label: "Launch", sub: "Create live board", status: launched ? "live" : scenarioApproved ? "ready" : "locked", tone: launched ? "good" : scenarioApproved ? "warn" : "neutral" },
   ];
   const activeTab = modelTabs.find(x => x.id === modelSection) || modelTabs[0];
   const intakeComps = [
@@ -850,9 +867,10 @@ const PreconView = ({ t }) => {
           </div>
           {modelTabs.map((s) => {
             const active = modelSection === s.id;
+            const locked = (s.id === "scenarios" && completedSteps.size < 5) || ((s.id === "lender" || s.id === "launch") && !scenarioApproved);
             const c = s.tone === "good" ? t.good : s.tone === "warn" ? t.warn : t.inkMute;
             return (
-              <button key={s.id} onClick={() => setModelSection(s.id)} style={{ width: "100%", padding: "13px 18px", display: "grid", gridTemplateColumns: "16px 1fr", gap: 10, background: active ? t.hover : "transparent", border: "none", borderBottom: `1px solid ${t.ruleSoft}`, borderLeft: `2px solid ${active ? t.accent : "transparent"}`, textAlign: "left", cursor: "pointer" }}>
+              <button key={s.id} disabled={locked} onClick={() => setModelSection(s.id)} style={{ width: "100%", padding: "13px 18px", display: "grid", gridTemplateColumns: "16px 1fr", gap: 10, background: active ? t.hover : "transparent", border: "none", borderBottom: `1px solid ${t.ruleSoft}`, borderLeft: `2px solid ${active ? t.accent : "transparent"}`, textAlign: "left", cursor: locked ? "default" : "pointer", opacity: locked ? 0.48 : 1 }}>
                 <span style={{ marginTop: 5 }}><Dot c={c} size={7} /></span>
                 <span>
                   <span style={{ display: "block", fontFamily: t.sans, fontSize: 12.5, color: active ? t.ink : t.inkSoft, fontWeight: 600 }}>{s.label}</span>
@@ -870,7 +888,7 @@ const PreconView = ({ t }) => {
               <div style={{ fontFamily: t.sans, fontSize: 18, fontWeight: 650, color: t.ink }}>{activeTab.label}</div>
               <div style={{ fontFamily: t.sans, fontSize: 12.5, color: t.inkSoft, lineHeight: 1.5, marginTop: 7, maxWidth: 620 }}>{guidance.head}</div>
             </div>
-            <Btn t={t} size="xs" variant="primary" onClick={modelSection === "intake" && intakeStep === "project" ? saveProperty : undefined}>{modelSection === "launch" ? "Create live board" : "Save section"}</Btn>
+            <Btn t={t} size="xs" variant="primary" onClick={modelSection === "intake" ? saveCurrentStep : modelSection === "scenarios" ? approveScenario : modelSection === "lender" ? () => setModelSection("launch") : launch}>{modelSection === "launch" ? (launched ? "Board created" : "Create live board") : modelSection === "scenarios" ? "Approve baseline" : modelSection === "lender" ? "Continue to launch" : "Save section"}</Btn>
           </div>
           {modelSection === "intake" && <>
           <div style={{ padding: 20, borderBottom: `1px solid ${t.rule}` }}>
@@ -978,7 +996,7 @@ const PreconView = ({ t }) => {
                   </div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16 }}>
-                  <Btn t={t} variant="primary" onClick={() => setIntakeStep(intakeSteps[Math.min(currentIntakeIndex + 1, intakeSteps.length - 1)].id)}>
+                  <Btn t={t} variant="primary" onClick={continueIntake}>
                     {currentIntakeIndex === intakeSteps.length - 1 ? "Build lease-up model" : "Next section"}
                   </Btn>
                   <Btn t={t} variant="ghost">Save and finish later</Btn>
@@ -1014,11 +1032,11 @@ const PreconView = ({ t }) => {
           {modelSection === "scenarios" && <>
           <Band t={t} title="Scenario comparison" right={<Btn t={t} size="xs">Add scenario</Btn>} />
           <div style={{ padding: 20, display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 14 }}>
-            {MODEL_SCENARIOS.map(sc => (
-              <div key={sc.name} style={{ background: sc.active ? t.accentSoft : t.surface, border: `1px solid ${sc.active ? t.accent + "66" : t.rule}`, borderRadius: 5, padding: 14 }}>
+            {MODEL_SCENARIOS.map(sc => { const scenarioId = `sc-${sc.name.toLowerCase()}`; const selected = activeModel.activeScenarioId === scenarioId; return (
+              <button key={sc.name} onClick={() => dispatch({ type: "setActiveScenario", modelId: activeModel.id, scenarioId })} style={{ background: selected ? t.accentSoft : t.surface, border: `1px solid ${selected ? t.accent + "66" : t.rule}`, borderRadius: 5, padding: 14, textAlign: "left", color: t.ink, cursor: "pointer" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                   <div style={{ fontFamily: t.sans, fontSize: 14, color: t.ink, fontWeight: 650 }}>{sc.name}</div>
-                  {sc.active ? <Tag t={t} tone="accent">active</Tag> : <Tag t={t}>compare</Tag>}
+                  {selected ? <Tag t={t} tone="accent">selected</Tag> : <Tag t={t}>compare</Tag>}
                 </div>
                 {[
                   ["Velocity", sc.leasesPerWeek + "/wk"],
@@ -1032,8 +1050,8 @@ const PreconView = ({ t }) => {
                   </div>
                 ))}
                 <div style={{ fontFamily: t.sans, fontSize: 11.5, color: t.inkSoft, lineHeight: 1.4, marginTop: 10 }}>{sc.note}</div>
-              </div>
-            ))}
+              </button>
+            ); })}
           </div>
 
           <Band t={t} title="Lease-up model · 78-week absorption plan" right={<Btn t={t} size="xs">Adjust assumptions</Btn>} />
@@ -1154,7 +1172,7 @@ const PreconView = ({ t }) => {
           </>}
 
           {modelSection === "launch" && <>
-          <Band t={t} title="Launch lease-up board" right={<Btn t={t} size="xs" variant="primary">Create live board</Btn>} />
+          <Band t={t} title="Launch lease-up board" right={<Btn t={t} size="xs" variant="primary" onClick={launch}>{launched ? "Board created" : "Create live board"}</Btn>} />
           <div style={{ padding: 20, display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 14 }}>
             {[
               ["Rents", "Create unit availability and rent matrix from approved model."],
@@ -1170,8 +1188,9 @@ const PreconView = ({ t }) => {
           </div>
           <div style={{ padding: "0 20px 20px" }}>
             <div style={{ padding: 14, background: t.goodSoft, border: `1px solid ${t.good}33`, borderRadius: 5 }}>
-              <div style={{ fontFamily: t.sans, fontSize: 13, color: t.ink, fontWeight: 650 }}>Ready when funding is set</div>
-              <div style={{ fontFamily: t.sans, fontSize: 12, color: t.inkSoft, lineHeight: 1.45, marginTop: 6 }}>Lock the model, invite the leasing team, and convert assumptions into the live workflow.</div>
+              <div style={{ fontFamily: t.sans, fontSize: 13, color: t.ink, fontWeight: 650 }}>{launched ? "The live board is ready" : "Ready to launch"}</div>
+              <div style={{ fontFamily: t.sans, fontSize: 12, color: t.inkSoft, lineHeight: 1.45, marginTop: 6 }}>{launched ? "The approved scenario is frozen as the baseline. Today, Pipeline, Applications, Rents, and Reports now share that plan." : "Lock the approved scenario as the baseline and create the live operating board without re-entry."}</div>
+              {launched && <div style={{ marginTop: 12 }}><Btn t={t} size="xs" variant="primary" onClick={onLaunched}>Open Today →</Btn></div>}
             </div>
           </div>
           </>}

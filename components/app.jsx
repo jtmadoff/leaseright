@@ -133,7 +133,7 @@ const App = () => {
   else if (tab === "listings") body = <ListingsView t={t} />;
   else if (tab === "market") body = <MarketView t={t} />;
   else if (tab === "concessions") body = <ConcessionsView t={t} />;
-  else if (tab === "model" || tab === "precon") body = <PreconView t={t} />;
+  else if (tab === "model" || tab === "precon") body = <PreconView t={t} onLaunched={() => setTab("today")} />;
   else if (tab === "settings") body = <SettingsView t={t} />;
   else if (tab === "applications") body = <ApplicationsView t={t} />;
   else if (tab === "lp") body = <LPReportingView t={t} />;

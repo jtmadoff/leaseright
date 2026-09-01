@@ -44,8 +44,17 @@ function reducer(state, action) {
     case "updateModel":
       return { ...state, model: state.model.map(m => m.id === action.modelId ? { ...m, ...action.patch } : m) };
     // Launch the project; baseline freezing and unit generation land in N9.
-    case "launchProject":
-      return { ...state, projects: state.projects.map(p => p.id === action.projectId ? { ...p, stage: "active_leaseup", launchedAt: action.at || new Date().toISOString() } : p) };
+    case "launchProject": {
+      const project = state.projects.find(p => p.id === action.projectId);
+      const model = state.model.find(m => m.projectId === action.projectId);
+      const scenario = state.scenarios.find(s => s.id === model?.activeScenarioId);
+      const baseline = scenario ? Object.freeze({ ...scenario, frozenAt: action.at || new Date().toISOString() }) : null;
+      return {
+        ...state,
+        projects: state.projects.map(p => p.id === action.projectId ? { ...p, stage: "active_leaseup", launchedAt: action.at || new Date().toISOString() } : p),
+        model: state.model.map(m => m.projectId === project?.id ? { ...m, baselineScenarioId: scenario?.id || null, baseline } : m),
+      };
+    }
     case "setActiveProject":
       return { ...state, activeProjectId: action.projectId };
     case "setProjectStage":
