@@ -48,6 +48,10 @@ function reducer(state, action) {
       return { ...state, projects: state.projects.map(p => p.id === action.projectId ? { ...p, stage: "active_leaseup", launchedAt: action.at || new Date().toISOString() } : p) };
     case "setActiveProject":
       return { ...state, activeProjectId: action.projectId };
+    case "setProjectStage":
+      return { ...state, projects: state.projects.map(p => p.id === action.projectId ? { ...p, stage: action.stage } : p) };
+    case "updateProject":
+      return { ...state, projects: state.projects.map(p => p.id === action.projectId ? { ...p, ...action.patch } : p) };
     default:
       return state;
   }

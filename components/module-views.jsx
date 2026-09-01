@@ -3,7 +3,7 @@
    PRECON_INTAKE, BROKER_ECONOMICS, MARKET_RENT_INPUTS, MODEL_FIELDS, MODEL_UNIT_MIX, MODEL_SCENARIOS, LENDER_PACKAGE,
    APPLICATIONS, APP_KPIS, LP_REPORT, VENDORS, VENDOR_KPIS, DOC_FOLDERS, RECENT_DOCS,
    Dot, Tag, Btn, Eyebrow, Section, MicroBar, Kbd, PageKpis, Band, UnitChip, dataTH, dataTD,
-   fmtUSD, fmtNum, fmtPct, useSelector */
+   fmtUSD, fmtNum, fmtPct, useStore, useSelector */
 const { useState, useMemo } = React;
 
 // ═══════════════════════════════════════════════════════════════
@@ -668,11 +668,70 @@ const ConcessionsView = ({ t }) => {
 // ═══════════════════════════════════════════════════════════════
 //  MODEL — sponsor intake + absorption model
 // ═══════════════════════════════════════════════════════════════
+const LeaseRightWelcome = ({ t, onComplete }) => {
+  const [step, setStep] = useState("welcome");
+  const [stage, setStage] = useState("pre_funding");
+  const stages = [
+    { id: "pre_funding", label: "Pre-funding", detail: "Build the lease-up plan and lender-ready assumptions before capital closes." },
+    { id: "funded_prelaunch", label: "Funded · pre-launch", detail: "Validate rents, staffing, and launch timing before the first lead arrives." },
+    { id: "active_leaseup", label: "Active lease-up", detail: "Import the current plan and establish a clean baseline for live operations." },
+  ];
+  return (
+    <div style={{ minHeight: "100vh", background: t.bg, color: t.ink, fontFamily: t.sans }}>
+      <div style={{ height: 64, padding: "0 28px", display: "flex", alignItems: "center", borderBottom: `1px solid ${t.rule}` }}>
+        <div style={{ width: 24, height: 24, background: t.accent, color: "#0A0A0B", display: "grid", placeItems: "center", fontFamily: t.mono, fontWeight: 800, fontSize: 13 }}>L</div>
+        <div style={{ marginLeft: 10, fontSize: 14, fontWeight: 650 }}>LeaseRight</div>
+        <div style={{ flex: 1 }} />
+        <div style={{ fontSize: 12, color: t.inkMute }}>Lease-up decisions, from model to stabilization</div>
+      </div>
+      {step === "welcome" ? (
+        <main style={{ maxWidth: 1080, margin: "0 auto", padding: "96px 40px 72px" }}>
+          <div style={{ maxWidth: 760 }}>
+            <div style={{ fontFamily: t.mono, fontSize: 11, letterSpacing: 1.4, color: t.accent, marginBottom: 20 }}>MODEL ONCE · OPERATE FROM THE SAME PLAN</div>
+            <h1 style={{ fontSize: 52, lineHeight: 1.04, letterSpacing: -1.8, margin: 0, maxWidth: 720 }}>Make the lease-up plan clear before the pressure starts.</h1>
+            <p style={{ fontSize: 18, lineHeight: 1.6, color: t.inkSoft, margin: "24px 0 34px", maxWidth: 680 }}>LeaseRight turns property facts, market evidence, and execution choices into one approved model—then carries that baseline into daily leasing decisions.</p>
+            <button onClick={() => setStep("stage")} style={{ padding: "13px 20px", border: "none", borderRadius: 4, background: t.accent, color: "#0A0A0B", fontFamily: t.sans, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Create a lease-up plan →</button>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1, marginTop: 92, background: t.rule }}>
+            {[
+              ["01", "Model", "Set the property, unit mix, comps, rents, and execution strategy."],
+              ["02", "Approve", "Compare scenarios and freeze the baseline everyone will measure against."],
+              ["03", "Operate", "Turn on Pipeline, Applications, Rents, Today, and Reports without re-entry."],
+            ].map(([n,h,b]) => <div key={n} style={{ padding: 26, background: t.surface }}><div style={{ fontFamily: t.mono, fontSize: 10, color: t.accent, marginBottom: 18 }}>{n}</div><div style={{ fontSize: 17, fontWeight: 650, marginBottom: 9 }}>{h}</div><div style={{ fontSize: 13, color: t.inkSoft, lineHeight: 1.55 }}>{b}</div></div>)}
+          </div>
+        </main>
+      ) : (
+        <main style={{ maxWidth: 900, margin: "0 auto", padding: "76px 40px" }}>
+          <button onClick={() => setStep("welcome")} style={{ border: "none", background: "transparent", color: t.inkMute, fontSize: 12, cursor: "pointer", padding: 0, marginBottom: 32 }}>← Back</button>
+          <div style={{ fontFamily: t.mono, fontSize: 11, letterSpacing: 1.2, color: t.accent, marginBottom: 14 }}>PROJECT SETUP</div>
+          <h1 style={{ fontSize: 34, letterSpacing: -0.7, margin: 0 }}>Where is this project today?</h1>
+          <p style={{ color: t.inkSoft, fontSize: 15, lineHeight: 1.55, margin: "12px 0 30px" }}>We’ll tailor the model and only show the tools that matter at this stage.</p>
+          <div style={{ display: "grid", gap: 10 }}>
+            {stages.map(s => { const active = stage === s.id; return <button key={s.id} onClick={() => setStage(s.id)} style={{ padding: "20px 22px", display: "grid", gridTemplateColumns: "24px 180px 1fr", gap: 16, alignItems: "center", background: active ? t.accentSoft : t.surface, border: `1px solid ${active ? t.accent : t.rule}`, borderRadius: 5, color: t.ink, textAlign: "left", cursor: "pointer" }}><span style={{ width: 16, height: 16, borderRadius: 16, border: `1px solid ${active ? t.accent : t.inkFaint}`, display: "grid", placeItems: "center" }}>{active && <span style={{ width: 8, height: 8, borderRadius: 8, background: t.accent }} />}</span><strong style={{ fontSize: 14 }}>{s.label}</strong><span style={{ fontSize: 13, color: t.inkSoft, lineHeight: 1.45 }}>{s.detail}</span></button>; })}
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 28 }}><button onClick={() => onComplete(stage)} style={{ padding: "12px 18px", border: "none", borderRadius: 4, background: t.accent, color: "#0A0A0B", fontWeight: 700, cursor: "pointer" }}>Continue to property intake →</button></div>
+        </main>
+      )}
+    </div>
+  );
+};
+
 const PreconView = ({ t }) => {
   const P = PRECON;
   const B = BROKER_ECONOMICS;
+  const { dispatch } = useStore();
+  const activeProject = useSelector(state => state.projects.find(p => p.id === state.activeProjectId) || state.projects[0]);
+  const stageLabel = { pre_funding: "Pre-funding", funded_prelaunch: "Funded · pre-launch", active_leaseup: "Active lease-up" }[activeProject?.stage] || "Pre-funding";
   const [modelSection, setModelSection] = useState("intake");
   const [intakeStep, setIntakeStep] = useState("project");
+  const [intakeValues, setIntakeValues] = useState({});
+  const saveProperty = () => dispatch({ type: "updateProject", projectId: activeProject.id, patch: {
+    name: intakeValues["project:Project name"] || activeProject.name,
+    address: intakeValues["project:Address"] || activeProject.address,
+    submarket: intakeValues["project:Submarket"] || activeProject.submarket,
+    deliveryDate: intakeValues["project:Delivery date"] || activeProject.deliveryDate,
+    targetStabilizationDate: intakeValues["project:Target stabilization"] || activeProject.targetStabilizationDate,
+  }});
   const modelTabs = [
     { id: "intake", label: "Intake", sub: "Guided setup", status: "in progress", tone: "warn" },
     { id: "scenarios", label: "Scenarios", sub: "Base/downside/aggressive", status: "ready", tone: "good" },
@@ -773,7 +832,7 @@ const PreconView = ({ t }) => {
         <div style={{ display: "flex", alignItems: "center", gap: 18, minWidth: 0 }}>
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
-              <span style={{ fontFamily: t.sans, fontSize: 12, color: t.inkMute }}>The Meridian · Pre-funding</span>
+              <span style={{ fontFamily: t.sans, fontSize: 12, color: t.inkMute }}>{activeProject?.name || "New project"} · {stageLabel}</span>
             </div>
             <div style={{ fontFamily: t.sans, fontSize: 20, lineHeight: 1.18, fontWeight: 650, color: t.ink, letterSpacing: -0.25 }}>
               Build your lease-up plan.
@@ -811,7 +870,7 @@ const PreconView = ({ t }) => {
               <div style={{ fontFamily: t.sans, fontSize: 18, fontWeight: 650, color: t.ink }}>{activeTab.label}</div>
               <div style={{ fontFamily: t.sans, fontSize: 12.5, color: t.inkSoft, lineHeight: 1.5, marginTop: 7, maxWidth: 620 }}>{guidance.head}</div>
             </div>
-            <Btn t={t} size="xs" variant="primary">{modelSection === "launch" ? "Create live board" : "Save section"}</Btn>
+            <Btn t={t} size="xs" variant="primary" onClick={modelSection === "intake" && intakeStep === "project" ? saveProperty : undefined}>{modelSection === "launch" ? "Create live board" : "Save section"}</Btn>
           </div>
           {modelSection === "intake" && <>
           <div style={{ padding: 20, borderBottom: `1px solid ${t.rule}` }}>
@@ -843,7 +902,7 @@ const PreconView = ({ t }) => {
                   {currentIntake.fields.map(([k,v]) => (
                     <label key={k} style={{ display: "block", padding: 13, background: t.surfaceAlt, border: `1px solid ${t.rule}`, borderRadius: 5 }}>
                       <div style={{ fontFamily: t.sans, fontSize: 11.5, color: t.inkMute, marginBottom: 7 }}>{k}</div>
-                      <div style={{ minHeight: 30, display: "flex", alignItems: "center", padding: "0 10px", background: t.bg, border: `1px solid ${t.rule}`, borderRadius: 4, fontFamily: t.sans, fontSize: 13, color: t.ink }}>{v}</div>
+                      <input value={intakeValues[`${intakeStep}:${k}`] ?? v} onChange={e => setIntakeValues(values => ({ ...values, [`${intakeStep}:${k}`]: e.target.value }))} aria-label={k} style={{ width: "100%", minHeight: 32, padding: "0 10px", background: t.bg, border: `1px solid ${t.rule}`, borderRadius: 4, fontFamily: t.sans, fontSize: 13, color: t.ink, outline: "none" }} />
                     </label>
                   ))}
                 </div>
@@ -1573,7 +1632,7 @@ const DocumentsView = ({ t }) => {
 };
 
 Object.assign(window, {
-  ResidentsView, CollectionView, MaintenanceView, LedgerView,
+  LeaseRightWelcome, ResidentsView, CollectionView, MaintenanceView, LedgerView,
   ListingsView, MarketView, ConcessionsView, PreconView,
   SettingsView, ApplicationsView, LPReportingView, VendorsView, DocumentsView,
 });

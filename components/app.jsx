@@ -1,6 +1,6 @@
 /* global React, THEMES, TodayView, RentOptimizer, PipelineView, InboxView, Placeholder, TopBar, Sidebar, CmdK,
    ResidentsView, CollectionView, MaintenanceView, LedgerView, ListingsView, MarketView, ConcessionsView,
-   PreconView, SettingsView, ApplicationsView, LPReportingView, VendorsView, DocumentsView,
+   LeaseRightWelcome, PreconView, SettingsView, ApplicationsView, LPReportingView, VendorsView, DocumentsView,
    StoreProvider, useStore */
 const { useState, useEffect } = React;
 
@@ -61,6 +61,7 @@ const TweaksPanel = ({ open, onClose, state, onChange, t }) => {
 
 const App = () => {
   const { state, dispatch } = useStore();
+  const [journeyStarted, setJourneyStarted] = useState(false);
   const [tweaks, setTweaks] = useState(() => {
     // v8 — new terminal theme, reset stored tweaks
     try { return { ...TWEAK_DEFAULTS, ...JSON.parse(localStorage.getItem("leaseright_tweaks_v2") || "{}") }; } catch { return TWEAK_DEFAULTS; }
@@ -116,6 +117,8 @@ const App = () => {
 
   const t = THEMES[tweaks.theme];
 
+  if (!journeyStarted) return <LeaseRightWelcome t={t} onComplete={(stage) => { dispatch({ type: "setProjectStage", projectId: state.activeProjectId, stage }); setTab("model"); setJourneyStarted(true); }} />;
+
   const setLayout = (l) => updateTweaks({ layout: l });
 
   let body;
@@ -158,7 +161,7 @@ const App = () => {
         button:focus-visible { outline: 2px solid ${t.accent}; outline-offset: 1px; }
       `}</style>
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-        <TopBar t={t} tab={tab} setTab={setTab} onCmdK={() => setCmdK(true)} layout={tweaks.layout} setLayout={setLayout} propIdx={propIdx} setPropIdx={setPropIdx} onToggleSidebar={() => setSidebar(v => !v)} />
+        <TopBar t={t} tab={tab} setTab={setTab} onCmdK={() => setCmdK(true)} layout={tweaks.layout} setLayout={setLayout} propIdx={propIdx} setPropIdx={setPropIdx} project={state.projects[propIdx]} onToggleSidebar={() => setSidebar(v => !v)} />
         <div style={{ flex: 1, minWidth: 0, overflow: "auto" }}>{body}</div>
       </div>
       <Sidebar t={t} open={sidebar} onClose={() => setSidebar(false)} tab={tab} setTab={setTab} />

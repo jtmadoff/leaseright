@@ -277,12 +277,12 @@ const PropertyPeek = ({ t, propIdx, setPropIdx, onClose }) => {
 // ═══════════════════════════════════════════════════════════════
 //  TOP BAR — 2-row Bloomberg-style header
 // ═══════════════════════════════════════════════════════════════
-const TopBar = ({ t, tab, setTab, onCmdK, layout, setLayout, propIdx, setPropIdx, onToggleSidebar }) => {
+const TopBar = ({ t, tab, setTab, onCmdK, layout, setLayout, propIdx, setPropIdx, onToggleSidebar, project }) => {
   const [propMenu, setPropMenu] = useState(false);
   const [hoverTab, setHoverTab] = useState(null);
   const [userMenu, setUserMenu] = useState(false);
 
-  const p = PROPERTIES[propIdx];
+  const p = project ? { ...project, units: project.unitCount, leased: 121, pace: "ahead" } : PROPERTIES[propIdx];
 
   // F-key routing
   useEffect(() => {
