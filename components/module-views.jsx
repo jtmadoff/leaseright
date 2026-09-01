@@ -789,8 +789,8 @@ const PreconView = ({ t, onLaunched }) => {
       id: "project",
       label: "Property",
       sub: "Address, market, timing",
-      prompt: "Start with the property we are modeling.",
-      fields: [["Project name", "The Meridian"], ["Sponsor", "Mori Development"], ["Address", "1212 E 6th St, Austin, TX"], ["Submarket", "East Austin"], ["Delivery date", "Jan 15, 2025"], ["Target stabilization", "Jul 28, 2026"]],
+      prompt: "Tell us which property we are modeling.",
+      fields: [["Project name", ""], ["Sponsor", ""], ["Address", ""], ["Submarket", ""], ["Delivery date", ""], ["Target stabilization", ""]],
       builds: ["Mapped property profile", "Submarket context", "Lease-up timeline"],
     },
     {
@@ -828,6 +828,9 @@ const PreconView = ({ t, onLaunched }) => {
   ];
   const currentIntake = intakeSteps.find(x => x.id === intakeStep) || intakeSteps[0];
   const currentIntakeIndex = intakeSteps.findIndex(x => x.id === currentIntake.id);
+  const requiredFields = intakeStep === "project" ? ["Project name", "Sponsor", "Address", "Delivery date", "Target stabilization"] : currentIntake.fields.map(([key]) => key);
+  const isCurrentValid = requiredFields.every(key => String(intakeValues[`${intakeStep}:${key}`] ?? currentIntake.fields.find(([field]) => field === key)?.[1] ?? "").trim());
+  const fieldPlaceholders = { "Project name": "Example: River House", "Sponsor": "Owner or development company", "Address": "Street, city, state", "Submarket": "Optional", "Delivery date": "MM / DD / YYYY", "Target stabilization": "MM / DD / YYYY" };
   const intakeProgress = Math.round(((currentIntakeIndex + 1) / intakeSteps.length) * 100);
   const guidance = {
     intake: {
@@ -924,7 +927,7 @@ const PreconView = ({ t, onLaunched }) => {
                   const active = s.id === intakeStep;
                   const done = i < currentIntakeIndex;
                   return (
-                    <button key={s.id} onClick={() => setIntakeStep(s.id)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 9px", background: active ? t.hover : t.surfaceAlt, border: `1px solid ${active ? t.accent + "66" : t.rule}`, borderRadius: 4, color: active ? t.ink : t.inkSoft, cursor: "pointer" }}>
+                    <button key={s.id} disabled={i > completedSteps.size} onClick={() => setIntakeStep(s.id)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 9px", background: active ? t.hover : t.surfaceAlt, border: `1px solid ${active ? t.accent + "66" : t.rule}`, borderRadius: 4, color: active ? t.ink : t.inkSoft, cursor: i > completedSteps.size ? "default" : "pointer", opacity: i > completedSteps.size ? 0.45 : 1 }}>
                       <span style={{ width: 16, height: 16, borderRadius: 16, display: "inline-flex", alignItems: "center", justifyContent: "center", background: done ? t.good : active ? t.accent : t.bg, color: done || active ? "#0A0A0B" : t.inkMute, fontFamily: t.mono, fontSize: 9, fontWeight: 700 }}>{done ? "✓" : i + 1}</span>
                       <span style={{ fontFamily: t.sans, fontSize: 12, fontWeight: 600 }}>{s.label}</span>
                     </button>
@@ -936,7 +939,7 @@ const PreconView = ({ t, onLaunched }) => {
                   {currentIntake.fields.map(([k,v]) => (
                     <label key={k} style={{ display: "block", padding: 13, background: t.surfaceAlt, border: `1px solid ${t.rule}`, borderRadius: 5 }}>
                       <div style={{ fontFamily: t.sans, fontSize: 11.5, color: t.inkMute, marginBottom: 7 }}>{k}</div>
-                      <input value={intakeValues[`${intakeStep}:${k}`] ?? v} onChange={e => setIntakeValues(values => ({ ...values, [`${intakeStep}:${k}`]: e.target.value }))} aria-label={k} style={{ width: "100%", minHeight: 32, padding: "0 10px", background: t.bg, border: `1px solid ${t.rule}`, borderRadius: 4, fontFamily: t.sans, fontSize: 13, color: t.ink, outline: "none" }} />
+                      <input value={intakeValues[`${intakeStep}:${k}`] ?? v} placeholder={fieldPlaceholders[k] || "Enter value"} onChange={e => setIntakeValues(values => ({ ...values, [`${intakeStep}:${k}`]: e.target.value }))} aria-label={k} style={{ width: "100%", minHeight: 34, padding: "0 10px", background: t.bg, border: `1px solid ${t.rule}`, borderRadius: 4, fontFamily: t.sans, fontSize: 13, color: t.ink, outline: "none" }} />
                     </label>
                   ))}
                 </div>
@@ -945,8 +948,8 @@ const PreconView = ({ t, onLaunched }) => {
                     <div style={{ minHeight: 126, padding: 14, background: t.bg, border: `1px solid ${t.rule}`, borderRadius: 5, position: "relative", overflow: "hidden" }}>
                       <div style={{ position: "absolute", inset: 0, opacity: 0.28, backgroundImage: `linear-gradient(${t.ruleSoft} 1px, transparent 1px), linear-gradient(90deg, ${t.ruleSoft} 1px, transparent 1px)`, backgroundSize: "24px 24px" }} />
                       <div style={{ position: "relative", width: 12, height: 12, borderRadius: 12, background: t.accent, boxShadow: `0 0 0 6px ${t.accentSoft}`, margin: "40px auto 10px" }} />
-                      <div style={{ position: "relative", textAlign: "center", fontFamily: t.sans, fontSize: 12.5, color: t.ink, fontWeight: 650 }}>1212 E 6th St</div>
-                      <div style={{ position: "relative", textAlign: "center", fontFamily: t.sans, fontSize: 11.5, color: t.inkMute, marginTop: 4 }}>Submarket and comp radius locked from address</div>
+                      <div style={{ position: "relative", textAlign: "center", fontFamily: t.sans, fontSize: 12.5, color: t.ink, fontWeight: 650 }}>{intakeValues["project:Address"] || "Add an address"}</div>
+                      <div style={{ position: "relative", textAlign: "center", fontFamily: t.sans, fontSize: 11.5, color: t.inkMute, marginTop: 4 }}>{intakeValues["project:Address"] ? "Ready to map the property and comp radius" : "We will map the property here"}</div>
                     </div>
                     <div style={{ padding: 14, background: t.surfaceAlt, border: `1px solid ${t.rule}`, borderRadius: 5 }}>
                       <div style={{ fontFamily: t.sans, fontSize: 12.5, color: t.ink, fontWeight: 650, marginBottom: 8 }}>What this unlocks</div>
@@ -1012,37 +1015,17 @@ const PreconView = ({ t, onLaunched }) => {
                   </div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16 }}>
-                  <Btn t={t} variant="primary" onClick={continueIntake}>
+                  <Btn t={t} variant="primary" onClick={continueIntake} disabled={!isCurrentValid} style={!isCurrentValid ? { opacity: 0.45 } : undefined}>
                     {currentIntakeIndex === intakeSteps.length - 1 ? "Build lease-up model" : "Next section"}
                   </Btn>
                   <Btn t={t} variant="ghost">Save and finish later</Btn>
                   <div style={{ flex: 1 }} />
-                  <span style={{ fontFamily: t.sans, fontSize: 11.5, color: t.inkMute }}>No spreadsheet required</span>
+                  <span style={{ fontFamily: t.sans, fontSize: 11.5, color: t.inkMute }}>{isCurrentValid ? "Ready to continue" : "Complete the required fields"}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <Band t={t} title="System outputs · generated after structured intake" />
-          <div style={{ padding: "0 20px 16px" }}>
-            {PRECON_INTAKE.map((s, i) => {
-              const tone = s.status === "complete" ? "good" : s.status === "review" ? "warn" : "neutral";
-              const c = tone === "good" ? t.good : tone === "warn" ? t.warn : t.inkMute;
-              return (
-                <div key={s.step} style={{ display: "grid", gridTemplateColumns: "132px 1fr 220px", gap: 16, padding: "12px 0", borderBottom: i < PRECON_INTAKE.length - 1 ? `1px solid ${t.ruleSoft}` : "none", alignItems: "center" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <Dot c={c} size={7} />
-                    <span style={{ fontFamily: t.sans, fontSize: 12.5, fontWeight: 600, color: t.ink }}>{s.step}</span>
-                  </div>
-                  <div>
-                    <div style={{ fontFamily: t.sans, fontSize: 12, color: t.inkSoft }}>{s.fields}</div>
-                    <div style={{ fontFamily: t.mono, fontSize: 10.5, color: t.inkMute, marginTop: 3, textTransform: "uppercase", letterSpacing: 0.7 }}>{s.status}</div>
-                  </div>
-                  <div style={{ fontFamily: t.sans, fontSize: 12, color: t.inkSoft }}>{s.output}</div>
-                </div>
-              );
-            })}
-          </div>
           </>}
 
           {modelSection === "scenarios" && <>

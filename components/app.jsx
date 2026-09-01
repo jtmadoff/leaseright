@@ -117,7 +117,12 @@ const App = () => {
 
   const t = THEMES[tweaks.theme];
 
-  if (!journeyStarted) return <LeaseRightWelcome t={t} onComplete={(stage) => { dispatch({ type: "setProjectStage", projectId: state.activeProjectId, stage }); setTab("model"); setJourneyStarted(true); }} />;
+  if (!journeyStarted) return <LeaseRightWelcome t={t} onComplete={(stage) => {
+    dispatch({ type: "updateProject", projectId: state.activeProjectId, patch: { name: "New project", city: "", address: "", submarket: "", deliveryDate: "", targetStabilizationDate: "" } });
+    dispatch({ type: "setProjectStage", projectId: state.activeProjectId, stage });
+    setTab("model");
+    setJourneyStarted(true);
+  }} />;
 
   const setLayout = (l) => updateTweaks({ layout: l });
 
