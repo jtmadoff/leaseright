@@ -109,7 +109,7 @@ const units = [
 const scenarios = [
   { id: "sc-base",       modelId: "model-meridian", name: "Base",       active: true,  leasesPerWeek: 3.3, stabilizeDate: "Jul 28, 2026", concessionCost: 480000, carryCost: 1710000, staffingCost: 166500, note: "Lender underwriting case" },
   { id: "sc-downside",   modelId: "model-meridian", name: "Downside",   active: false, leasesPerWeek: 2.4, stabilizeDate: "Oct 6, 2026",  concessionCost: 690000, carryCost: 2380000, staffingCost: 166500, note: "Slow traffic + 3BR drag" },
-  { id: "sc-aggressive", modelId: "model-meridian", name: "Aggressive", active: false, leasesPerWeek: 5.1, stabilizeDate: "Mar 31, 2026", concessionCost: 390000, carryCost: 1100000, staffingCost: 166500, note: "In-house team + fast response" },
+  { id: "sc-aggressive", modelId: "model-meridian", name: "Aggressive", active: false, leasesPerWeek: 5.1, stabilizeDate: "Mar 31, 2026", concessionCost: 390000, carryCost: 1100000, staffingCost: 166500, note: "Illustrative upside · validate traffic + response inputs" },
 ];
 
 // ── Model (one per project; carries the plan side of the spine, D4) ────────────
@@ -124,7 +124,7 @@ const model = [
       { unitTypeId: "ut-2br",    type: "2BR",    count: 72,  targetRent: 2800, plannedConcession: "1mo", plannedVelocity: 1.6, confidenceScore: 86 },
       { unitTypeId: "ut-3br",    type: "3BR",    count: 28,  targetRent: 3200, plannedConcession: "2mo", plannedVelocity: 0.4, confidenceScore: 68 },
     ],
-    budget: { concessionReserve: 480000, marketingBudget: 180000, carryCostPerMonth: 227000, brokerFeeBasis: "50% first-year rent" },
+    budget: { concessionReserve: 480000, marketingBudget: 180000, carryCostPerMonth: 227000, brokerFeeBasis: "50% of first month's rent" },
     staffingPlan: { model: "hybrid", fteCount: 2, cost: 166500, note: "In-house lead + broker overflow for 3BR" },
     marketRentInputs: [
       { source: "Sponsor pro forma",     confidence: 62, oneBed: 2050, twoBed: 2650, threeBed: 3300, usedInModel: false, note: "Preliminary underwriting" },

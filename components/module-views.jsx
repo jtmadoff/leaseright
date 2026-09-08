@@ -1,6 +1,6 @@
 /* global React, THEMES, RESIDENTS, COLLECTION_KPIS, FAILED_PAYMENTS, AR_AGING, PAY_METHODS,
    WORK_ORDERS, MAINT_KPIS, ACCOUNTS, LEDGER_TAPE, LISTINGS, COMPS, CONCESSIONS, PRECON,
-   PRECON_INTAKE, BROKER_ECONOMICS, MARKET_RENT_INPUTS, MODEL_FIELDS, MODEL_UNIT_MIX, MODEL_SCENARIOS, LENDER_PACKAGE,
+   PRECON_INTAKE, BROKER_ECONOMICS, brokerEconomics, MARKET_RENT_INPUTS, MODEL_FIELDS, MODEL_UNIT_MIX, MODEL_SCENARIOS, LENDER_PACKAGE,
    APPLICATIONS, APP_KPIS, LP_REPORT, VENDORS, VENDOR_KPIS, DOC_FOLDERS, RECENT_DOCS,
    Dot, Tag, Btn, Eyebrow, Section, MicroBar, Kbd, PageKpis, Band, UnitChip, dataTH, dataTD,
    fmtUSD, fmtNum, fmtPct */
@@ -653,6 +653,7 @@ const ConcessionsView = ({ t }) => {
 const PreconView = ({ t }) => {
   const P = PRECON;
   const B = BROKER_ECONOMICS;
+  const E = brokerEconomics(B);
   const [modelSection, setModelSection] = useState("intake");
   const [intakeStep, setIntakeStep] = useState("project");
   const modelTabs = [
@@ -670,9 +671,9 @@ const PreconView = ({ t }) => {
     { name: "Alder", dist: "1.4 mi", units: 176, rent: "$2,290", conc: "2 mo", fit: "73%" },
   ];
   const strategyOptions = [
-    { label: "In-house", cost: "$166.5K", velocity: "4.1/wk", note: "Best economics if sponsor can staff onsite." },
-    { label: "Hybrid", cost: "$198.9K", velocity: "3.6/wk", note: "Internal lead plus broker overflow for hard units." },
-    { label: "Broker", cost: "$283.4K", velocity: "3.0/wk", note: "Lowest lift, highest cost, weakest data control." },
+    { label: "In-house", cost: "$" + fmtNum(E.inHouseCost), velocity: "test actual", note: "Payroll only; compare with observed velocity and carry." },
+    { label: "Hybrid", cost: "$" + fmtNum(E.hybridCost), velocity: "test actual", note: "Internal lead plus outside originators for " + Math.round(E.locatorShareOfLeases * 100) + "% of leases." },
+    { label: "Broker", cost: "$" + fmtNum(E.exclusiveCost), velocity: "test actual", note: "Commission-only illustration; compare with observed velocity and carry." },
   ];
   const intakeSteps = [
     {
@@ -976,6 +977,32 @@ const PreconView = ({ t }) => {
             ))}
           </div>
 
+          <Band t={t} title="Staffing routes · illustrative economics" />
+          <div style={{ padding: 20, display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 14 }}>
+            {strategyOptions.map((o) => {
+              const active = o.label === "Hybrid";
+              return (
+                <div key={o.label} style={{ padding: 14, background: active ? t.accentSoft : t.surface, border: `1px solid ${active ? t.accent + "66" : t.rule}`, borderRadius: 5 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 10 }}>
+                    <div style={{ fontFamily: t.sans, fontSize: 14, color: t.ink, fontWeight: 650 }}>{o.label}</div>
+                    {active && <Tag t={t} tone="accent">pilot default</Tag>}
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginBottom: 9 }}>
+                    <span style={{ fontFamily: t.mono, fontSize: 16, color: active ? t.accent : t.ink }}>{o.cost}</span>
+                    <span style={{ fontFamily: t.mono, fontSize: 11, color: t.inkMute }}>{o.velocity}</span>
+                  </div>
+                  <div style={{ fontFamily: t.sans, fontSize: 11.5, color: t.inkSoft, lineHeight: 1.4 }}>{o.note}</div>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ margin: "0 20px 20px", padding: 14, background: t.goodSoft, border: `1px solid ${t.good}33`, borderRadius: 5 }}>
+            <div style={{ fontFamily: t.mono, fontSize: 16, fontWeight: 600, color: t.good }}>${fmtNum(E.savingsHybrid)} illustrative Hybrid savings</div>
+            <div style={{ fontFamily: t.sans, fontSize: 12, color: t.inkSoft, lineHeight: 1.5, marginTop: 6 }}>
+              ${fmtNum(E.hybridPayroll)} internal payroll + ${fmtNum(E.hybridCommission)} outside-agent commissions ({Math.round(E.locatorShareOfLeases * 100)}% of leases). That savings equals only {E.carryDaysEquivalentHybrid} days of modeled carry, so observed velocity can reverse the ranking.
+            </div>
+          </div>
+
           <Band t={t} title="Lease-up model · 78-week absorption plan" right={<Btn t={t} size="xs">Adjust assumptions</Btn>} />
           <div style={{ padding: 20 }}>
             <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: 220, display: "block" }}>
@@ -1150,9 +1177,9 @@ const PreconView = ({ t }) => {
           {modelSection === "scenarios" && <div style={{ padding: "14px 20px", borderBottom: `1px solid ${t.rule}` }}>
             <Eyebrow t={t} style={{ marginBottom: 10 }}>Broker economics</Eyebrow>
             {[
-              ["Traditional broker", "$" + fmtNum(B.brokerCommission), "50% of first-year rent assumption"],
-              ["In-house leasing", "$" + fmtNum(B.inHouseCost), "2 FT + weekend support · " + B.months + " months"],
-              ["Hybrid model", "$" + fmtNum(B.hybridCost), "Internal lead + broker overflow"],
+              ["Traditional broker", "$" + fmtNum(E.exclusiveCost), Math.round(B.feePct * 100) + "% of first " + E.feePeriod + "'s rent"],
+              ["In-house leasing", "$" + fmtNum(E.inHouseCost), "2 FT + weekend support · " + B.months + " months"],
+              ["Hybrid model", "$" + fmtNum(E.hybridCost), "$" + fmtNum(E.hybridPayroll) + " payroll + $" + fmtNum(E.hybridCommission) + " outside-agent commissions"],
             ].map(([k,v,d],i) => (
               <div key={k} style={{ padding: "9px 0", borderBottom: i < 2 ? `1px solid ${t.ruleSoft}` : "none" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
@@ -1163,8 +1190,11 @@ const PreconView = ({ t }) => {
               </div>
             ))}
             <div style={{ marginTop: 12, padding: 12, background: t.goodSoft, border: `1px solid ${t.good}33`, borderRadius: 4 }}>
-              <div style={{ fontFamily: t.mono, fontSize: 18, fontWeight: 600, color: t.good, fontVariantNumeric: "tabular-nums" }}>${fmtNum(B.savingsInHouse)} saved</div>
+              <div style={{ fontFamily: t.mono, fontSize: 18, fontWeight: 600, color: t.good, fontVariantNumeric: "tabular-nums" }}>${fmtNum(E.savingsHybrid)} illustrative savings</div>
               <div style={{ fontFamily: t.sans, fontSize: 12, color: t.inkSoft, marginTop: 5, lineHeight: 1.45 }}>{B.recommendation}</div>
+              <div style={{ fontFamily: t.sans, fontSize: 11, color: t.inkMute, marginTop: 7, lineHeight: 1.45 }}>
+                Equivalent to {E.carryDaysEquivalentHybrid} days of modeled carry. Velocity is not assumed; test it on a real lease-up before choosing a staffing route.
+              </div>
             </div>
           </div>}
           {modelSection === "rents" && <div style={{ padding: "14px 20px", borderBottom: `1px solid ${t.rule}` }}>

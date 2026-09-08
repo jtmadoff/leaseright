@@ -4,7 +4,7 @@ This is the confirmed Netlify Drop-era LeaseRight prototype.
 
 ## Source of truth
 
-- Canonical local folder: `/Users/jtm_mbp/Downloads/LeaseUp_v6`
+- Canonical local folder: `/Users/jmad/HomeBase/Prospeer/Projects/Active/LeaseRight`
 - Primary app file: `LeaseRight.html`
 - Component files: `components/*.jsx`
 - Hosting target: Netlify static deploy

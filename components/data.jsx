@@ -371,7 +371,7 @@ const AR_AGING = [
   { bucket: "60+",       amount: 0,      units: 0   },
 ];
 const PAY_METHODS = [
-  { m: "ACH",         share: 74, fee: "free",         note: "renter-paid" },
+  { m: "ACH",         share: 74, fee: "free",         note: "resident-free" },
   { m: "Card",        share: 22, fee: "2.9% + $0.30", note: "renter-paid" },
   { m: "Check / cash", share: 4, fee: "—",            note: "manual post" },
 ];
@@ -474,15 +474,13 @@ const PRECON_INTAKE = [
 const BROKER_ECONOMICS = {
   units: 260,
   avgRent: 2180,
-  brokerFeePct: 0.50,
+  feePct: 0.50,
+  feePeriod: "month",
   inHouseMonthly: 18500,
-  months: 9,
   hybridMonthly: 9500,
-  brokerCommission: 283400,
-  inHouseCost: 166500,
-  hybridCost: 198900,
-  savingsInHouse: 116900,
-  savingsHybrid: 84500,
+  months: 9,
+  locatorShareOfLeases: 0.40,
+  carryPerMonth: 227000,
   recommendation: "Use in-house lead + broker overflow for 3BR and hard-to-fill units.",
 };
 
@@ -510,7 +508,7 @@ const MODEL_FIELDS = [
     ["Concession reserve", "$480K"],
     ["Marketing budget", "$180K"],
     ["Carry cost / mo", "$227K"],
-    ["Broker fee basis", "50% first-year rent"],
+    ["Broker fee basis", "50% of first month's rent"],
   ]},
 ];
 
@@ -524,7 +522,7 @@ const MODEL_UNIT_MIX = [
 const MODEL_SCENARIOS = [
   { name: "Base", active: true, leasesPerWeek: 3.3, stabilize: "Jul 28, 2026", concession: "$480K", carry: "$1.71M", note: "Lender underwriting case" },
   { name: "Downside", active: false, leasesPerWeek: 2.4, stabilize: "Oct 6, 2026", concession: "$690K", carry: "$2.38M", note: "Slow traffic + 3BR drag" },
-  { name: "Aggressive", active: false, leasesPerWeek: 5.1, stabilize: "Mar 31, 2026", concession: "$390K", carry: "$1.10M", note: "In-house team + fast response" },
+  { name: "Aggressive", active: false, leasesPerWeek: 5.1, stabilize: "Mar 31, 2026", concession: "$390K", carry: "$1.10M", note: "Illustrative upside · validate traffic + response inputs" },
 ];
 
 const LENDER_PACKAGE = [

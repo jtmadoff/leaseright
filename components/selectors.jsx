@@ -54,6 +54,41 @@ function _round(n, dp) {
   return Math.round(n * m) / m;
 }
 
+// Staffing/commission comparison only. Velocity is deliberately absent: it
+// must be observed or entered from a real project, not authored to pick a winner.
+function brokerEconomics(inputs) {
+  const x = inputs || {};
+  const units = Number(x.units) || 0;
+  const avgRent = Number(x.avgRent) || 0;
+  const feePct = Number(x.feePct) || 0;
+  const feePeriod = x.feePeriod === "year" ? "year" : "month";
+  const months = Number(x.months) || 0;
+  const locatorShare = Math.max(0, Math.min(1, Number(x.locatorShareOfLeases) || 0));
+  const periodMonths = feePeriod === "year" ? 12 : 1;
+  const exclusiveCost = units * avgRent * periodMonths * feePct;
+  const inHouseCost = (Number(x.inHouseMonthly) || 0) * months;
+  const hybridPayroll = (Number(x.hybridMonthly) || 0) * months;
+  const hybridCommission = exclusiveCost * locatorShare;
+  const hybridCost = hybridPayroll + hybridCommission;
+  const savingsInHouse = exclusiveCost - inHouseCost;
+  const savingsHybrid = exclusiveCost - hybridCost;
+  const carryPerDay = (Number(x.carryPerMonth) || 0) / (365 / 12);
+
+  return {
+    exclusiveCost: _round(exclusiveCost, 0),
+    inHouseCost: _round(inHouseCost, 0),
+    hybridPayroll: _round(hybridPayroll, 0),
+    hybridCommission: _round(hybridCommission, 0),
+    hybridCost: _round(hybridCost, 0),
+    savingsInHouse: _round(savingsInHouse, 0),
+    savingsHybrid: _round(savingsHybrid, 0),
+    carryDaysEquivalentInHouse: carryPerDay ? _round(savingsInHouse / carryPerDay, 1) : null,
+    carryDaysEquivalentHybrid: carryPerDay ? _round(savingsHybrid / carryPerDay, 1) : null,
+    feePeriod: feePeriod,
+    locatorShareOfLeases: locatorShare,
+  };
+}
+
 // ── deriveLeadStage(lead, seed) ─────────────────────────────────────────────────
 // Derives a lead's pipeline stage from its furthest-progressed child, falling
 // back to the authored `pipelineStage` as a floor for NEW/CONTACTED (see header).
@@ -239,9 +274,25 @@ function __selfTest() {
     "occupancy must expose the leasedUnits/totalUnits it derived from"
   );
 
+  // 3) Fee period and hybrid outside-originator share remain explicit.
+  const monthCase = brokerEconomics({
+    units: 260, avgRent: 2180, feePct: 0.5, feePeriod: "month",
+    inHouseMonthly: 18500, hybridMonthly: 9500, months: 9,
+    locatorShareOfLeases: 0.4, carryPerMonth: 227000,
+  });
+  const yearCase = brokerEconomics({
+    units: 260, avgRent: 2180, feePct: 0.5, feePeriod: "year",
+  });
+  console.assert(monthCase.exclusiveCost === 283400, "month fee basis must equal $283,400");
+  console.assert(yearCase.exclusiveCost === 3400800, "year fee basis must equal $3,400,800");
+  console.assert(
+    monthCase.hybridCost === monthCase.hybridPayroll + monthCase.hybridCommission,
+    "hybrid cost must equal payroll plus outside-originator commissions"
+  );
+
   return true;
 }
 
 // ── window export (same pattern as data.jsx / model-data.jsx) ────────────────────
-const Selectors = { STAGE_ORDER, deriveLeadStage, stageCounts, sharedQuantities, variance, __selfTest };
-Object.assign(window, { deriveLeadStage, stageCounts, sharedQuantities, variance, Selectors, __selfTest });
+const Selectors = { STAGE_ORDER, deriveLeadStage, stageCounts, sharedQuantities, variance, brokerEconomics, __selfTest };
+Object.assign(window, { deriveLeadStage, stageCounts, sharedQuantities, variance, brokerEconomics, Selectors, __selfTest });

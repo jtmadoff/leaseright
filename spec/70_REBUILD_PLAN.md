@@ -1,5 +1,15 @@
 # 70 — Rebuild Plan (sequencing the spine rebuild)
 
+> **2026-09-01 status.** N1 (`model-data.jsx`) and N2 (`selectors.jsx`) are done. The corrected
+> economics selector now also derives explicit month/year, payroll, outside-originator share, and
+> carry-day comparisons; it supersedes N7's original broken oracle. The next
+> company milestone is **not** N3–N17. Business recommendation:
+> `spec/OVERSEER_MODEL_AND_AGENT_SYNTHESIS.md`. Implementation sequence:
+> `spec/80_IMPLEMENTER_PLAN.md` (G0 against a named sponsor, then I2, then I3 only
+> if an operator must click). Resume this queue only if Justin names a live
+> operator demo that needs a clickable golden path (then I3 = N3/N4 + N12–N14 only).
+> Do not execute N7 as written. Do not "reconcile" Meridian demo numbers in lieu of Gate 0.
+>
 > Turns the locked foundation (`40_FOUNDATION_SYNTHESIS.md`, decisions **D1–D7** confirmed by
 > Justin 2026-07-03) into an ordered, task-level build plan for the prototype. Read the four
 > Phase-1 specs (`00`–`40`), `../PRODUCT_DIRECTION.md`, and `../SCOPE_AUDIT.md` first — this doc

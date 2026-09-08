@@ -257,29 +257,63 @@ The product should make inaction visible.
 
 ## Business Model
 
-Core pricing:
+Entry software pricing / positioning:
 
-- $1 per unit forever.
+- $1 per unit forever. This is not the primary economic engine; the billing period and final offer
+  remain to be validated. Do not lead the first sales artifact with this number or imply it funds
+  the company; price the initial paid engagement from scoped deliverables and project band.
 
-Primary monetization:
+Primary long-term economic engine:
 
-- Rent payment processing.
-- Deposit collection.
-- ACH/card convenience fees.
-- Banking/escrow workflows.
-- Potential insurance, screening, and service marketplace revenue later.
+- A contracted **net** share of rent-processing economics on collectible rent actually routed
+  through LeaseRight's payment partner.
+- Screen 5–10 bps of processed rent volume until a written partner proposal exists; treat 10 bps as
+  sufficient to test a beta, not proof of the core P&L, and 25 bps as a stretch contract case. Do
+  not use 50 bps in the plan.
+- Default to resident-free ACH and processor-funded residual economics where available; treat cards
+  as an optional payment method, not the margin thesis. Track any separate owner-funded
+  application/platform fee as software/platform revenue, not processing-fee-share evidence.
+- Exclude security deposits, third-party payouts, float, late fees, and NSF fees from the core
+  payments case. They carry distinct legal, trust-accounting, and customer-harm risks.
+- Potential insurance, screening, and service-marketplace revenue remains later optionality, not
+  part of the payment-engine underwriting.
 
 Implication:
 
-The product must eventually win the payment relationship. The lease-up workflow is the wedge; payments are the economic engine.
+The product must eventually win the payment relationship. The lease-up workflow is the paid trust,
+data, and distribution wedge; net revenue on processed rent volume is the economic engine. Gross
+resident or owner fees are not LeaseRight revenue, and the take rate must be modeled after processor,
+partner, return, dispute, and variable support costs.
+
+At the current 260-unit / `$2,180` repository assumptions, 95% occupied/collectible rent and 80%
+LeaseRight adoption produce about `$5.17M` annual processed payment volume. That yields only about
+`$5.2K` per asset at a 10-bps net take and requires roughly 50K comparable units for `$1M` of annual
+net payment revenue. The business therefore needs both payment economics and a credible path to
+retain portfolio-scale volume after stabilization, sale, lender cash-management, and PM handoff.
+At 10 bps the payment line is only `$1.66` per total unit per month, so the mechanism is better than
+the prior `$1/unit/month` interpretation mainly because it is rent-indexed and can persist—not
+because it is a different order of magnitude. Measure realized `$/retained unit/year`,
+payment-engine survival at stabilization, and
+retained PPV acquired per sales/implementation dollar; net bps alone does not establish the engine.
 
 ## Strategic Risk
 
 The $1/unit promise is compelling, but the software still needs enough real utility that developers trust it before payment monetization kicks in.
 
-The biggest product risk is building too much generic property management before nailing the lease-up workflow.
+The biggest product risk is building too much generic property management—or a live payment rail—
+before nailing the lease-up workflow and validating partner economics.
 
-The biggest go-to-market risk is asking developers to change staffing behavior too early. LeaseRight should support in-house leasing, broker-assisted leasing, and PM-managed leasing so adoption does not require one perfect operating model.
+The biggest business-model risk is that a pure processor share nets below 5–10 bps while the wedge
+customer sells the asset or hands payments to a PM at stabilization. LeaseRight must earn and retain
+the payment relationship across that transition; one lease-up building cannot prove this.
+The first commercial contract should therefore test assignment/continuity, successor-PM treatment,
+the right to bid on processing at stabilization, and lender cash-management disclosure. Refusal
+classifies the engagement as wedge-only; it does not prevent a profitable project-fee pilot.
+
+The biggest adoption risk is asking developers to change staffing or resident payment behavior too
+early. LeaseRight should support in-house leasing, broker-assisted leasing, and PM-managed leasing,
+while treating PM-managed assets as payment-engine ineligible unless the contract preserves
+LeaseRight's payment rail and economics.
 
 ## Near-Term Build Direction
 
@@ -291,4 +325,8 @@ The current prototype should be refined around the lease-up workflow first:
 4. Reduce or defer generic PM modules that distract from lease-up.
 5. Add explicit owner / leasing agent / broker roles.
 6. Make every lead, unit, tour, application, and lease status connected.
-7. Build a realistic demo flow from lender-ready model to active lease-up to signed lease to deposit.
+7. Build a realistic demo flow from lender-ready model to active lease-up to signed lease to a
+   payment-ready rent obligation. Do not simulate custody, settlement, or platform revenue.
+8. After the processor, legal, and shadow-ledger gates clear, make Rents the stabilization-handoff
+   surface for payment enrollment, contract continuity, successor ownership/management, and
+   realized dollars per retained unit. Do not build this before live-payment authorization.
