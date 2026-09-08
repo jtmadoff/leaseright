@@ -42,7 +42,7 @@ const QueueRow = ({ t, q, selected, onSelect, expanded, onExpand, done, onDone }
     <div style={{ borderBottom: `1px solid ${t.ruleSoft}`, background: selected ? t.hover : "transparent", borderLeft: `2px solid ${selected ? t.accent : "transparent"}`, transition: "background 80ms" }}>
       <div onClick={onSelect} style={{ padding: "10px 16px 10px 14px", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, opacity: done ? 0.45 : 1 }}>
         <span style={{ fontFamily: t.mono, fontSize: 10.5, color: t.inkMute, width: 16, letterSpacing: 0.5 }}>{String(q.priority).padStart(2, "0")}</span>
-        <Dot c={q.status === "act" ? t.bad : q.status === "sla" ? t.warn : t.inkMute} pulse={q.status === "act" || q.status === "sla"} />
+        <Dot c={q.status === "act" ? t.bad : q.status === "sla" ? t.warn : t.inkMute} />
         <span style={{ fontFamily: t.mono, fontSize: 9.5, letterSpacing: 1.2, color: t.inkMute, width: 78, fontWeight: 500 }}>{kindLabels[q.kind]}</span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: t.sans, fontSize: 13, fontWeight: 500, color: t.ink, textDecoration: done ? "line-through" : "none" }}>{q.subject}</div>
@@ -95,7 +95,7 @@ const QueueLayout = ({ t }) => {
             onDone={() => markDone(q.id)} />
         ))}
         <div style={{ padding: "16px", fontFamily: t.sans, fontSize: 11.5, color: t.inkMute, textAlign: "center" }}>
-          End of queue · next sweep 3 hours
+          Nothing else needs a decision right now.
         </div>
       </div>
 
@@ -134,16 +134,6 @@ const QueueLayout = ({ t }) => {
           </>
         )}
 
-        <div style={{ padding: "14px 20px" }}>
-          <Eyebrow t={t} style={{ marginBottom: 10 }}>Activity</Eyebrow>
-          {FEED.map((f, i) => (
-            <div key={i} style={{ display: "flex", gap: 10, padding: "6px 0", fontFamily: t.sans, fontSize: 11.5, alignItems: "baseline" }}>
-              <span style={{ fontFamily: t.mono, fontSize: 10.5, color: t.inkMute, width: 60, letterSpacing: 0.2, flexShrink: 0 }}>{f.time}</span>
-              <Dot c={f.type === "failed" ? t.bad : f.type === "signed" ? t.good : t.inkMute} size={5} />
-              <span style={{ color: t.inkSoft }}>{f.text}</span>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );

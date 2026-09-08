@@ -1,11 +1,12 @@
 /* global React, THEMES, TodayView, RentOptimizer, PipelineView, InboxView, Placeholder, TopBar, Sidebar, CmdK,
    ResidentsView, CollectionView, MaintenanceView, LedgerView, ListingsView, MarketView, ConcessionsView,
-   PreconView, SettingsView, ApplicationsView, LPReportingView, VendorsView, DocumentsView */
+   LeaseRightWelcome, PreconView, SettingsView, ApplicationsView, LPReportingView, VendorsView, DocumentsView,
+   StoreProvider, useStore */
 const { useState, useEffect } = React;
 
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "theme": "terminal",
-  "layout": "grid",
+  "layout": "queue",
   "density": "normal"
 }/*EDITMODE-END*/;
 
@@ -30,7 +31,7 @@ const TweaksPanel = ({ open, onClose, state, onChange, t }) => {
   );
   const th = THEMES[state.theme];
   const hints = {
-    terminal: "Deep-black shell, saturated accents, dense data. Bloomberg-terminal energy.",
+    terminal: "Warm charcoal, restrained signals, and room to think.",
     graphite: "Near-mono grayscale, indigo accent. Flat, keyboard-first — Linear energy.",
     quant: "Neutral cool, Stripe blue, surgical color. Modern dashboard energy.",
   };
@@ -59,22 +60,25 @@ const TweaksPanel = ({ open, onClose, state, onChange, t }) => {
 };
 
 const App = () => {
+  const { state, dispatch } = useStore();
+  const [journeyStarted, setJourneyStarted] = useState(false);
   const [tweaks, setTweaks] = useState(() => {
     // v8 — new terminal theme, reset stored tweaks
-    try { return { ...TWEAK_DEFAULTS, ...JSON.parse(localStorage.getItem("leaseright_tweaks_v1") || "{}") }; } catch { return TWEAK_DEFAULTS; }
+    try { return { ...TWEAK_DEFAULTS, ...JSON.parse(localStorage.getItem("leaseright_tweaks_v2") || "{}") }; } catch { return TWEAK_DEFAULTS; }
   });
   const [editMode, setEditMode] = useState(false);
   const [tab, setTab] = useState(() => {
     const saved = localStorage.getItem("leaseright_tab_v1");
     return saved === "precon" ? "model" : (saved || "model");
   });
-  const [propIdx, setPropIdx] = useState(0);
+  const propIdx = Math.max(0, state.projects.findIndex(p => p.id === state.activeProjectId));
+  const setPropIdx = (idx) => dispatch({ type: "setActiveProject", projectId: state.projects[idx]?.id });
   const [cmdK, setCmdK] = useState(false);
   const [sidebar, setSidebar] = useState(false);
   const [toast, setToast] = useState(null);
 
   useEffect(() => { localStorage.setItem("leaseright_tab_v1", tab); }, [tab]);
-  useEffect(() => { localStorage.setItem("leaseright_tweaks_v1", JSON.stringify(tweaks)); }, [tweaks]);
+  useEffect(() => { localStorage.setItem("leaseright_tweaks_v2", JSON.stringify(tweaks)); }, [tweaks]);
 
   // Remove splash once we've rendered.
   useEffect(() => {
@@ -113,6 +117,13 @@ const App = () => {
 
   const t = THEMES[tweaks.theme];
 
+  if (!journeyStarted) return <LeaseRightWelcome t={t} onComplete={(stage) => {
+    dispatch({ type: "updateProject", projectId: state.activeProjectId, patch: { name: "New project", city: "", address: "", submarket: "", deliveryDate: "", targetStabilizationDate: "" } });
+    dispatch({ type: "setProjectStage", projectId: state.activeProjectId, stage });
+    setTab("model");
+    setJourneyStarted(true);
+  }} />;
+
   const setLayout = (l) => updateTweaks({ layout: l });
 
   let body;
@@ -127,7 +138,7 @@ const App = () => {
   else if (tab === "listings") body = <ListingsView t={t} />;
   else if (tab === "market") body = <MarketView t={t} />;
   else if (tab === "concessions") body = <ConcessionsView t={t} />;
-  else if (tab === "model" || tab === "precon") body = <PreconView t={t} />;
+  else if (tab === "model" || tab === "precon") body = <PreconView t={t} onLaunched={() => setTab("today")} />;
   else if (tab === "settings") body = <SettingsView t={t} />;
   else if (tab === "applications") body = <ApplicationsView t={t} />;
   else if (tab === "lp") body = <LPReportingView t={t} />;
@@ -139,7 +150,7 @@ const App = () => {
     <div style={{ minHeight: "100vh", background: t.bg, color: t.ink, display: "flex", flexDirection: "column", fontFamily: t.sans, fontSize: t.baseSize }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-        @keyframes pulseDot { 0% { transform: scale(0.8); opacity: 0.4; } 100% { transform: scale(2.4); opacity: 0; } }
+        @keyframes pulseDot { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
         @keyframes toastIn { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
         @keyframes slideIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes tickGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(91,91,214,0); } 50% { box-shadow: 0 0 0 4px rgba(91,91,214,0.15); } }
@@ -155,7 +166,7 @@ const App = () => {
         button:focus-visible { outline: 2px solid ${t.accent}; outline-offset: 1px; }
       `}</style>
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-        <TopBar t={t} tab={tab} setTab={setTab} onCmdK={() => setCmdK(true)} layout={tweaks.layout} setLayout={setLayout} propIdx={propIdx} setPropIdx={setPropIdx} onToggleSidebar={() => setSidebar(v => !v)} />
+        <TopBar t={t} tab={tab} setTab={setTab} onCmdK={() => setCmdK(true)} layout={tweaks.layout} setLayout={setLayout} propIdx={propIdx} setPropIdx={setPropIdx} project={state.projects[propIdx]} onToggleSidebar={() => setSidebar(v => !v)} />
         <div style={{ flex: 1, minWidth: 0, overflow: "auto" }}>{body}</div>
       </div>
       <Sidebar t={t} open={sidebar} onClose={() => setSidebar(false)} tab={tab} setTab={setTab} />
@@ -166,4 +177,4 @@ const App = () => {
   );
 };
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+ReactDOM.createRoot(document.getElementById("root")).render(<StoreProvider><App /></StoreProvider>);

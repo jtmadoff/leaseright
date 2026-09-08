@@ -3,34 +3,52 @@
    PRECON_INTAKE, BROKER_ECONOMICS, brokerEconomics, MARKET_RENT_INPUTS, MODEL_FIELDS, MODEL_UNIT_MIX, MODEL_SCENARIOS, LENDER_PACKAGE,
    APPLICATIONS, APP_KPIS, LP_REPORT, VENDORS, VENDOR_KPIS, DOC_FOLDERS, RECENT_DOCS,
    Dot, Tag, Btn, Eyebrow, Section, MicroBar, Kbd, PageKpis, Band, UnitChip, dataTH, dataTD,
-   fmtUSD, fmtNum, fmtPct */
+   fmtUSD, fmtNum, fmtPct, useStore, useSelector */
 const { useState, useMemo } = React;
 
 // ═══════════════════════════════════════════════════════════════
 //  RESIDENTS — active lease roster with delinquency + renewal
 // ═══════════════════════════════════════════════════════════════
 const ResidentsView = ({ t }) => {
-  const [sel, setSel] = useState(2); // Jamie Patel default
+  const residentRows = useSelector(state => state.residents.map(resident => {
+    const lead = state.leads.find(row => row.id === resident.leadId) || {};
+    const unit = state.units.find(row => row.id === resident.unitId) || {};
+    const lease = state.leases.find(row => row.id === resident.activeLeaseId) || {};
+    const payments = state.payments.filter(row => row.leadId === lead.id);
+    const failed = payments.find(row => ["failed", "retrying"].includes(row.status));
+    const deposit = payments.find(row => row.kind === "security_deposit");
+    return {
+      id: resident.id, unit: `U-${unit.number || "—"}`, name: lead.name || "Unknown resident",
+      beds: unit.beds === 0 ? "Studio" : `${unit.beds || "—"}BR`, start: lease.startDate || "—", end: lease.endDate || "—",
+      rent: lease.rent || unit.effectiveRent || 0, lastPaid: deposit?.status === "succeeded" ? "Deposit paid" : "—",
+      pay: failed ? "failed" : deposit?.status === "succeeded" ? "current" : resident.moveInStatus === "pending_movein" ? "upcoming" : "current",
+      onTime: resident.onTimeRecord || "—", renewal: resident.renewalStatus || "—", tenure: resident.tenure || 0,
+      moveInStatus: resident.moveInStatus, depositStatus: deposit?.status || "missing", note: resident.note || lead.note || "—",
+    };
+  }));
+  const [sel, setSel] = useState(0);
   const [filter, setFilter] = useState("all");
   const payTone = (p) => p === "current" ? "good" : p === "late" ? "warn" : p === "failed" ? "bad" : p === "upcoming" ? "neutral" : "neutral";
   const payDot = (p) => p === "current" ? t.good : p === "late" ? t.warn : p === "failed" ? t.bad : t.inkMute;
-  const rows = RESIDENTS.filter(r => filter === "all" ? true : filter === "late" ? (r.pay === "late" || r.pay === "failed") : filter === "renewal" ? r.renewal !== "—" : filter === "ntv" ? r.renewal === "ntv" : true);
-  const R = RESIDENTS[sel];
+  const rows = residentRows.filter(r => filter === "all" ? true : filter === "movein" ? r.moveInStatus === "pending_movein" : filter === "deposit" ? r.depositStatus !== "succeeded" : r.pay === "failed");
+  const R = residentRows[sel] || residentRows[0];
+  const depositsPaid = residentRows.filter(r => r.depositStatus === "succeeded").length;
+  const moveIns = residentRows.filter(r => r.moveInStatus === "pending_movein").length;
 
   const kpis = [
-    { label: "Active leases", value: "121",  sub: "46.5% occupancy · 260 total", tone: "neutral" },
-    { label: "Payments current", value: "117", unit: "/ 121", sub: "3 failed · 1 late", tone: "good" },
-    { label: "Renewal window", value: "14", sub: "Jun 1 – Aug 31 · 4 NTVs filed", tone: "warn" },
-    { label: "Avg tenure", value: "0.8", unit: "yrs", sub: "earliest Mar 2024", tone: "neutral" },
+    { label: "Resident handoffs", value: residentRows.length, sub: "Converted from signed applicants", tone: "neutral" },
+    { label: "Move-ins pending", value: moveIns, sub: "Keys · insurance · first rent", tone: moveIns ? "warn" : "good" },
+    { label: "Deposits recorded", value: depositsPaid, unit: `/ ${residentRows.length}`, sub: "Shared payment record", tone: depositsPaid === residentRows.length ? "good" : "warn" },
+    { label: "Payment attention", value: residentRows.filter(r => r.pay === "failed").length, sub: "Failed or retrying", tone: "bad" },
   ];
-  const filters = [["all","All · 121"],["late","Delinquent · 4"],["renewal","Renewal ·  5"],["ntv","NTV · 1"]];
+  const filters = [["all",`All · ${residentRows.length}`],["movein",`Move-in · ${moveIns}`],["deposit",`Deposit missing · ${residentRows.length - depositsPaid}`],["attention",`Attention · ${residentRows.filter(r => r.pay === "failed").length}`]];
 
   return (
     <div>
       <PageKpis t={t} items={kpis} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", minHeight: "calc(100vh - 44px - 96px)" }}>
         <div style={{ borderRight: `1px solid ${t.rule}`, display: "flex", flexDirection: "column", minWidth: 0 }}>
-          <Band t={t} title={`Residents · ${rows.length} of ${RESIDENTS.length}`}
+          <Band t={t} title={`Resident handoff · ${rows.length} of ${residentRows.length}`}
             right={
               <div style={{ display: "flex", gap: 4 }}>
                 {filters.map(([v,l]) => (
@@ -51,7 +69,7 @@ const ResidentsView = ({ t }) => {
             </tr></thead>
             <tbody>
               {rows.map((r, i) => {
-                const idx = RESIDENTS.indexOf(r);
+                const idx = residentRows.indexOf(r);
                 const selected = idx === sel;
                 return (
                   <tr key={r.id} onClick={() => setSel(idx)}
@@ -113,10 +131,10 @@ const ResidentsView = ({ t }) => {
           <div style={{ padding: "14px 20px", borderBottom: `1px solid ${t.rule}` }}>
             <Eyebrow t={t} style={{ marginBottom: 10 }}>Quick actions</Eyebrow>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              <Btn t={t} size="xs">Open ledger</Btn>
-              <Btn t={t} size="xs">Open tickets</Btn>
-              <Btn t={t} size="xs">Send renewal offer</Btn>
-              <Btn t={t} size="xs" variant="ghost">Start NTV</Btn>
+              <Btn t={t} size="xs">Review deposit</Btn>
+              <Btn t={t} size="xs">Move-in checklist</Btn>
+              <Btn t={t} size="xs">Message resident</Btn>
+              <Btn t={t} size="xs" variant="ghost">Open lease</Btn>
             </div>
           </div>
           <div style={{ padding: "14px 20px" }}>
@@ -650,18 +668,114 @@ const ConcessionsView = ({ t }) => {
 // ═══════════════════════════════════════════════════════════════
 //  MODEL — sponsor intake + absorption model
 // ═══════════════════════════════════════════════════════════════
-const PreconView = ({ t }) => {
+const LeaseRightWelcome = ({ t, onComplete }) => {
+  const [step, setStep] = useState("welcome");
+  const [stage, setStage] = useState("pre_funding");
+  const stages = [
+    { id: "pre_funding", label: "Pre-funding", detail: "Build the lease-up plan and lender-ready assumptions before capital closes." },
+    { id: "funded_prelaunch", label: "Funded · pre-launch", detail: "Validate rents, staffing, and launch timing before the first lead arrives." },
+    { id: "active_leaseup", label: "Active lease-up", detail: "Import the current plan and establish a clean baseline for live operations." },
+  ];
+  return (
+    <div style={{ minHeight: "100vh", background: t.bg, color: t.ink, fontFamily: t.sans }}>
+      <div style={{ height: 64, padding: "0 28px", display: "flex", alignItems: "center", borderBottom: `1px solid ${t.rule}` }}>
+        <div style={{ width: 24, height: 24, background: t.accent, color: "#0A0A0B", display: "grid", placeItems: "center", fontFamily: t.mono, fontWeight: 800, fontSize: 13 }}>L</div>
+        <div style={{ marginLeft: 10, fontSize: 14, fontWeight: 650 }}>LeaseRight</div>
+        <div style={{ flex: 1 }} />
+        <div style={{ fontSize: 12, color: t.inkMute }}>Built for the lease-up.</div>
+      </div>
+      {step === "welcome" ? (
+        <main style={{ maxWidth: 1180, margin: "0 auto", padding: "68px 40px 56px", display: "grid", gridTemplateColumns: "0.82fr 1.18fr", gap: 64, alignItems: "center" }}>
+          <section style={{ paddingBottom: 18 }}>
+            <div style={{ marginBottom: 24, color: t.inkSoft, fontSize: 13, fontWeight: 600 }}>Plan and run multifamily lease-ups</div>
+            <h1 style={{ fontSize: 58, lineHeight: 0.98, letterSpacing: -2.2, margin: 0, maxWidth: 520 }}>Know what stabilization will take.</h1>
+            <p style={{ fontSize: 17, lineHeight: 1.65, color: t.inkSoft, margin: "26px 0 32px", maxWidth: 500 }}>Build the lease-up plan, approve the financial baseline, and see each week whether the property is on pace to stabilize.</p>
+            <button onClick={() => setStep("stage")} style={{ padding: "14px 21px", border: "none", borderRadius: 3, background: t.accent, color: "#0A0A0B", fontFamily: t.sans, fontSize: 14, fontWeight: 750, cursor: "pointer" }}>Start a project</button>
+          </section>
+          <section style={{ display: "grid", gridTemplateColumns: "96px 1fr", border: `1px solid ${t.rule}`, background: t.surface, boxShadow: "0 30px 80px rgba(0,0,0,0.35)" }}>
+            <aside style={{ padding: "18px 12px", borderRight: `1px solid ${t.rule}`, background: t.bg }}>
+              <div style={{ fontFamily: t.mono, fontSize: 9, color: t.inkMute, letterSpacing: 0.9, marginBottom: 22 }}>LEASE·RIGHT</div>
+              {["Today", "Model", "Leasing", "Units", "Reports"].map((x, i) => <div key={x} style={{ padding: "8px 7px", marginBottom: 3, borderLeft: `2px solid ${i === 0 ? t.accent : "transparent"}`, color: i === 0 ? t.ink : t.inkMute, background: i === 0 ? t.hover : "transparent", fontSize: 10.5 }}>{x}</div>)}
+            </aside>
+            <div>
+            <div style={{ height: 46, padding: "0 16px", display: "flex", alignItems: "center", borderBottom: `1px solid ${t.rule}` }}>
+              <div style={{ fontSize: 12.5, fontWeight: 650 }}>The Meridian</div><div style={{ marginLeft: 10, fontFamily: t.mono, fontSize: 9.5, color: t.inkMute }}>AUSTIN, TX · 260 UNITS</div><div style={{ flex: 1 }} /><div style={{ fontFamily: t.mono, fontSize: 9.5, color: t.good }}>BASE CASE</div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", borderBottom: `1px solid ${t.rule}` }}>
+              {[["STABILIZED", "Jul 2026", "93% occupancy"], ["VELOCITY", "3.3 / wk", "approved pace"], ["TOTAL CARRY", "$1.71M", "$670K below downside"]].map(([k,v,s],i) => <div key={k} style={{ padding: "18px 16px", borderLeft: i ? `1px solid ${t.rule}` : "none" }}><div style={{ fontFamily: t.mono, fontSize: 9, color: t.inkMute, letterSpacing: 0.8 }}>{k}</div><div style={{ fontFamily: t.mono, fontSize: 19, color: t.ink, marginTop: 9 }}>{v}</div><div style={{ fontSize: 10.5, color: i === 2 ? t.good : t.inkMute, marginTop: 5 }}>{s}</div></div>)}
+            </div>
+            <div style={{ padding: "18px 18px 14px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}><span style={{ fontSize: 11.5, color: t.inkSoft }}>78-week absorption</span><span style={{ fontFamily: t.mono, fontSize: 9.5, color: t.inkMute }}>242 LEASES TO TARGET</span></div>
+              <svg viewBox="0 0 560 210" style={{ width: "100%", height: 230, display: "block" }}>
+                {[35,75,115,155,195].map(y => <line key={y} x1="0" x2="560" y1={y} y2={y} stroke={t.ruleSoft} />)}
+                <line x1="0" x2="560" y1="49" y2="49" stroke={t.warn} strokeDasharray="3 5" opacity="0.7" />
+                <text x="556" y="43" textAnchor="end" fill={t.warn} fontSize="9" fontFamily={t.mono}>93% TARGET</text>
+                <path d="M0 196 C70 190 102 174 142 151 C200 116 254 82 324 60 C390 39 470 31 560 27" fill="none" stroke={t.inkFaint} strokeWidth="1.5" strokeDasharray="5 5" />
+                <path d="M0 196 C62 190 108 167 150 137 C194 106 226 84 270 70" fill="none" stroke={t.good} strokeWidth="2.5" />
+                <path d="M270 70 C342 45 430 32 560 27" fill="none" stroke={t.accent} strokeWidth="2" strokeDasharray="4 4" />
+                <circle cx="270" cy="70" r="4" fill={t.accent} />
+                <text x="280" y="62" fill={t.ink} fontSize="10" fontFamily={t.mono}>121 LEASED</text>
+              </svg>
+              <div style={{ display: "flex", gap: 20, borderTop: `1px solid ${t.ruleSoft}`, paddingTop: 12, fontSize: 10.5, color: t.inkMute }}><span><b style={{ color: t.good }}>━━</b> Actual</span><span><b style={{ color: t.accent }}>┅┅</b> Approved projection</span><span><b style={{ color: t.inkFaint }}>┅┅</b> Downside</span></div>
+            </div>
+            </div>
+          </section>
+        </main>
+      ) : (
+        <main style={{ maxWidth: 900, margin: "0 auto", padding: "88px 40px 76px" }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: t.inkMute, marginBottom: 14 }}>New project</div>
+          <h1 style={{ fontSize: 34, letterSpacing: -0.7, margin: 0 }}>Where is this project today?</h1>
+          <p style={{ color: t.inkSoft, fontSize: 15, lineHeight: 1.55, margin: "12px 0 30px" }}>Your answer sets the starting workflow and the baseline we need.</p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", borderTop: `1px solid ${t.rule}`, borderBottom: `1px solid ${t.rule}` }}>
+            {stages.map((s, i) => { const active = stage === s.id; return <button key={s.id} onClick={() => setStage(s.id)} style={{ minHeight: 190, padding: "22px 20px", display: "flex", flexDirection: "column", alignItems: "flex-start", background: active ? t.surface : "transparent", border: "none", borderRight: i < stages.length - 1 ? `1px solid ${t.rule}` : "none", borderTop: `3px solid ${active ? t.ink : "transparent"}`, color: t.ink, textAlign: "left", cursor: "pointer" }}><strong style={{ fontSize: 15, fontWeight: 650 }}>{s.label}</strong><span style={{ fontSize: 13, color: t.inkSoft, lineHeight: 1.55, marginTop: 14 }}>{s.detail}</span><span style={{ marginTop: "auto", fontSize: 11.5, fontWeight: 650, color: active ? t.ink : t.inkMute }}>{active ? "Selected" : "Choose"}</span></button>; })}
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 28 }}><button onClick={() => onComplete(stage)} style={{ padding: "12px 18px", border: "none", borderRadius: 4, background: t.accent, color: "#0A0A0B", fontWeight: 700, cursor: "pointer" }}>Continue to property intake →</button></div>
+        </main>
+      )}
+    </div>
+  );
+};
+
+const PreconView = ({ t, onLaunched }) => {
   const P = PRECON;
   const B = BROKER_ECONOMICS;
   const E = brokerEconomics(B);
+  const { dispatch } = useStore();
+  const activeProject = useSelector(state => state.projects.find(p => p.id === state.activeProjectId) || state.projects[0]);
+  const activeModel = useSelector(state => state.model.find(m => m.projectId === state.activeProjectId));
+  const stageLabel = { pre_funding: "Pre-funding", funded_prelaunch: "Funded · pre-launch", active_leaseup: "Active lease-up" }[activeProject?.stage] || "Pre-funding";
   const [modelSection, setModelSection] = useState("intake");
   const [intakeStep, setIntakeStep] = useState("project");
+  const [intakeValues, setIntakeValues] = useState({});
+  const [completedSteps, setCompletedSteps] = useState(new Set());
+  const [scenarioApproved, setScenarioApproved] = useState(false);
+  const [launched, setLaunched] = useState(false);
+  const saveProperty = () => dispatch({ type: "updateProject", projectId: activeProject.id, patch: {
+    name: intakeValues["project:Project name"] || activeProject.name,
+    address: intakeValues["project:Address"] || activeProject.address,
+    submarket: intakeValues["project:Submarket"] || activeProject.submarket,
+    deliveryDate: intakeValues["project:Delivery date"] || activeProject.deliveryDate,
+    targetStabilizationDate: intakeValues["project:Target stabilization"] || activeProject.targetStabilizationDate,
+  }});
+  const saveCurrentStep = () => {
+    if (intakeStep === "project") saveProperty();
+    if (intakeStep === "units") dispatch({ type: "updateProject", projectId: activeProject.id, patch: { unitCount: Number(intakeValues["units:Total units"] || activeProject.unitCount) } });
+    const values = Object.fromEntries(currentIntake.fields.map(([key, fallback]) => [key, intakeValues[`${intakeStep}:${key}`] ?? fallback]));
+    dispatch({ type: "updateModel", modelId: activeModel.id, patch: { intake: { ...(activeModel.intake || {}), [intakeStep]: values } } });
+    setCompletedSteps(done => new Set([...done, intakeStep]));
+  };
+  const continueIntake = () => {
+    saveCurrentStep();
+    if (currentIntakeIndex < intakeSteps.length - 1) setIntakeStep(intakeSteps[currentIntakeIndex + 1].id);
+    else setModelSection("scenarios");
+  };
+  const approveScenario = () => { setScenarioApproved(true); setModelSection("lender"); };
+  const launch = () => { dispatch({ type: "launchProject", projectId: activeProject.id }); setLaunched(true); };
   const modelTabs = [
-    { id: "intake", label: "Intake", sub: "Guided setup", status: "in progress", tone: "warn" },
-    { id: "scenarios", label: "Scenarios", sub: "Base/downside/aggressive", status: "ready", tone: "good" },
-    { id: "rents", label: "Rents", sub: "Unit mix + market inputs", status: "review", tone: "warn" },
-    { id: "lender", label: "Model output", sub: "Lease-up model sections", status: "2 review", tone: "warn" },
-    { id: "launch", label: "Launch", sub: "Create live lease-up board", status: "locked", tone: "neutral" },
+    { id: "intake", label: "Plan", sub: "Property through strategy", status: `${completedSteps.size}/5`, tone: completedSteps.size === 5 ? "good" : "warn" },
+    { id: "scenarios", label: "Scenarios", sub: "Choose the baseline", status: scenarioApproved ? "approved" : completedSteps.size === 5 ? "ready" : "locked", tone: scenarioApproved ? "good" : "warn" },
+    { id: "lender", label: "Review", sub: "Model output", status: scenarioApproved ? "ready" : "locked", tone: scenarioApproved ? "good" : "neutral" },
+    { id: "launch", label: "Launch", sub: "Create live board", status: launched ? "live" : scenarioApproved ? "ready" : "locked", tone: launched ? "good" : scenarioApproved ? "warn" : "neutral" },
   ];
   const activeTab = modelTabs.find(x => x.id === modelSection) || modelTabs[0];
   const intakeComps = [
@@ -680,8 +794,8 @@ const PreconView = ({ t }) => {
       id: "project",
       label: "Property",
       sub: "Address, market, timing",
-      prompt: "Start with the property we are modeling.",
-      fields: [["Project name", "The Meridian"], ["Sponsor", "Mori Development"], ["Address", "1212 E 6th St, Austin, TX"], ["Submarket", "East Austin"], ["Delivery date", "Jan 15, 2025"], ["Target stabilization", "Jul 28, 2026"]],
+      prompt: "Tell us which property we are modeling.",
+      fields: [["Project name", ""], ["Sponsor", ""], ["Address", ""], ["Submarket", ""], ["Delivery date", ""], ["Target stabilization", ""]],
       builds: ["Mapped property profile", "Submarket context", "Lease-up timeline"],
     },
     {
@@ -719,6 +833,9 @@ const PreconView = ({ t }) => {
   ];
   const currentIntake = intakeSteps.find(x => x.id === intakeStep) || intakeSteps[0];
   const currentIntakeIndex = intakeSteps.findIndex(x => x.id === currentIntake.id);
+  const requiredFields = intakeStep === "project" ? ["Project name", "Sponsor", "Address", "Delivery date", "Target stabilization"] : currentIntake.fields.map(([key]) => key);
+  const isCurrentValid = requiredFields.every(key => String(intakeValues[`${intakeStep}:${key}`] ?? currentIntake.fields.find(([field]) => field === key)?.[1] ?? "").trim());
+  const fieldPlaceholders = { "Project name": "Example: River House", "Sponsor": "Owner or development company", "Address": "Street, city, state", "Submarket": "Optional", "Delivery date": "MM / DD / YYYY", "Target stabilization": "MM / DD / YYYY" };
   const intakeProgress = Math.round(((currentIntakeIndex + 1) / intakeSteps.length) * 100);
   const guidance = {
     intake: {
@@ -752,111 +869,95 @@ const PreconView = ({ t }) => {
   const toPath = (pts) => pts.map((p,i) => (i===0?"M":"L") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
   return (
     <div>
-      <div style={{ padding: "12px 24px", borderBottom: `1px solid ${t.rule}`, background: t.bg }}>
+      <div style={{ padding: "26px 32px 24px", borderBottom: `1px solid ${t.rule}`, background: t.bg }}>
         <div style={{ display: "flex", alignItems: "center", gap: 18, minWidth: 0 }}>
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
-              <Tag t={t} tone="accent">Pre-funding workspace</Tag>
-              <Tag t={t} tone="good">82% ready</Tag>
-              <span style={{ fontFamily: t.mono, fontSize: 10.5, color: t.inkMute, letterSpacing: 0.8, textTransform: "uppercase" }}>The Meridian · Austin TX · 260 units</span>
+              <span style={{ fontFamily: t.sans, fontSize: 12, color: t.inkMute }}>{activeProject?.name || "New project"} · {stageLabel}</span>
             </div>
             <div style={{ fontFamily: t.sans, fontSize: 20, lineHeight: 1.18, fontWeight: 650, color: t.ink, letterSpacing: -0.25 }}>
-              Build the high-end lease-up model.
+              Build your lease-up plan.
             </div>
             <div style={{ fontFamily: t.sans, fontSize: 12.5, lineHeight: 1.45, color: t.inkSoft, marginTop: 5, maxWidth: 760 }}>
-              Work left to right: map the asset, choose comps, validate rents, define strategy, then produce the lease-up model.
+              Complete each section at your own pace. LeaseRight will turn the approved plan into the live operating board.
             </div>
           </div>
         </div>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "240px minmax(0, 1fr)", minHeight: "calc(100vh - 44px - 66px)" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "220px minmax(0, 1fr)", minHeight: "calc(100vh - 90px - 92px)" }}>
         <div style={{ borderRight: `1px solid ${t.rule}`, background: t.surface, overflow: "auto" }}>
-          <div style={{ padding: "16px 18px", borderBottom: `1px solid ${t.rule}` }}>
-            <Eyebrow t={t} style={{ marginBottom: 10 }}>Work through</Eyebrow>
-            <div style={{ fontFamily: t.sans, fontSize: 12, color: t.inkSoft, lineHeight: 1.5 }}>
-              One step at a time. Each completed step feeds the lease-up model.
-            </div>
+          <div style={{ padding: "20px 18px", borderBottom: `1px solid ${t.rule}` }}>
+            <Eyebrow t={t}>Plan sections</Eyebrow>
           </div>
           {modelTabs.map((s) => {
             const active = modelSection === s.id;
+            const locked = (s.id === "scenarios" && completedSteps.size < 5) || ((s.id === "lender" || s.id === "launch") && !scenarioApproved);
             const c = s.tone === "good" ? t.good : s.tone === "warn" ? t.warn : t.inkMute;
             return (
-              <button key={s.id} onClick={() => setModelSection(s.id)} style={{ width: "100%", padding: "13px 18px", display: "grid", gridTemplateColumns: "16px 1fr", gap: 10, background: active ? t.hover : "transparent", border: "none", borderBottom: `1px solid ${t.ruleSoft}`, borderLeft: `2px solid ${active ? t.accent : "transparent"}`, textAlign: "left", cursor: "pointer" }}>
+              <button key={s.id} disabled={locked} onClick={() => setModelSection(s.id)} style={{ width: "100%", padding: "13px 18px", display: "grid", gridTemplateColumns: "16px 1fr", gap: 10, background: active ? t.hover : "transparent", border: "none", borderBottom: `1px solid ${t.ruleSoft}`, borderLeft: `2px solid ${active ? t.accent : "transparent"}`, textAlign: "left", cursor: locked ? "default" : "pointer", opacity: locked ? 0.48 : 1 }}>
                 <span style={{ marginTop: 5 }}><Dot c={c} size={7} /></span>
                 <span>
                   <span style={{ display: "block", fontFamily: t.sans, fontSize: 12.5, color: active ? t.ink : t.inkSoft, fontWeight: 600 }}>{s.label}</span>
-                  <span style={{ display: "block", fontFamily: t.sans, fontSize: 11, color: t.inkMute, marginTop: 3, lineHeight: 1.35 }}>{s.sub}</span>
                   <span style={{ display: "block", fontFamily: t.mono, fontSize: 9.5, color: c, marginTop: 5, letterSpacing: 0.7, textTransform: "uppercase" }}>{s.status}</span>
                 </span>
               </button>
             );
           })}
-          <div style={{ padding: 18, borderTop: `1px solid ${t.rule}` }}>
-            <div style={{ fontFamily: t.sans, fontSize: 11.5, color: t.inkMute, lineHeight: 1.45 }}>
-              The live app stays quiet until the model is ready to launch.
-            </div>
-          </div>
         </div>
 
         <div style={{ borderRight: `1px solid ${t.rule}`, minWidth: 0 }}>
-          <div style={{ padding: "16px 20px", borderBottom: `1px solid ${t.rule}`, background: t.bg, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+          <div style={{ padding: "22px 32px", borderBottom: `1px solid ${t.rule}`, background: t.bg, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24 }}>
             <div>
               <Eyebrow t={t} style={{ marginBottom: 7 }}>Currently working on</Eyebrow>
               <div style={{ fontFamily: t.sans, fontSize: 18, fontWeight: 650, color: t.ink }}>{activeTab.label}</div>
-              <div style={{ fontFamily: t.sans, fontSize: 12, color: t.inkMute, marginTop: 4 }}>{activeTab.sub}</div>
-              <div style={{ fontFamily: t.sans, fontSize: 12, color: t.inkSoft, lineHeight: 1.45, marginTop: 10, maxWidth: 760 }}>
-                <strong style={{ color: t.ink }}>{guidance.head}</strong> {guidance.body}
-              </div>
+              <div style={{ fontFamily: t.sans, fontSize: 12.5, color: t.inkSoft, lineHeight: 1.5, marginTop: 7, maxWidth: 620 }}>{guidance.head}</div>
             </div>
-            <Btn t={t} size="xs" variant="primary">{modelSection === "launch" ? "Create live board" : "Save section"}</Btn>
+            <Btn t={t} size="xs" variant="primary" onClick={modelSection === "intake" ? saveCurrentStep : modelSection === "scenarios" ? approveScenario : modelSection === "lender" ? () => setModelSection("launch") : launch}>{modelSection === "launch" ? (launched ? "Board created" : "Create live board") : modelSection === "scenarios" ? "Approve baseline" : modelSection === "lender" ? "Continue to launch" : "Save section"}</Btn>
           </div>
           {modelSection === "intake" && <>
           <div style={{ padding: 20, borderBottom: `1px solid ${t.rule}` }}>
-            <div style={{ background: t.surface, border: `1px solid ${t.rule}`, borderRadius: 6, overflow: "hidden" }}>
+            <div style={{ background: t.surface, border: `1px solid ${t.rule}`, overflow: "hidden" }}>
               <div style={{ padding: "16px 18px", borderBottom: `1px solid ${t.rule}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14 }}>
                 <div style={{ minWidth: 0 }}>
                   <Eyebrow t={t} style={{ marginBottom: 7 }}>Guided intake</Eyebrow>
                   <div style={{ fontFamily: t.sans, fontSize: 20, fontWeight: 650, color: t.ink }}>{currentIntake.prompt}</div>
-                  <div style={{ fontFamily: t.sans, fontSize: 12.5, color: t.inkSoft, lineHeight: 1.45, marginTop: 7, maxWidth: 760 }}>
-                    Keep this fast. The first pass should take about 10 minutes and build the custom dashboard in the background.
-                  </div>
                 </div>
                 <div style={{ width: 92, textAlign: "right", flexShrink: 0 }}>
                   <div style={{ fontFamily: t.mono, fontSize: 22, color: t.accent, fontWeight: 650, fontVariantNumeric: "tabular-nums" }}>{intakeProgress}%</div>
                   <div style={{ fontFamily: t.mono, fontSize: 9.5, color: t.inkMute, letterSpacing: 1, textTransform: "uppercase" }}>complete</div>
                 </div>
               </div>
-              <div style={{ padding: "12px 18px", borderBottom: `1px solid ${t.rule}`, display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <div style={{ padding: "0 18px", borderBottom: `1px solid ${t.rule}`, display: "grid", gridTemplateColumns: `repeat(${intakeSteps.length}, minmax(0, 1fr))` }}>
                 {intakeSteps.map((s, i) => {
                   const active = s.id === intakeStep;
                   const done = i < currentIntakeIndex;
                   return (
-                    <button key={s.id} onClick={() => setIntakeStep(s.id)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 9px", background: active ? t.hover : t.surfaceAlt, border: `1px solid ${active ? t.accent + "66" : t.rule}`, borderRadius: 4, color: active ? t.ink : t.inkSoft, cursor: "pointer" }}>
-                      <span style={{ width: 16, height: 16, borderRadius: 16, display: "inline-flex", alignItems: "center", justifyContent: "center", background: done ? t.good : active ? t.accent : t.bg, color: done || active ? "#0A0A0B" : t.inkMute, fontFamily: t.mono, fontSize: 9, fontWeight: 700 }}>{done ? "✓" : i + 1}</span>
-                      <span style={{ fontFamily: t.sans, fontSize: 12, fontWeight: 600 }}>{s.label}</span>
+                    <button key={s.id} disabled={i > completedSteps.size} onClick={() => setIntakeStep(s.id)} style={{ minWidth: 0, display: "flex", alignItems: "center", gap: 8, padding: "13px 8px", background: "transparent", border: "none", borderBottom: `2px solid ${active ? t.accent : "transparent"}`, color: active ? t.ink : t.inkSoft, cursor: i > completedSteps.size ? "default" : "pointer", opacity: i > completedSteps.size ? 0.36 : 1 }}>
+                      <span style={{ fontFamily: t.mono, fontSize: 9, color: done ? t.good : active ? t.accent : t.inkMute }}>{done ? "✓" : String(i + 1).padStart(2, "0")}</span>
+                      <span style={{ fontFamily: t.sans, fontSize: 11.5, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.label}</span>
                     </button>
                   );
                 })}
               </div>
               <div style={{ padding: 18 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(180px, 1fr))", gap: 12 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(180px, 1fr))", columnGap: 28, rowGap: 4 }}>
                   {currentIntake.fields.map(([k,v]) => (
-                    <label key={k} style={{ display: "block", padding: 13, background: t.surfaceAlt, border: `1px solid ${t.rule}`, borderRadius: 5 }}>
-                      <div style={{ fontFamily: t.sans, fontSize: 11.5, color: t.inkMute, marginBottom: 7 }}>{k}</div>
-                      <div style={{ minHeight: 30, display: "flex", alignItems: "center", padding: "0 10px", background: t.bg, border: `1px solid ${t.rule}`, borderRadius: 4, fontFamily: t.sans, fontSize: 13, color: t.ink }}>{v}</div>
+                    <label key={k} style={{ display: "block", padding: "15px 0 13px", borderBottom: `1px solid ${t.rule}` }}>
+                      <div style={{ fontFamily: t.mono, fontSize: 9.5, letterSpacing: 0.75, textTransform: "uppercase", color: t.inkMute, marginBottom: 8 }}>{k}</div>
+                      <input value={intakeValues[`${intakeStep}:${k}`] ?? v} placeholder={fieldPlaceholders[k] || "Enter value"} onChange={e => setIntakeValues(values => ({ ...values, [`${intakeStep}:${k}`]: e.target.value }))} aria-label={k} style={{ width: "100%", minHeight: 30, padding: 0, background: "transparent", border: "none", borderRadius: 0, fontFamily: t.sans, fontSize: 14, color: t.ink, outline: "none" }} />
                     </label>
                   ))}
                 </div>
                 {intakeStep === "project" && (
                   <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 12 }}>
-                    <div style={{ minHeight: 126, padding: 14, background: t.bg, border: `1px solid ${t.rule}`, borderRadius: 5, position: "relative", overflow: "hidden" }}>
+                    <div style={{ minHeight: 126, padding: 14, background: t.bg, border: `1px solid ${t.rule}`, position: "relative", overflow: "hidden" }}>
                       <div style={{ position: "absolute", inset: 0, opacity: 0.28, backgroundImage: `linear-gradient(${t.ruleSoft} 1px, transparent 1px), linear-gradient(90deg, ${t.ruleSoft} 1px, transparent 1px)`, backgroundSize: "24px 24px" }} />
                       <div style={{ position: "relative", width: 12, height: 12, borderRadius: 12, background: t.accent, boxShadow: `0 0 0 6px ${t.accentSoft}`, margin: "40px auto 10px" }} />
-                      <div style={{ position: "relative", textAlign: "center", fontFamily: t.sans, fontSize: 12.5, color: t.ink, fontWeight: 650 }}>1212 E 6th St</div>
-                      <div style={{ position: "relative", textAlign: "center", fontFamily: t.sans, fontSize: 11.5, color: t.inkMute, marginTop: 4 }}>Submarket and comp radius locked from address</div>
+                      <div style={{ position: "relative", textAlign: "center", fontFamily: t.sans, fontSize: 12.5, color: t.ink, fontWeight: 650 }}>{intakeValues["project:Address"] || "Add an address"}</div>
+                      <div style={{ position: "relative", textAlign: "center", fontFamily: t.sans, fontSize: 11.5, color: t.inkMute, marginTop: 4 }}>{intakeValues["project:Address"] ? "Ready to map the property and comp radius" : "We will map the property here"}</div>
                     </div>
-                    <div style={{ padding: 14, background: t.surfaceAlt, border: `1px solid ${t.rule}`, borderRadius: 5 }}>
-                      <div style={{ fontFamily: t.sans, fontSize: 12.5, color: t.ink, fontWeight: 650, marginBottom: 8 }}>What this unlocks</div>
+                    <div style={{ padding: "10px 6px 10px 20px", borderLeft: `1px solid ${t.rule}` }}>
+                      <div style={{ fontFamily: t.mono, fontSize: 9.5, letterSpacing: 0.8, textTransform: "uppercase", color: t.inkMute, fontWeight: 650, marginBottom: 10 }}>Downstream use</div>
                       {["Map the property", "Suggest local comps", "Set market rent boundaries"].map((x, i) => (
                         <div key={x} style={{ display: "flex", gap: 8, padding: "6px 0", borderBottom: i < 2 ? `1px solid ${t.ruleSoft}` : "none" }}>
                           <Dot c={t.good} size={7} />
@@ -910,8 +1011,8 @@ const PreconView = ({ t }) => {
                     })}
                   </div>
                 )}
-                <div style={{ marginTop: 14, padding: 12, background: t.accentSoft, border: `1px solid ${t.accent}33`, borderRadius: 5 }}>
-                  <div style={{ fontFamily: t.sans, fontSize: 12.5, color: t.ink, fontWeight: 650, marginBottom: 8 }}>LeaseRight is building from this section</div>
+                <div style={{ marginTop: 20, padding: "12px 0", borderTop: `1px solid ${t.rule}`, borderBottom: `1px solid ${t.rule}`, display: "grid", gridTemplateColumns: "180px 1fr", alignItems: "center", gap: 16 }}>
+                  <div style={{ fontFamily: t.mono, fontSize: 9.5, letterSpacing: 0.8, textTransform: "uppercase", color: t.inkMute, fontWeight: 650 }}>Model contribution</div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                     {currentIntake.builds.map((b) => (
                       <Tag key={b} t={t} tone="good">{b}</Tag>
@@ -919,47 +1020,27 @@ const PreconView = ({ t }) => {
                   </div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16 }}>
-                  <Btn t={t} variant="primary" onClick={() => setIntakeStep(intakeSteps[Math.min(currentIntakeIndex + 1, intakeSteps.length - 1)].id)}>
+                  <Btn t={t} variant="primary" onClick={continueIntake} disabled={!isCurrentValid} style={!isCurrentValid ? { opacity: 0.45 } : undefined}>
                     {currentIntakeIndex === intakeSteps.length - 1 ? "Build lease-up model" : "Next section"}
                   </Btn>
                   <Btn t={t} variant="ghost">Save and finish later</Btn>
                   <div style={{ flex: 1 }} />
-                  <span style={{ fontFamily: t.sans, fontSize: 11.5, color: t.inkMute }}>No spreadsheet required</span>
+                  <span style={{ fontFamily: t.sans, fontSize: 11.5, color: t.inkMute }}>{isCurrentValid ? "Ready to continue" : "Complete the required fields"}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <Band t={t} title="System outputs · generated after structured intake" />
-          <div style={{ padding: "0 20px 16px" }}>
-            {PRECON_INTAKE.map((s, i) => {
-              const tone = s.status === "complete" ? "good" : s.status === "review" ? "warn" : "neutral";
-              const c = tone === "good" ? t.good : tone === "warn" ? t.warn : t.inkMute;
-              return (
-                <div key={s.step} style={{ display: "grid", gridTemplateColumns: "132px 1fr 220px", gap: 16, padding: "12px 0", borderBottom: i < PRECON_INTAKE.length - 1 ? `1px solid ${t.ruleSoft}` : "none", alignItems: "center" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <Dot c={c} size={7} />
-                    <span style={{ fontFamily: t.sans, fontSize: 12.5, fontWeight: 600, color: t.ink }}>{s.step}</span>
-                  </div>
-                  <div>
-                    <div style={{ fontFamily: t.sans, fontSize: 12, color: t.inkSoft }}>{s.fields}</div>
-                    <div style={{ fontFamily: t.mono, fontSize: 10.5, color: t.inkMute, marginTop: 3, textTransform: "uppercase", letterSpacing: 0.7 }}>{s.status}</div>
-                  </div>
-                  <div style={{ fontFamily: t.sans, fontSize: 12, color: t.inkSoft }}>{s.output}</div>
-                </div>
-              );
-            })}
-          </div>
           </>}
 
           {modelSection === "scenarios" && <>
           <Band t={t} title="Scenario comparison" right={<Btn t={t} size="xs">Add scenario</Btn>} />
           <div style={{ padding: 20, display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 14 }}>
-            {MODEL_SCENARIOS.map(sc => (
-              <div key={sc.name} style={{ background: sc.active ? t.accentSoft : t.surface, border: `1px solid ${sc.active ? t.accent + "66" : t.rule}`, borderRadius: 5, padding: 14 }}>
+            {MODEL_SCENARIOS.map(sc => { const scenarioId = `sc-${sc.name.toLowerCase()}`; const selected = activeModel.activeScenarioId === scenarioId; return (
+              <button key={sc.name} onClick={() => dispatch({ type: "setActiveScenario", modelId: activeModel.id, scenarioId })} style={{ background: selected ? t.accentSoft : t.surface, border: `1px solid ${selected ? t.accent + "66" : t.rule}`, borderRadius: 5, padding: 14, textAlign: "left", color: t.ink, cursor: "pointer" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                   <div style={{ fontFamily: t.sans, fontSize: 14, color: t.ink, fontWeight: 650 }}>{sc.name}</div>
-                  {sc.active ? <Tag t={t} tone="accent">active</Tag> : <Tag t={t}>compare</Tag>}
+                  {selected ? <Tag t={t} tone="accent">selected</Tag> : <Tag t={t}>compare</Tag>}
                 </div>
                 {[
                   ["Velocity", sc.leasesPerWeek + "/wk"],
@@ -973,8 +1054,8 @@ const PreconView = ({ t }) => {
                   </div>
                 ))}
                 <div style={{ fontFamily: t.sans, fontSize: 11.5, color: t.inkSoft, lineHeight: 1.4, marginTop: 10 }}>{sc.note}</div>
-              </div>
-            ))}
+              </button>
+            ); })}
           </div>
 
           <Band t={t} title="Staffing routes · illustrative economics" />
@@ -1121,7 +1202,7 @@ const PreconView = ({ t }) => {
           </>}
 
           {modelSection === "launch" && <>
-          <Band t={t} title="Launch lease-up board" right={<Btn t={t} size="xs" variant="primary">Create live board</Btn>} />
+          <Band t={t} title="Launch lease-up board" right={<Btn t={t} size="xs" variant="primary" onClick={launch}>{launched ? "Board created" : "Create live board"}</Btn>} />
           <div style={{ padding: 20, display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 14 }}>
             {[
               ["Rents", "Create unit availability and rent matrix from approved model."],
@@ -1137,8 +1218,9 @@ const PreconView = ({ t }) => {
           </div>
           <div style={{ padding: "0 20px 20px" }}>
             <div style={{ padding: 14, background: t.goodSoft, border: `1px solid ${t.good}33`, borderRadius: 5 }}>
-              <div style={{ fontFamily: t.sans, fontSize: 13, color: t.ink, fontWeight: 650 }}>Ready when funding is set</div>
-              <div style={{ fontFamily: t.sans, fontSize: 12, color: t.inkSoft, lineHeight: 1.45, marginTop: 6 }}>Lock the model, invite the leasing team, and convert assumptions into the live workflow.</div>
+              <div style={{ fontFamily: t.sans, fontSize: 13, color: t.ink, fontWeight: 650 }}>{launched ? "The live board is ready" : "Ready to launch"}</div>
+              <div style={{ fontFamily: t.sans, fontSize: 12, color: t.inkSoft, lineHeight: 1.45, marginTop: 6 }}>{launched ? "The approved scenario is frozen as the baseline. Today, Pipeline, Applications, Rents, and Reports now share that plan." : "Lock the approved scenario as the baseline and create the live operating board without re-entry."}</div>
+              {launched && <div style={{ marginTop: 12 }}><Btn t={t} size="xs" variant="primary" onClick={onLaunched}>Open Today →</Btn></div>}
             </div>
           </div>
           </>}
@@ -1602,7 +1684,7 @@ const DocumentsView = ({ t }) => {
 };
 
 Object.assign(window, {
-  ResidentsView, CollectionView, MaintenanceView, LedgerView,
+  LeaseRightWelcome, ResidentsView, CollectionView, MaintenanceView, LedgerView,
   ListingsView, MarketView, ConcessionsView, PreconView,
   SettingsView, ApplicationsView, LPReportingView, VendorsView, DocumentsView,
 });
