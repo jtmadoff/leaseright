@@ -102,8 +102,8 @@ This ledger prevents shipped substrate from being confused with complete user wo
 | N16 Rents write-through | **Outstanding** | `UNIT_MATRIX` is local; publish does not dispatch. |
 | N17 shared counts | **Outstanding** | View metrics and sidebar badges/peeks are not selector-backed. |
 
-Do not resume N5–N17 merely because the substrate exists. The business gates for further build are
-still controlled by the canonical Overseer memo.
+N1–N4 are finished foundation work and must not be resumed. The next uncompleted rebuild item is
+N5, but N5–N17 remain controlled by the business gates in the canonical Overseer memo.
 
 ---
 
