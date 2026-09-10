@@ -2,11 +2,11 @@
 project: LeaseRight
 company: Prospeer
 stage: "Venture build"
-as_of: 2026-09-02
+as_of: 2026-09-10
 next_action: "Justin: name a long-term-holder validation target with payment-stack authority—preferably with existing stabilized units—and authorize one fixed five-figure, stage-gated paid pilot with continuity terms and payment diligence; live payments remain a separately gated beta (spec/OVERSEER_MODEL_AND_AGENT_SYNTHESIS.md)."
 definition_of_done: "ONGOING — not public launch. Next milestone is one paid, stage-gated validation: collected sponsor payment; a continuity screen; a reconciled frozen baseline; payment-volume/processor diligence; then conditional operator/originator validation. Live rent processing starts only after partner economics, legal architecture, shadow reconciliation, and beta gates clear."
 owner: Justin
-as_of_source: Justin payment-engine correction + Overseer synthesis 2026-09-02 (repo and primary sources inspected; take rate and retention remain unvalidated)
+as_of_source: git log through b961b36 (latest commit dated 2026-09-08) and repository code inspected 2026-09-10; business context remains the 2026-09-02 Overseer synthesis
 ---
 
 # LeaseRight — Lease-up operating system
@@ -14,7 +14,7 @@ as_of_source: Justin payment-engine correction + Overseer synthesis 2026-09-02 (
 ## Metadata
 - **Company:** Prospeer
 - **Type:** Digital/Creative Project — product build
-- **Repo:** `https://github.com/jtmadoff/leaseright` (per `_system/builds/BUILDS.md`)
+- **Repo:** `https://github.com/jtmadoff/leaseright`
 - **Hosting:** Netlify static deploy
 - **Naming:** formerly **LeaseUp**. Renamed to LeaseRight over trademark conflict risk.
   The superseded LeaseUp prototypes are archived under `Archive/LeaseUp_prototypes/`.
@@ -29,6 +29,22 @@ property-manager-first, built around lease-up velocity rather than generic prope
 Justin confirmed on 2026-09-02 that `$1/unit` is secondary positioning: net rent-processing
 economics on volume routed through LeaseRight are the intended long-term engine.
 
+**Repository state, verified 2026-09-10 from git log and current code:** the latest commit is
+`b961b36` (2026-09-08), a merge that reconciled the status UI and product journey into the
+canonical project. The merged journey starts with a welcome and project-stage choice,
+then makes required property intake the first Model step. Intake edits write to the in-memory store;
+completion unlocks scenario selection, approval unlocks review and launch, and launch freezes the
+selected scenario as a baseline before routing to Today. The same merge replaced prominent filled
+status badges, pulsing queue dots, navigation counts, and ticker/clock chrome with quieter border,
+dot, and text treatments. The implementation touched `LeaseRight.html` and seven files under
+`components/`, including the new `components/store.jsx`; it does not add a backend or durable
+project persistence.
+
+The N1 normalized `SEED` graph and N2 selectors remain present, and the Model view calls
+`brokerEconomics`. Pipeline, Inbox, and Rents still initialize from the legacy top-level
+`PROSPECTS`, `INBOX_THREADS`, and `UNIT_MATRIX` literals in `components/data.jsx`, rather than the
+shared `SEED`/store. Their interactions therefore remain local UI state.
+
 **Overseer read, 2026-09-02** (`spec/OVERSEER_MODEL_AND_AGENT_SYNTHESIS.md`): the current
 business model does not work as stated; the strongest testable version is a paid owner
 command center with **hybrid** execution and a low-friction **originator**
@@ -37,10 +53,8 @@ collect payment, reconcile the sponsor's Model, then activate the operating and 
 only when the baseline, data path, commission policy, and brokerage/payee path are ready. A
 same-submarket second building tests whether originator reuse can become a network. A live payments
 build is not the next milestone, even though net rent-processing economics are the intended
-long-term engine. Spine N1–N2 exist; the Model view now calls
-`brokerEconomics`, but Pipeline/Inbox/Rents still read legacy literals. Do not continue N3–N17
-before the paid validation pilot clears its gates. See `spec/80_IMPLEMENTER_PLAN.md` for the build
-sequence.
+long-term engine. Do not continue N3–N17 before the paid validation pilot clears its gates. See
+`spec/80_IMPLEMENTER_PLAN.md` for the build sequence.
 
 The payment engine should be screened at 5–10 bps net; 25 bps is a stretch contract case, not a
 market quote, and 50 bps is no longer a planning case. At the current assumptions, 10 bps is only
