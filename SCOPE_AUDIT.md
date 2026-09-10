@@ -1,458 +1,189 @@
-# LeaseRight Scope Audit
+# LeaseRight shipped-scope audit
 
-## Current Product Read
+**As of:** 2026-09-10
+**Code inspected through:** 2026-09-08 (`b961b36`)
+**Scope:** `components/*.jsx` and their mounts in `LeaseRight.html` / `components/app.jsx`
 
-LeaseRight is strongest when it is framed as:
+This replaces the July 3 scope audit. The old “missing” lists and recommended build passes are
+retired because the component set changed materially. This file now records what is actually
+present, what is connected, and what remains a mock or local interaction.
 
-1. A pre-funding lease-up model for sponsors and lenders.
-2. A live lease-up execution system once the project is funded.
-3. A payments and resident infrastructure layer after stabilization.
+Business scope and product conclusions are not decided here. The canonical recommendation remains
+`spec/OVERSEER_MODEL_AND_AGENT_SYNTHESIS.md`; the current implementation sequence and done-whens are
+in `spec/80_IMPLEMENTER_PLAN.md`.
 
-The current prototype has the right raw material, but it still carries too much generic property-management surface area. The next build pass should sharpen the product around the sponsor journey:
+---
 
-`Model -> Today -> Pipeline -> Inbox -> Rents -> Applications -> Reports`
+## 1. Component inventory
 
-Everything else should either support that journey or move into the background.
+The current component directory contains 12 JSX files:
 
-## Keep As Core
+| File | Shipped responsibility |
+|---|---|
+| `app.jsx` | App mount, first-run routing, tab routing, active project, UI preferences |
+| `atoms.jsx` | Shared visual primitives |
+| `data.jsx` | Legacy authored display data and formatting helpers |
+| `inbox-view.jsx` | Inbox and local message interactions |
+| `model-data.jsx` | Normalized `SEED` graph and `resolveRefs` |
+| `module-views.jsx` | Residents, Collection, Maintenance, Ledger, Listings, Market, Concessions, welcome/Model, Settings, Applications, Reports, Vendors, Documents |
+| `other-views.jsx` | Rents and fallback placeholders |
+| `pipeline-view.jsx` | Pipeline board and local drag state |
+| `selectors.jsx` | Pure stage, shared-quantity, variance, and broker-economics functions |
+| `shell.jsx` | Primary navigation, sidebar, property switcher, command palette |
+| `store.jsx` | Shared context/reducer/actions |
+| `today-view.jsx` | Today queue/grid/table presentations and local decision interactions |
 
-### Model
+All 12 are loaded or reached by the primary entry path. The app is still a static browser prototype:
+there is no backend, production auth, durable application state, or live payment integration.
 
-Why it matters:
+---
 
-- This is the acquisition wedge before AppFolio/Buildium/Yardi are even being considered.
-- It makes LeaseRight useful before funding.
-- It creates the bridge from underwriting to live operations.
+## 2. Primary sponsor journey
 
-Keep building:
+The intended visible sequence still exists in the shell:
 
-- Sponsor intake.
-- Unit mix and rent assumptions.
-- Absorption scenarios.
-- Broker vs in-house economics.
-- Market rent confidence.
-- Lender PDF and model workbook.
-- Convert model into live lease-up board.
+`Model → Today → Pipeline → Inbox → Rents → Applications → Reports`
 
-Missing:
+The current degree of implementation is:
 
-- Actual editable intake fields.
-- Scenario toggles: base, downside, aggressive.
-- Delivery schedule and phased unit availability.
-- Carry cost of delay.
-- Lender-facing output preview.
-- Clear "create project" path for a first-time user.
+| Surface | What is shipped | Connection boundary |
+|---|---|---|
+| Model | Product-first welcome; three starting stages; five-step editable intake; progress/status UI; Base/Downside/Aggressive cards; staffing comparison; lender review; launch handoff. | Intake saves and scenario selection use the store, but the view still renders many `data.jsx` and local literals. It is not sponsor-sourced or internally reconciled. |
+| Today | Rich queue, grid, and table treatments with decisions, KPIs, and actions. | Decisions and pricing changes are local; they do not write normalized subjects in the store. |
+| Pipeline | Lead stages, filters, SLA flags, source/unit context, drag/drop, and detail treatment. | Cards initialize from `PROSPECTS`; drag changes only local state and creates no shared application. |
+| Inbox | Thread filters, unread/SLA status, conversation pane, suggested replies, and local send behavior. | Threads initialize from `INBOX_THREADS`; messages/actions do not advance the shared lead. |
+| Rents | Editable unit-type matrix, comp/effective comparisons, suggestions, and modeled impact. | Rows initialize from `UNIT_MATRIX`; “Publish changes” does not dispatch to store `UnitType` records. |
+| Applications | Screening queue, deposit/status display, detail view, and decision controls. | Reads `APPLICATIONS`; approve/request/decline controls do not write applications, leases, units, or payments. |
+| Reports | Authored plan/actual presentation, narrative, and PDF/model/deck/GL controls. | Reads `LP_REPORT`; variances are not selector-derived and controls do not create exports. |
 
-### Today
+The primary journey is therefore visually broad but only partially connected. Model and Residents
+are the current store consumers; the lead-to-lease operating surfaces are still separate dioramas.
 
-Why it matters:
+---
 
-- This should be the daily command center after launch.
-- It makes inaction visible.
+## 3. September 1–8 scope now shipped
 
-Keep building:
+Claims that were “missing” in the July audit but are now present:
 
-- Only true decisions.
-- Pricing, lead SLA, concession, application, and lease-signature blockers.
-- Owner/leasing-agent/broker accountability.
+### First-time project start: **partially shipped**
 
-Reduce:
+- The welcome screen has an explicit “Start a project” action.
+- The user selects pre-funding, funded/pre-launch, or active lease-up.
+- The selection writes the active seeded project’s stage and routes to property intake.
+- Property name, sponsor, address, submarket, delivery date, and target stabilization fields render.
 
-- Generic ops noise.
-- Live-tape energy that distracts from executive clarity.
+Boundary: the flow mutates the active seeded project rather than creating a new project record;
+“stabilized” is not offered; team invitation is only a cosmetic downstream control.
 
-Missing:
+### Intake wizard: **shipped as a prototype, partially store-backed**
 
-- Role-specific Today views: sponsor, leasing agent, broker, PM.
-- A clear action history: accepted, deferred, assigned.
-- Connection between Today decisions and Model assumptions.
+- Property, Units, Comps, Rents, and Strategy steps render with required-field gating.
+- Inputs are editable, progress is visible, and saves dispatch `updateProject` / `updateModel`.
+- Unit count writes to the project.
 
-### Pipeline
+Boundary: field definitions and current edit values are local, most downstream calculations do not
+derive from saved intake, and there is no import or sponsor-source traceability.
 
-Why it matters:
+### Scenario and staffing comparison: **partially shipped**
 
-- This is the heart of lease-up execution.
-- It proves LeaseRight can replace spreadsheets, texts, broker updates, and weekly calls.
+- Base, Downside, and Aggressive cards render.
+- Selecting a card dispatches `setActiveScenario`.
+- `brokerEconomics(inputs)` supplies the displayed in-house, hybrid, and broker costs.
+- Staffing costs and savings are labeled illustrative; velocity is “test actual.”
 
-Keep building:
+Boundary: scenario card values still come from `MODEL_SCENARIOS`, not a single store-derived sponsor
+model. Authored carry and dates are not reconciled to one duration/carry formula.
 
-- Lead stages.
-- SLA timers.
-- Source tracking.
-- Unit matching.
-- Assignments.
-- Drag/drop status changes.
+### Model status and launch UI: **partially shipped**
 
-Missing:
-
-- Tour scheduling.
-- Lead capture forms.
-- Broker assignment.
-- Lost-lead reasons.
-- Unit-specific availability tie-in.
-- Follow-up automation.
-
-### Inbox
-
-Why it matters:
-
-- Leasing breaks when communication is scattered.
-- This can unify leads, residents, brokers, vendors, and PMs.
-
-Keep building:
-
-- Prospect conversations.
-- Resident handoff after signing.
-- Suggested replies.
-- SLA flags.
-
-Reduce:
-
-- Vendor/resident/service threads in the primary story until lease-up flow is stronger.
-
-Missing:
-
-- Channel setup: email, SMS, listing portals.
-- Broker messages.
-- Tour confirmation templates.
-- Application chase templates.
-- Lead-source attribution.
-
-### Rents
-
-Why it matters:
-
-- Rent and concession decisions are core to leasing velocity.
-- This can become the market-rent aggregation product.
-
-Keep building:
-
-- Unit matrix.
-- Effective rent.
-- Comp rents.
-- Concession-normalized rents.
-- Recommended adjustments.
-
-Missing:
-
-- Editable assumptions.
-- Rent confidence scoring by unit type.
-- Market rent history.
-- Concession sensitivity.
-- Integration with Model assumptions.
-- Explanation of why a rent is recommended.
-
-### Applications
-
-Why it matters:
-
-- The lead-to-lease path is incomplete without applications.
-- This is where prospects become revenue.
-
-Keep building:
-
-- Application status.
-- Deposit status.
-- Approval recommendations.
-- Lease sent/signed status.
-
-Missing:
-
-- Application intake link.
-- Screening/checklist workflow.
-- Lease package generation.
-- Deposit collection.
-- Move-in checklist.
-- Decline/conditional approval path.
-
-### Reports
-
-Why it matters:
-
-- Sponsors, lenders, LPs, and owners need confidence without asking for a weekly update call.
-
-Keep building:
-
-- Weekly sponsor report.
-- Lender package.
-- Broker performance report.
-- Velocity vs plan.
-- Rent/concession variance.
-
-Missing:
-
-- First-class lender report preview.
-- Broker scorecard.
-- Export states.
-- Narrative summary that a sponsor would actually send.
-
-## Keep But Demote
-
-### Market
-
-Keep as support for Model and Rents, not as a primary module.
-
-Good:
-
-- Comp set.
-- Occupancy.
-- Concessions.
-- Unit-type rents.
-
-Needs:
-
-- Source confidence.
-- Last updated.
-- Normalized effective rent.
-- "Used in model" toggle.
-
-### Concessions
-
-Keep as part of Rents/Model/Today.
-
-Good:
-
-- Cost, conversion, expiration.
-
-Needs:
-
-- Sensitivity impact on absorption.
-- Whether a concession is lender-approved.
-- Which unit types it applies to.
-
-### Listings
-
-Keep as a lease-up support module.
-
-Good:
-
-- Feed health.
-- Leads/views/cost per lead.
-
-Needs:
-
-- Clearer connection to lead pipeline.
-- Launch checklist.
-- Listing quality score.
-
-## Excessive For Now
-
-### Maintenance
-
-This is a full PM feature. It can stay hidden as future expansion, but it should not consume product attention now.
-
-Why excessive:
-
-- Does not help the pre-funding wedge.
-- Does not materially help lease-up unless tied to turns/punch lists.
-
-Keep only if reframed as:
-
-- Unit readiness.
-- Punch list before tour/move-in.
-- Turn blockers.
-
-### Vendors
-
-Useful later, but not central now.
-
-Keep only if reframed as:
-
-- Leasing launch vendors.
-- Cleaning, signage, photography, staging, access control.
-- COI/W9 can wait.
-
-### Ledger
-
-Important for monetization later, but too accounting-heavy for the current wedge.
-
-Keep only if focused on:
-
-- Deposits.
-- Application fees.
-- First rent.
-- Payment processing revenue.
-
-Full operating ledger can wait.
-
-### Collection
-
-Useful after stabilization, but premature for the first product story.
-
-Keep only if focused on:
-
-- Deposit collection.
-- First month rent.
-- Failed deposit/payment follow-up.
-
-### Residents
-
-Needed after lease signing, but not a primary feature yet.
-
-Keep as:
-
-- Converted applicant record.
-- Move-in readiness.
-- Basic resident handoff.
-
-Full renewal/delinquency workflows can wait.
-
-### Documents
-
-Useful as supporting infrastructure, but not a standalone module yet.
-
-Keep documents tied to:
-
-- Lender package.
-- Applications.
-- Leases.
-- Deposits.
-- Unit documents.
-
-## Missing Critical Features
-
-### First-Time Project Creation
-
-The app still assumes an existing property. It needs an obvious first-time path:
-
-- Create project.
-- Choose stage: pre-funding, funded/pre-launch, active lease-up, stabilized.
-- Enter unit count and expected delivery.
-- Invite sponsor team.
-
-### Intake Wizard
-
-The Model page needs an editable intake:
-
-- Project profile.
-- Unit mix.
-- Rent assumptions.
-- Concessions.
-- Delivery schedule.
-- Lease-up velocity.
-- Staffing model.
-- Broker model.
-- Marketing budget.
-- Lender report preferences.
-
-### Scenario Modeling
-
-Needed for the lender wedge:
-
-- Base case.
-- Downside case.
-- Aggressive case.
-- Broker-led case.
-- In-house case.
-- Hybrid case.
-
-Each should show:
-
-- Stabilization date.
-- Carry cost.
-- Concession cost.
-- Staffing/broker cost.
-- Expected rent roll.
-- Risk notes.
-
-### Broker/In-House Decision Tool
-
-This is a differentiator and should be explicit.
-
-It should calculate:
-
-- Broker commission cost.
-- In-house payroll cost.
-- Hybrid support cost.
-- Savings.
-- Delay risk.
-- Unit types that may still need broker help.
-- Recommended operating model.
-
-### Market Rent Aggregation
-
-This can become a data moat.
-
-Needed:
-
-- Comp input.
-- Listing scrape/import.
-- Broker opinion input.
-- Signed-lease feedback.
-- Concession normalization.
-- Confidence score by unit type.
-- Rent recommendation rationale.
-
-### Lead-to-Lease Demo Flow
-
-The current prototype has many pages, but not one clean story. Build one complete flow:
-
-1. Sponsor finishes Model.
-2. Lender package exported.
-3. Project launches.
-4. Lead enters Inbox/Pipeline.
-5. Unit match suggested.
-6. Tour scheduled.
-7. Application submitted.
-8. Lease approved/sent/signed.
-9. Deposit collected.
-10. Report updates automatically.
-
-### Role Model
-
-Need explicit roles:
-
-- Sponsor/owner.
-- Asset manager.
-- Leasing agent.
-- Broker.
-- Property manager.
-- Lender/observer.
-
-Each role should see different permissions and priorities.
-
-## Recommended Near-Term Cuts
-
-Do not delete these yet, but visually demote and stop investing in them for the next pass:
-
-- Maintenance.
-- Vendors.
-- Full ledger.
-- Collections.
-- Full residents.
-- Standalone documents.
-- Generic settings.
-
-## Recommended Next Build Pass
-
-### Pass 1: Make Model Real
-
-- Add a left-side intake checklist.
-- Add editable-looking fields for unit mix, rents, delivery, concessions, staffing.
-- Add scenario cards.
-- Add broker vs in-house calculator.
-- Add lender package preview.
-
-### Pass 2: Connect Model to Launch
-
-- Add a "Launch lease-up board" action.
-- Push assumptions into Rents, Pipeline, Applications, and Reports.
-- Show what changed from model to actual.
-
-### Pass 3: Build One Lead-to-Lease Story
-
-- Pick one sample lead.
-- Move them from lead to tour to application to lease to deposit.
-- Make every primary tab reflect the progression.
-
-### Pass 4: Calm the UI
-
-- Reduce live tape dominance.
-- Fewer badges and colors at once.
-- More guided empty/first-time states.
-- Keep density for power users, but lead with clarity.
-
-## Product Rule
-
-If a feature does not help a sponsor get funded, lease units faster, reduce broker/PM bloat, or win the payment relationship, it should not be primary in the MVP.
-
+- Plan, Scenarios, Review, and Launch show locked/ready/approved/live status.
+- Completing intake unlocks Scenarios; approval advances to Review and Launch.
+- Launch sets the project stage to `active_leaseup`, timestamps it, and freezes a copy of the
+  selected scenario in model state.
+
+Boundary: completion and approval flags are local UI state; the baseline freeze is shallow; launch
+does not create units, gate navigation, or make Pipeline/Applications/Rents/Reports consume the
+baseline.
+
+### Calm/status-focused shell: **shipped in the primary header**
+
+- The primary header no longer renders the scrolling tape, clock, visible F-key labels, nav hover
+  peeks, or primary-tab badges.
+- Navigation labels, project context, search, and a quiet notification dot remain.
+- Today defaults to the queue layout and animated urgency was reduced.
+
+Boundary: hardcoded `NAV_BADGES` and `PEEK_DATA` still feed the sidebar or remain in the file; this
+was a presentation change, not shared-count derivation.
+
+### Resident handoff/status: **shipped against normalized store data**
+
+- Residents derives each row by joining resident, lead, unit, lease, and payment records.
+- Move-in, deposit, and payment-attention filters/KPIs come from those records.
+
+Boundary: upstream Applications cannot create this handoff through the UI, so it demonstrates the
+normalized read path rather than an end-to-end workflow.
+
+---
+
+## 4. Secondary modules actually present
+
+The July audit described several areas as future or excessive. They are not absent: all of the
+following render from `module-views.jsx` and are reachable through the sidebar.
+
+| Module | Current scope |
+|---|---|
+| Residents | Store-derived resident handoff, move-in, deposit, and payment status |
+| Collection | Authored collection KPIs, failed payments, aging, and payment methods |
+| Maintenance | Authored work orders, priority/SLA filters, and work-order detail |
+| Ledger | Authored account balances and transaction/reconciliation presentation |
+| Listings | Authored feed health and listing performance |
+| Market | Authored comp set and market context |
+| Concessions | Authored programs, cost/conversion/expiration treatment |
+| Vendors | Authored COI/W-9/status records and controls |
+| Documents | Authored folders/recent documents and document controls |
+| Settings | Authored property, payment, feed, team, market, and compliance settings |
+
+Except for Residents, these modules remain largely display-level mock data and cosmetic/local
+controls. Their presence must not be reported as production PM, accounting, syndication, document,
+or payment capability.
+
+---
+
+## 5. Scope still absent or incomplete
+
+The following claims are verified against the current files:
+
+- **No connected lead-to-lease story:** a lead cannot move through Inbox/Pipeline → tour →
+  application → lease → deposit → Residents → Reports in shared state.
+- **No originator product:** there is no originator route/view, registration entity, commission
+  entity, frozen-terms confirmation, brokerage notification, or commission-status presentation.
+- **No explicit role model:** the shell renders one hardcoded owner identity; there is no role-based
+  permission or surface gating.
+- **No stage-gated navigation:** after welcome, all primary and sidebar views remain reachable for
+  every selected project stage.
+- **No functional lender/report export:** lender review and export buttons render but do not create
+  a PDF, workbook, deck, or GL file.
+- **No market-rent ingestion/data moat:** comps and confidence values are authored; there is no
+  scrape/import, freshness/provenance workflow, or signed-lease feedback loop.
+- **No production application/screening/lease workflow:** application data and controls are mock.
+- **No live payment capability:** payment records are seed data; there is no partner integration,
+  legal architecture, settlement, reconciliation, or money movement.
+- **No pilot mechanism log:** the required contact/source/tour/application/lease timestamps and
+  duplicate-entry measurement artifact are absent.
+- **Demo hygiene remains partial:** staffing economics say “illustrative,” but scenario carry lacks
+  the required warning and `$1/unit · forever` remains in two shell locations.
+
+---
+
+## 6. Retired July recommendations
+
+The old four-pass recommendation (“Make Model Real,” “Connect Model to Launch,” “Build One
+Lead-to-Lease Story,” “Calm the UI”) is no longer an authoritative queue:
+
+- The intake, status, launch, store mount, and calm-header portions have partly or fully shipped.
+- The downstream connections and named-lead golden path have not shipped.
+- Whether to finish those connections is gated by the paid validation sequence in the canonical
+  business memo and the current done-whens in `spec/80_IMPLEMENTER_PLAN.md`.
+
+This audit therefore makes no new build or business recommendation. It records the current scope so
+future work is not credited early and shipped work is not described as missing.
