@@ -37,18 +37,31 @@ http://localhost:4174/LeaseRight.html
 
 ## Verification
 
-Run the declared project gate:
+Run the primary, dependency-free unit-test suite:
 
 ```sh
-node .m4d/check.mjs
+npm test --offline --script-shell=/bin/sh
 ```
 
-This runs the Netlify staging command; enforces a strict publish allowlist of `index.html`,
+The seven Node tests cover exact selector outputs, checked-in seed reference integrity, the selector
+self-test, and the prototype validator's missing-script failure path. The suite then validates every
+local script reference in both HTML entry points. It requires no install step, network access, or
+browser. The `package.json` manifest exists only to declare this test command; it adds no runtime or
+build dependency.
+
+The declared project gate in `.m4d/project.json` runs the unit tests first, followed by the existing
+browser render check:
+
+```sh
+npm test --offline --script-shell=/bin/sh && node .m4d/check.mjs
+```
+
+The second check runs the Netlify staging command; enforces a strict publish allowlist of `index.html`,
 `LeaseRight.html`, and files under `components/`; and confirms that all twelve component scripts are
 published byte-identically, referenced by `LeaseRight.html`, cache-busted with a query string, and
 resolvable. A component script reference without a cache-bust query string fails the gate. It also
 runs `resolveRefs(SEED)` and `Selectors.__selfTest()` in Node. Those model self-checks are a
-build-time guarantee, not a browser guarantee. `.m4d/project.json` gives the complete gate a
+verification-time guarantee, not a browser guarantee. `.m4d/project.json` gives the complete gate a
 three-minute timeout.
 
 The gate then runs the headless-browser render check. It fails if no browser can be started or if
