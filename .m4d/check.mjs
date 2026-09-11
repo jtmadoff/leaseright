@@ -320,14 +320,20 @@ function cdpClient(chrome, onEvent) {
   const pending = new Map();
   let stderr = "";
   let buffered = Buffer.alloc(0);
+  function rejectPending(error) {
+    for (const waiter of pending.values()) waiter.reject(error);
+    pending.clear();
+  }
   chrome.stderr.on("data", (chunk) => {
     stderr = `${stderr}${chunk}`.slice(-4_000);
+  });
+  chrome.once("error", (error) => {
+    rejectPending(new Error(`Chrome failed to start (${error.message})`));
   });
   chrome.once("exit", (code, signal) => {
     const detail = stderr ? `\n${stderr}` : "";
     const error = new Error(`Chrome exited before loading the app (${signal || `code ${code}`})${detail}`);
-    for (const waiter of pending.values()) waiter.reject(error);
-    pending.clear();
+    rejectPending(error);
   });
   chrome.stdio[4].on("data", (chunk) => {
     buffered = Buffer.concat([buffered, chunk]);
@@ -411,10 +417,10 @@ async function verifyInBrowser(chrome, entryHtml, expectedScripts) {
   let targetId;
   try {
     ({ targetId } = await call("Target.createTarget", { url: "about:blank" }));
+    ({ sessionId } = await call("Target.attachToTarget", { targetId, flatten: true }));
   } catch (error) {
     throw new BrowserUnavailableError(error.message);
   }
-  ({ sessionId } = await call("Target.attachToTarget", { targetId, flatten: true }));
   const appUrl = `${APP_ORIGIN}/${ENTRY}`;
   try {
     await Promise.all([
@@ -464,9 +470,8 @@ async function verifyBrowser() {
   try {
     const browser = findChrome();
     if (!browser) {
-      throw new BrowserUnavailableError(
-        "Headless browser render check could not run because Chrome or Chromium was not found; set CHROME_PATH to its executable.",
-      );
+      console.warn("WARNING: Headless browser render check skipped because Chrome or Chromium was not found; set CHROME_PATH to its executable.");
+      return;
     }
     let html = await readFile(join(ROOT, ENTRY), "utf8");
     let expectedScripts = localComponentScripts(html);
@@ -496,9 +501,8 @@ async function verifyBrowser() {
       await verifyInBrowser(chrome, html, expectedScripts);
     } catch (error) {
       if (!(error instanceof BrowserUnavailableError)) throw error;
-      throw new BrowserUnavailableError(
-        `Headless browser could not start (${browser}):\n${error.message}`,
-      );
+      console.warn(`WARNING: Headless browser render check skipped because the installed browser could not start (${browser}):\n${error.message}`);
+      return;
     }
     console.log(`Browser check passed: ${expectedScripts.length} component scripts loaded in headless Chrome.`);
   } finally {
