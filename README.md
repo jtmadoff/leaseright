@@ -48,11 +48,22 @@ This runs the Netlify staging command; enforces a strict publish allowlist of `i
 published byte-identically, referenced by `LeaseRight.html`, cache-busted with a query string, and
 resolvable. A component script reference without a cache-bust query string fails the gate. It also
 runs `resolveRefs(SEED)` and `Selectors.__selfTest()` in Node. Those model self-checks are a
-build-time guarantee, not a browser guarantee.
+build-time guarantee, not a browser guarantee. `.m4d/project.json` gives the complete gate a
+three-minute timeout.
 
-On every gate run, the headless-Chrome render check verifies that the app mounts, component requests
-return successfully, and no browser errors are reported when Chrome or Chromium is available. It
-does not exercise the first-user journey. To smoke-test that journey, run the local preview, open
+The gate then runs the headless-browser render check. It fails if no browser can be started or if
+any render assertion fails; browser unavailability is never treated as a skipped check. Discovery
+checks `CHROME_PATH`, the standard macOS Chrome, Chromium, Edge, and Brave application locations,
+and the `google-chrome`, `google-chrome-stable`, `chromium`, and `chromium-browser` commands. To use
+a different executable, set `CHROME_PATH` to its absolute path:
+
+```sh
+CHROME_PATH="/absolute/path/to/chromium" node .m4d/check.mjs
+```
+
+The browser check verifies that the app mounts, component requests return successfully, and no
+browser errors are reported. It does not exercise the first-user journey. To smoke-test that
+journey, run the local preview, open
 `LeaseRight.html`, start a project, choose a project stage, and continue to property intake. Confirm
 that required property fields gate the next section and that completing the Model flow unlocks
 Scenarios, Review, and Launch in order.

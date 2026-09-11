@@ -452,8 +452,9 @@ async function verifyBrowser() {
   try {
     const browser = findChrome();
     if (!browser) {
-      console.warn("WARNING: Headless browser render check skipped because Chrome or Chromium was not found; set CHROME_PATH to its executable.");
-      return;
+      throw new BrowserUnavailableError(
+        "Headless browser render check could not run because Chrome or Chromium was not found; set CHROME_PATH to its executable.",
+      );
     }
     let html = await readFile(join(ROOT, ENTRY), "utf8");
     let expectedScripts = localComponentScripts(html);
@@ -483,8 +484,9 @@ async function verifyBrowser() {
       await verifyInBrowser(chrome, html, expectedScripts);
     } catch (error) {
       if (!(error instanceof BrowserUnavailableError)) throw error;
-      console.warn(`WARNING: Headless browser render check skipped because the installed browser could not start:\n${error.message}`);
-      return;
+      throw new BrowserUnavailableError(
+        `Headless browser could not start (${browser}):\n${error.message}`,
+      );
     }
     console.log(`Browser check passed: ${expectedScripts.length} component scripts loaded in headless Chrome.`);
   } finally {
