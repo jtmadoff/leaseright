@@ -21,6 +21,8 @@ class BrowserUnavailableError extends Error {}
 function findChrome() {
   const candidates = [
     process.env.CHROME_PATH,
+    "chrome-headless-shell",
+    "/Applications/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
     "/Applications/Chromium.app/Contents/MacOS/Chromium",
     "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
@@ -40,6 +42,10 @@ function findChrome() {
     }
   }
   return null;
+}
+
+function isHeadlessShell(executable) {
+  return /(?:^|[/\\])(?:chrome-headless-shell|headless_shell)(?:\.exe)?$/u.test(executable);
 }
 
 function localComponentScripts(html) {
@@ -466,7 +472,6 @@ async function verifyBrowser() {
     await assertComponentFiles(expectedScripts);
     profile = await mkdtemp(join(tmpdir(), "leaseright-browser-check-"));
     const args = [
-      "--headless=new",
       "--disable-background-networking",
       "--disable-component-update",
       "--disable-default-apps",
@@ -478,6 +483,7 @@ async function verifyBrowser() {
       `--user-data-dir=${profile}`,
       "about:blank",
     ];
+    if (!isHeadlessShell(browser)) args.unshift("--headless=new");
     if (typeof process.getuid === "function" && process.getuid() === 0) args.unshift("--no-sandbox");
     chrome = spawn(browser, args, { stdio: ["ignore", "ignore", "pipe", "pipe", "pipe"] });
     try {
