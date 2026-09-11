@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import { cp, mkdtemp, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { extname, join, normalize, relative, resolve, sep } from "node:path";
+import { createContext, runInContext } from "node:vm";
 
 const ROOT = process.cwd();
 const ENTRY = "LeaseRight.html";
@@ -120,6 +121,38 @@ function withoutScript(html, source) {
     return `${html.slice(0, match.index)}${html.slice(match.index + match[0].length)}`;
   }
   throw new Error(`negative control could not remove ${source} from ${ENTRY}`);
+}
+
+async function verifyModelIntegrity() {
+  const assertionFailures = [];
+  const sandbox = {
+    console: {
+      assert(condition, ...details) {
+        if (!condition) assertionFailures.push(details.join(" "));
+      },
+    },
+  };
+  sandbox.window = sandbox;
+  const context = createContext(sandbox);
+
+  for (const name of ["model-data.jsx", "selectors.jsx"]) {
+    const source = await readFile(join(ROOT, "components", name), "utf8");
+    runInContext(source, context, { filename: `components/${name}` });
+  }
+
+  const dangling = context.resolveRefs(context.SEED);
+  if (!Array.isArray(dangling)) throw new Error("resolveRefs(SEED) did not return an array");
+  if (dangling.length) {
+    throw new Error(`resolveRefs(SEED) found dangling references:\n${JSON.stringify(dangling, null, 2)}`);
+  }
+
+  const selectorsPassed = context.Selectors.__selfTest();
+  if (selectorsPassed !== true) assertionFailures.push("Selectors.__selfTest() did not return true");
+  if (assertionFailures.length) {
+    throw new Error(`Selectors.__selfTest() failed:\n${assertionFailures.join("\n")}`);
+  }
+
+  console.log("Model integrity check passed: resolveRefs(SEED) and Selectors.__selfTest().");
 }
 
 async function verifyStaticDeploy() {
@@ -413,6 +446,7 @@ async function verifyBrowser() {
 
 async function main() {
   await verifyStaticDeploy();
+  await verifyModelIntegrity();
   if (process.env.LEASERIGHT_BROWSER_CHECK !== "1") {
     console.log("Browser check skipped; set LEASERIGHT_BROWSER_CHECK=1 to opt in.");
     return;
