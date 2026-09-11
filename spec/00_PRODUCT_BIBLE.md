@@ -1,5 +1,23 @@
 # LeaseRight — Product Bible (v0 seed)
 
+**As of:** 2026-09-11
+**Original package date:** 2026-07-01
+**Status:** Superseded for implementation status
+
+This Product Bible predates the September first-user, property-intake, Model, launch, and
+resident-handoff work. Its implementation snapshot in §§4–5 is retired where it describes all data
+as hardcoded mock and the prototype as having no shared spine; those claims no longer describe the
+shipped component set.
+
+Use:
+
+- `spec/80_IMPLEMENTER_PLAN.md` for the current component-by-component implementation state,
+  done-when ledger, and gated build sequence.
+- `spec/OVERSEER_MODEL_AND_AGENT_SYNTHESIS.md` for the current business recommendation, pilot
+  design, payment-engine conclusions, and decisions for Justin.
+
+This supersession changes no business conclusion.
+
 > Shared source of truth for the prototype-perfection effort. Every specialist reads this
 > BEFORE working and writes findings back into their own spec file. If your work contradicts
 > something here, flag it explicitly rather than silently diverging — the lead integrates.

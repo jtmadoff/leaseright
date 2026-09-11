@@ -21,14 +21,14 @@ A lease-up operating system for developers and small-to-mid portfolio owners who
 
 - **One HTML app, twelve components.** `LeaseRight.html` loads React 18.3.1 and Babel from a CDN with SRI hashes and renders `components/*.jsx` in the browser. No bundler, no server, no persistence beyond the page.
 - **The first user journey works end to end in memory.** Welcome → project-stage choice → required property intake (the first Model step) → scenario selection → approval → review and launch, which freezes the chosen scenario as a baseline and routes to Today. `components/store.jsx` holds this state (`StoreProvider`, mounted in `app.jsx`).
-- **Model math is real.** The normalized `SEED` graph (`model-data.jsx`) and the N2 selectors (`selectors.jsx`) exist and the Model view calls `brokerEconomics`. The verification gate calls `resolveRefs(SEED)` and `Selectors.__selfTest()` on every run.
-- **Pipeline, Inbox, and Rents are still demo views.** They initialize from legacy literals in `data.jsx`, not from the shared store, so their interactions are local UI state.
+- **Model math is real.** The normalized `SEED` graph (`model-data.jsx`) and the N2 selectors (`selectors.jsx`) exist and the Model view calls `brokerEconomics`. The verification gate calls `resolveRefs(SEED)` and `Selectors.__selfTest()` on every run. Those self-checks run in Node as a build-time guarantee; they are not a browser guarantee.
+- **Six primary surfaces are still disconnected demo views.** Today, Pipeline, Inbox, Rents, Applications, and Reports use legacy globals and/or local state rather than the shared store. Of the secondary surfaces, Collection, Maintenance, Ledger, Listings, Market, Concessions, Vendors, Documents, and Settings are also disconnected; Model and Residents are the two connected surfaces.
 - **Delivery is hardened.** Netlify publishes only `index.html`, `LeaseRight.html`, and `components/` (specs and the archive are no longer served); security headers are set; `/leaseright` and `/app` redirect to the app.
 - **Verification gate.** `.m4d/project.json` declares `node .m4d/check.mjs`: a verification that runs the Netlify staging command, confirms every component script is published byte-identically and referenced by `LeaseRight.html`, confirms every local script reference resolves in the staged output, keeps internal and spec directories out of that output, and calls `resolveRefs(SEED)` and `Selectors.__selfTest()`. M4D runs this check on every write mission; a branch cannot merge without it passing. The headless-Chrome browser check still exists behind `LEASERIGHT_BROWSER_CHECK=1`, but it is opt-in, non-blocking, and does not gate merges.
 
 ## What the agent packs did (Sep 10–11)
 
-Two Overseer packs and their follow-ups ran through M4D. Landed on `main`: the public-site publish fix, security headers, the deploy manifest that reads component names from the HTML instead of a hand-typed list, the implementer-plan correction (the status table claimed the store was missing — it was built), three spec reconciliations against shipped code, the PROJECT/README refresh, the production React swap with a visible load-error fallback, and the check gate above. Filed as reports in `spec/`: the Warden delivery/dependency audit and the Analyst doc-vs-code claims ledger. Removed: a self-referential `node_modules` symlink that an early merge had introduced (`node_modules` is ignored in both spellings now; nothing on the runtime path used it). The graph cache under `graphify-out/cache/` is ignored too; the graph itself stays tracked.
+Two Overseer packs and their follow-ups ran through M4D. Landed on `main`: the public-site publish fix, security headers, the deploy manifest that reads component names from the HTML instead of a hand-typed list, the implementer-plan correction (the status table claimed the store was missing — it was built), three spec reconciliations against shipped code, the PROJECT/README refresh, the production React swap with a visible load-error fallback, and the check gate above. Filed as reports in `spec/`: the Warden delivery/dependency audit and the Analyst doc-vs-code claims ledger. The self-referential `node_modules` symlink that an early merge introduced is untracked and ignored (`node_modules` is ignored in both spellings; nothing on the runtime path uses it). The graph cache under `graphify-out/cache/` is ignored too; the graph itself stays tracked.
 
 Not taken: two competing test-gate branches that needed an npm install of `@babel/parser` or a vendored 14k-line parser — the no-build rule wins. The dependency-free static gate instead verifies the deploy artifact: the staging command succeeds, component scripts are published byte-identically and referenced by the entry page, every local script reference resolves, and internal and spec directories remain unpublished. The retained headless-Chrome check is an opt-in, non-blocking supplement, not a merge gate.
 
@@ -40,8 +40,8 @@ Not taken: two competing test-gate branches that needed an npm install of `@babe
 
 ## Next two things worth doing
 
-1. Wire Pipeline, Inbox, and Rents to the shared store so the journey's baseline flows into them (the last piece of "one project, one state").
-2. Do not continue N3–N17 from `spec/80_IMPLEMENTER_PLAN.md` until the paid pilot clears its first gate.
+1. Secure the paid pilot and clear its first gate; until then, do not continue N5–N17 from `spec/80_IMPLEMENTER_PLAN.md`.
+2. After that gate clears, wire Today, Pipeline, Inbox, Rents, Applications, and Reports to the shared store so the journey's baseline flows into every primary operating surface.
 
 ## Where things live
 
