@@ -11,7 +11,8 @@ This is the confirmed Netlify Drop-era LeaseRight prototype.
 - Canonical business recommendation: `spec/OVERSEER_MODEL_AND_AGENT_SYNTHESIS.md`
 - Hosting target: Netlify static deploy
 
-This project is intentionally a static HTML prototype. It uses React UMD and Babel in the browser so the design can be shared and iterated quickly without a build step.
+This project is intentionally a static HTML prototype. It uses React UMD and Babel in the browser,
+so deployment does not bundle or compile the app before it is served.
 
 ## Component loading and cache busting
 
@@ -50,7 +51,15 @@ section and that completing the Model flow unlocks Scenarios, Review, and Launch
 
 ## Deployment
 
-Netlify can publish this folder directly. No build command is required.
+Netlify runs this staging command before publishing:
+
+```sh
+mkdir -p .netlify-publish/components && cp index.html LeaseRight.html .netlify-publish/ && cp components/*.jsx .netlify-publish/components/
+```
+
+The command copies both entry pages (`index.html` and `LeaseRight.html`) and every top-level
+component script (`components/*.jsx`) into the `.netlify-publish/` publish folder. Only that staged
+folder is deployed, so repository-only internal folders and `spec/` are deliberately excluded.
 
 The public entry points are `/`, `/app`, and `/leaseright`; all open the
 LeaseRight prototype.
