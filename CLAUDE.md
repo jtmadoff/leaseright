@@ -8,7 +8,7 @@
 
 ## Static prototype conventions
 
-- Keep the app build-free: it uses React UMD and Babel in the browser and deploys directly to Netlify. Do not add a package-manager, bundler, compiled output, backend, or build command unless the project direction explicitly changes.
+- Keep the app build-free: it uses React UMD and Babel in the browser and deploys directly to Netlify. A dependency-free `package.json` may exist solely to declare verification scripts run by `npm test`; it is not authorization for dependencies or install steps. Do not add a bundler, compiled output, backend, or application build step unless the project direction explicitly changes.
 - Preview from the repository root with `python3 -m http.server 4174`, then open `http://localhost:4174/LeaseRight.html`.
 - When changing a file in `components/`, update that file's matching `<script>` URL in `LeaseRight.html` with a new `?v=` cache-bust value in the same change. Preserve the component script order.
 
