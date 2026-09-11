@@ -54,8 +54,10 @@ three-minute timeout.
 The gate then runs the headless-browser render check. It fails if no browser can be started or if
 any render assertion fails; browser unavailability is never treated as a skipped check. Discovery
 checks `CHROME_PATH`, the standard macOS Chrome, Chromium, Edge, and Brave application locations,
-and the `google-chrome`, `google-chrome-stable`, `chromium`, and `chromium-browser` commands. To use
-a different executable, set `CHROME_PATH` to its absolute path:
+the standard macOS Chrome for Testing location, and the `chrome-headless-shell`, `google-chrome`,
+`google-chrome-stable`, `chromium`, and `chromium-browser` commands. The gate omits
+`--headless=new` only when the selected executable is itself a headless shell. To use a different
+executable, set `CHROME_PATH` to its absolute path:
 
 ```sh
 CHROME_PATH="/absolute/path/to/chromium" node .m4d/check.mjs
