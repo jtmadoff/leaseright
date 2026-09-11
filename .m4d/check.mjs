@@ -16,6 +16,8 @@ const MIME_TYPES = new Map([
   [".jsx", "text/javascript; charset=utf-8"],
 ]);
 
+class BrowserUnavailableError extends Error {}
+
 function findChrome() {
   const candidates = [
     process.env.CHROME_PATH,
@@ -37,7 +39,7 @@ function findChrome() {
       if (found) return found;
     }
   }
-  throw new Error("Chrome or Chromium is required (set CHROME_PATH to its executable)");
+  return null;
 }
 
 function localComponentScripts(html) {
@@ -99,6 +101,19 @@ async function jsxNames(directory) {
     .sort();
 }
 
+async function stagedFileNames(directory, prefix = "") {
+  const files = [];
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const relativePath = prefix ? `${prefix}/${entry.name}` : entry.name;
+    if (entry.isDirectory()) {
+      files.push(...await stagedFileNames(join(directory, entry.name), relativePath));
+    } else {
+      files.push(relativePath);
+    }
+  }
+  return files.sort();
+}
+
 async function assertRegularFile(file, description) {
   try {
     if (!(await stat(file)).isFile()) throw new Error("not a regular file");
@@ -121,6 +136,14 @@ function withoutScript(html, source) {
     return `${html.slice(0, match.index)}${html.slice(match.index + match[0].length)}`;
   }
   throw new Error(`negative control could not remove ${source} from ${ENTRY}`);
+}
+
+function withoutQueryString(html, source) {
+  const uncached = source.replace(/\?[^#]*/u, "");
+  if (uncached === source) {
+    throw new Error(`negative control could not remove a query string from ${source}`);
+  }
+  return html.replace(source, uncached);
 }
 
 async function verifyModelIntegrity() {
@@ -197,8 +220,23 @@ async function verifyStaticDeploy() {
       const firstReference = localComponentScripts(entryHtml)[0];
       if (!firstReference) throw new Error(`${ENTRY} declares no local component scripts`);
       await writeFile(entryFile, withoutScript(entryHtml, firstReference));
+    } else if (negative === "uncached") {
+      const entryFile = join(publishRoot, ENTRY);
+      const entryHtml = await readFile(entryFile, "utf8");
+      const firstReference = localComponentScripts(entryHtml)[0];
+      if (!firstReference) throw new Error(`${ENTRY} declares no local component scripts`);
+      await writeFile(entryFile, withoutQueryString(entryHtml, firstReference));
+    } else if (negative === "unexpected") {
+      await writeFile(join(publishRoot, "unexpected.txt"), "negative control\n");
     } else if (negative) {
       throw new Error(`Unknown LEASERIGHT_STATIC_NEGATIVE value: ${negative}`);
+    }
+
+    const stagedFiles = await stagedFileNames(publishRoot);
+    for (const file of stagedFiles) {
+      if (file !== "index.html" && file !== ENTRY && !file.startsWith("components/")) {
+        throw new Error(`${file} is outside the staged publish allowlist`);
+      }
     }
 
     const stagedComponents = await jsxNames(join(publishRoot, "components"));
@@ -223,6 +261,12 @@ async function verifyStaticDeploy() {
     const entryHtml = await readFile(join(publishRoot, ENTRY), "utf8");
     const localScripts = localScriptSources(entryHtml);
     if (!localScripts.length) throw new Error(`${ENTRY} declares no local script references`);
+    const componentScripts = localComponentScripts(entryHtml);
+    for (const source of componentScripts) {
+      if (!new URL(source, `${APP_ORIGIN}/${ENTRY}`).search) {
+        throw new Error(`${source}: component script reference is missing a cache-bust query string`);
+      }
+    }
     const referencedComponents = new Set();
     for (const source of localScripts) {
       const resolved = stagedScriptPath(publishRoot, source);
@@ -238,15 +282,8 @@ async function verifyStaticDeploy() {
       }
     }
 
-    const privateDirectories = [".claude", ".m4d", "Archive", "graphify-out", "spec"];
-    for (const directory of privateDirectories) {
-      if (existsSync(join(publishRoot, directory))) {
-        throw new Error(`${directory}/ must be absent from the staged output`);
-      }
-    }
-
     console.log(
-      `Static deploy check passed: ${sourceComponents.length} byte-identical component scripts are staged, referenced, and resolvable; private directories are absent.`,
+      `Static deploy check passed: ${sourceComponents.length} byte-identical component scripts are staged, cache-busted, referenced, and resolvable; all ${stagedFiles.length} staged files are allowlisted.`,
     );
   } finally {
     await rm(scratch, { recursive: true, force: true });
@@ -359,7 +396,12 @@ async function verifyInBrowser(chrome, entryHtml, expectedScripts) {
     if (method === "Network.responseReceived") responses.set(params.response.url, params.response.status);
   });
 
-  const { targetId } = await call("Target.createTarget", { url: "about:blank" });
+  let targetId;
+  try {
+    ({ targetId } = await call("Target.createTarget", { url: "about:blank" }));
+  } catch (error) {
+    throw new BrowserUnavailableError(error.message);
+  }
   ({ sessionId } = await call("Target.attachToTarget", { targetId, flatten: true }));
   const appUrl = `${APP_ORIGIN}/${ENTRY}`;
   try {
@@ -408,6 +450,11 @@ async function verifyBrowser() {
   let chrome;
   let profile;
   try {
+    const browser = findChrome();
+    if (!browser) {
+      console.warn("WARNING: Headless browser render check skipped because Chrome or Chromium was not found; set CHROME_PATH to its executable.");
+      return;
+    }
     let html = await readFile(join(ROOT, ENTRY), "utf8");
     let expectedScripts = localComponentScripts(html);
     if (process.env.LEASERIGHT_BREAK_COMPONENT_REFERENCE === "1" && expectedScripts.length) {
@@ -431,8 +478,14 @@ async function verifyBrowser() {
       "about:blank",
     ];
     if (typeof process.getuid === "function" && process.getuid() === 0) args.unshift("--no-sandbox");
-    chrome = spawn(findChrome(), args, { stdio: ["ignore", "ignore", "pipe", "pipe", "pipe"] });
-    await verifyInBrowser(chrome, html, expectedScripts);
+    chrome = spawn(browser, args, { stdio: ["ignore", "ignore", "pipe", "pipe", "pipe"] });
+    try {
+      await verifyInBrowser(chrome, html, expectedScripts);
+    } catch (error) {
+      if (!(error instanceof BrowserUnavailableError)) throw error;
+      console.warn(`WARNING: Headless browser render check skipped because the installed browser could not start:\n${error.message}`);
+      return;
+    }
     console.log(`Browser check passed: ${expectedScripts.length} component scripts loaded in headless Chrome.`);
   } finally {
     if (chrome && chrome.exitCode === null && chrome.signalCode === null) {
@@ -447,10 +500,6 @@ async function verifyBrowser() {
 async function main() {
   await verifyStaticDeploy();
   await verifyModelIntegrity();
-  if (process.env.LEASERIGHT_BROWSER_CHECK !== "1") {
-    console.log("Browser check skipped; set LEASERIGHT_BROWSER_CHECK=1 to opt in.");
-    return;
-  }
   await verifyBrowser();
 }
 

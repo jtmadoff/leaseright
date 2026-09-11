@@ -1,5 +1,5 @@
 {
   "check": "node .m4d/check.mjs",
   "isolation": "worktree",
-  "check_timeout_minutes": 1
+  "check_timeout_minutes": 3
 }
