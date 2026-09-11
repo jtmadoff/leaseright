@@ -43,26 +43,19 @@ Run the declared project gate:
 node .m4d/check.mjs
 ```
 
-This runs the Netlify staging command; confirms that all twelve component scripts are published
-byte-identically, referenced by `LeaseRight.html`, and resolvable; and confirms that internal and
-spec directories are excluded from the publish output. It also runs `resolveRefs(SEED)` and
-`Selectors.__selfTest()` in Node. Those model self-checks are a build-time guarantee, not a browser
-guarantee.
+This runs the Netlify staging command; enforces a strict publish allowlist of `index.html`,
+`LeaseRight.html`, and files under `components/`; and confirms that all twelve component scripts are
+published byte-identically, referenced by `LeaseRight.html`, cache-busted with a query string, and
+resolvable. A component script reference without a cache-bust query string fails the gate. It also
+runs `resolveRefs(SEED)` and `Selectors.__selfTest()` in Node. Those model self-checks are a
+build-time guarantee, not a browser guarantee.
 
-The gate confirms that local script references resolve, but it does not enforce the `?v=` cache-bust
-convention in `CLAUDE.md`; reviewing that bump remains part of every component change.
-
-An opt-in headless-Chrome supplement is available:
-
-```sh
-LEASERIGHT_BROWSER_CHECK=1 node .m4d/check.mjs
-```
-
-That supplement verifies that the app mounts, component requests return successfully, and no
-browser errors are reported. It does not exercise the first-user journey. To smoke-test that journey,
-run the local preview, open `LeaseRight.html`, start a project, choose a project stage, and continue
-to property intake. Confirm that required property fields gate the next section and that completing
-the Model flow unlocks Scenarios, Review, and Launch in order.
+On every gate run, the headless-Chrome render check verifies that the app mounts, component requests
+return successfully, and no browser errors are reported when Chrome or Chromium is available. It
+does not exercise the first-user journey. To smoke-test that journey, run the local preview, open
+`LeaseRight.html`, start a project, choose a project stage, and continue to property intake. Confirm
+that required property fields gate the next section and that completing the Model flow unlocks
+Scenarios, Review, and Launch in order.
 
 ## Deployment
 
