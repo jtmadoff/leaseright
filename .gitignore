@@ -2,6 +2,7 @@ node_modules
 node_modules/
 .DS_Store
 .netlify/
+.m4d/tools/
 *.zip
 *.bundle
 .__*

@@ -6,6 +6,8 @@ import { extname, join, normalize, relative, resolve, sep } from "node:path";
 import { createContext, runInContext } from "node:vm";
 
 const ROOT = process.cwd();
+const LOCAL_TOOLS_DIR = join(ROOT, ".m4d", "tools");
+const LOCAL_BROWSER = join(LOCAL_TOOLS_DIR, "chrome-headless-shell", "chrome-headless-shell");
 const ENTRY = "LeaseRight.html";
 const APP_ORIGIN = "http://leaseright.local";
 const LOAD_TIMEOUT_MS = 30_000;
@@ -20,6 +22,7 @@ class BrowserUnavailableError extends Error {}
 
 function findChrome() {
   const candidates = [
+    LOCAL_BROWSER,
     process.env.CHROME_PATH,
     "chrome-headless-shell",
     "/Applications/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
@@ -194,7 +197,10 @@ async function verifyStaticDeploy() {
         const rel = relative(ROOT, source);
         if (!rel) return true;
         const topLevel = rel.split(sep, 1)[0];
-        return topLevel !== ".git" && topLevel !== ".netlify-publish";
+        return topLevel !== ".git"
+          && topLevel !== ".netlify-publish"
+          && source !== LOCAL_TOOLS_DIR
+          && !source.startsWith(`${LOCAL_TOOLS_DIR}${sep}`);
       },
     });
 

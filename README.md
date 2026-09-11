@@ -52,12 +52,37 @@ build-time guarantee, not a browser guarantee. `.m4d/project.json` gives the com
 three-minute timeout.
 
 The gate then runs the headless-browser render check. It fails if no browser can be started or if
-any render assertion fails; browser unavailability is never treated as a skipped check. Discovery
-checks `CHROME_PATH`, the standard macOS Chrome, Chromium, Edge, and Brave application locations,
-the standard macOS Chrome for Testing location, and the `chrome-headless-shell`, `google-chrome`,
-`google-chrome-stable`, `chromium`, and `chromium-browser` commands. The gate omits
-`--headless=new` only when the selected executable is itself a headless shell. To use a different
-executable, set `CHROME_PATH` to its absolute path:
+any render assertion fails; browser unavailability is never treated as a skipped check. Browser
+discovery uses the first available executable in this order:
+
+1. `.m4d/tools/chrome-headless-shell/chrome-headless-shell`
+2. `CHROME_PATH`
+3. the `chrome-headless-shell` command
+4. `/Applications/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing`
+5. `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`
+6. `/Applications/Chromium.app/Contents/MacOS/Chromium`
+7. `/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge`
+8. `/Applications/Brave Browser.app/Contents/MacOS/Brave Browser`
+9. the `google-chrome` command
+10. the `google-chrome-stable` command
+11. the `chromium` command
+12. the `chromium-browser` command
+
+For a project-local installation, place the extracted headless-shell bundle contents—the
+executable plus its sibling libraries and resources—in `.m4d/tools/chrome-headless-shell/`. The
+executable must land at exactly
+`.m4d/tools/chrome-headless-shell/chrome-headless-shell`; make it executable with:
+
+```sh
+chmod +x .m4d/tools/chrome-headless-shell/chrome-headless-shell
+```
+
+The `.m4d/tools/` directory is ignored by Git and excluded from the gate's temporary staging copy.
+The gate does not download a browser. The project-local executable takes precedence over
+`CHROME_PATH` and all system browsers.
+
+The gate omits `--headless=new` only when the selected executable is itself a headless shell. To
+use `CHROME_PATH` when the project-local executable is absent, set it to an absolute path:
 
 ```sh
 CHROME_PATH="/absolute/path/to/chromium" node .m4d/check.mjs
