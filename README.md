@@ -37,17 +37,32 @@ http://localhost:4174/LeaseRight.html
 
 ## Verification
 
-Check Markdown whitespace and confirm that every local Babel script is versioned and resolves to
-an existing component file:
+Run the declared project gate:
 
 ```sh
-git diff --check
-node -e 'const fs=require("fs");const h=fs.readFileSync("LeaseRight.html","utf8");const s=[...h.matchAll(/<script type="text\/babel" src="([^"]+)"/g)].map(m=>m[1]);if(!s.length||s.some(x=>!x.includes("?v=")||!fs.existsSync(x.split("?")[0])))process.exit(1);console.log(`verified ${s.length} versioned local component scripts`);'
+node .m4d/check.mjs
 ```
 
-For a browser smoke test, run the local preview, open `LeaseRight.html`, start a project, choose a
-project stage, and continue to property intake. Confirm that required property fields gate the next
-section and that completing the Model flow unlocks Scenarios, Review, and Launch in order.
+This runs the Netlify staging command; confirms that all twelve component scripts are published
+byte-identically, referenced by `LeaseRight.html`, and resolvable; and confirms that internal and
+spec directories are excluded from the publish output. It also runs `resolveRefs(SEED)` and
+`Selectors.__selfTest()` in Node. Those model self-checks are a build-time guarantee, not a browser
+guarantee.
+
+The gate confirms that local script references resolve, but it does not enforce the `?v=` cache-bust
+convention in `CLAUDE.md`; reviewing that bump remains part of every component change.
+
+An opt-in headless-Chrome supplement is available:
+
+```sh
+LEASERIGHT_BROWSER_CHECK=1 node .m4d/check.mjs
+```
+
+That supplement verifies that the app mounts, component requests return successfully, and no
+browser errors are reported. It does not exercise the first-user journey. To smoke-test that journey,
+run the local preview, open `LeaseRight.html`, start a project, choose a project stage, and continue
+to property intake. Confirm that required property fields gate the next section and that completing
+the Model flow unlocks Scenarios, Review, and Launch in order.
 
 ## Deployment
 
