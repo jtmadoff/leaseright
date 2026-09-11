@@ -42,22 +42,22 @@
     "semantic_hash": "d80153b3f212e87a6063970279b249b5"
   },
   "components/app.jsx": {
-    "mtime": 1783099894.3236833,
-    "seen": 1788528001.82834,
-    "ast_hash": "a2d527693d224cd30c4c8bb1b74c3f2f",
-    "semantic_hash": "a2d527693d224cd30c4c8bb1b74c3f2f"
+    "mtime": 1788845405.5475805,
+    "seen": 1789056157.638384,
+    "ast_hash": "67dddcae5cc7cae8ff5c1bd5ce2abec2",
+    "semantic_hash": ""
   },
   "components/atoms.jsx": {
-    "mtime": 1783099893.8297486,
-    "seen": 1788528001.828341,
-    "ast_hash": "0e1a0256e55187f1853b0908a89390ec",
-    "semantic_hash": "0e1a0256e55187f1853b0908a89390ec"
+    "mtime": 1788845405.54768,
+    "seen": 1789056157.638384,
+    "ast_hash": "3839eeb329957778dd37f9041e53ae85",
+    "semantic_hash": ""
   },
   "components/data.jsx": {
-    "mtime": 1788365477.176284,
-    "seen": 1788528001.828341,
-    "ast_hash": "f01c17e2562c6c22e3c92798fe86c4e6",
-    "semantic_hash": "f01c17e2562c6c22e3c92798fe86c4e6"
+    "mtime": 1788845405.5479326,
+    "seen": 1789056157.6383848,
+    "ast_hash": "51b66ad7229bc14983f71ed0fb0418c0",
+    "semantic_hash": ""
   },
   "components/inbox-view.jsx": {
     "mtime": 1783099893.2463443,
@@ -72,10 +72,10 @@
     "semantic_hash": "06ba3772c3fe7ed949f86cadc269d11e"
   },
   "components/module-views.jsx": {
-    "mtime": 1788311635.557635,
-    "seen": 1788528001.8283432,
-    "ast_hash": "e4d1928502b8b82bc786890ef3e07abd",
-    "semantic_hash": "e4d1928502b8b82bc786890ef3e07abd"
+    "mtime": 1788845522.2220356,
+    "seen": 1789056157.638387,
+    "ast_hash": "6b1a5491b4e66805962fe66c044ce2ac",
+    "semantic_hash": ""
   },
   "components/other-views.jsx": {
     "mtime": 1783099893.350723,
@@ -90,21 +90,189 @@
     "semantic_hash": "157322ab0821bb73633d673b02b49aaa"
   },
   "components/selectors.jsx": {
-    "mtime": 1788311450.040701,
-    "seen": 1788528001.828344,
+    "mtime": 1788845522.417322,
+    "seen": 1789056157.638389,
     "ast_hash": "774ef6f30f49158c4a4663832bd24a6e",
     "semantic_hash": "774ef6f30f49158c4a4663832bd24a6e"
   },
   "components/shell.jsx": {
-    "mtime": 1783099894.491414,
-    "seen": 1788528001.828345,
-    "ast_hash": "e2b27723b832aecc038f806b80a24fe1",
-    "semantic_hash": "e2b27723b832aecc038f806b80a24fe1"
+    "mtime": 1788845405.5489576,
+    "seen": 1789056157.63839,
+    "ast_hash": "ad04f6d8f8dc84df143899edfd656507",
+    "semantic_hash": ""
   },
   "components/today-view.jsx": {
-    "mtime": 1783099893.7174983,
-    "seen": 1788528001.828345,
-    "ast_hash": "51ce2ee7f0eeba284dad8927fb8c0e4b",
-    "semantic_hash": "51ce2ee7f0eeba284dad8927fb8c0e4b"
+    "mtime": 1788845405.5491395,
+    "seen": 1789056157.638391,
+    "ast_hash": "98177d65742a6c4d439010e7a3bd2136",
+    "semantic_hash": ""
+  },
+  "components/store.jsx": {
+    "mtime": 1788845405.5490153,
+    "seen": 1789056157.63839,
+    "ast_hash": "057e64a0b59716a60e2a247718ef20fa",
+    "semantic_hash": ""
+  },
+  "Archive/LeaseUp_prototypes/LeaseUp-New/README copy.txt": {
+    "mtime": 1776352674.3067598,
+    "seen": 1789056157.638392,
+    "ast_hash": "bc47f02fe4b40db5b93004979697765c",
+    "semantic_hash": ""
+  },
+  "Archive/LeaseUp_prototypes/LeaseUp_Design_Brief.md": {
+    "mtime": 1776681438.1849303,
+    "seen": 1789056157.638392,
+    "ast_hash": "61e7bd068b9b233dab3b7c259902d0a9",
+    "semantic_hash": ""
+  },
+  "Archive/LeaseUp_prototypes/README.txt": {
+    "mtime": 1776352674.3067598,
+    "seen": 1789056157.6383932,
+    "ast_hash": "bc47f02fe4b40db5b93004979697765c",
+    "semantic_hash": ""
+  },
+  "CLAUDE.md": {
+    "mtime": 1789056142.980321,
+    "seen": 1789056157.638394,
+    "ast_hash": "b7af199d13e58536a790e45021dbcbd1",
+    "semantic_hash": ""
+  },
+  "LeaseRight.html": {
+    "mtime": 1788845521.8444679,
+    "seen": 1789056157.638394,
+    "ast_hash": "07a6d85d9a93732ff245fef311aefdb7",
+    "semantic_hash": ""
+  },
+  "PRODUCT_DIRECTION.md": {
+    "mtime": 1788365343.2256477,
+    "seen": 1789056157.6383948,
+    "ast_hash": "0697202bfe8e7730c840faec6837b319",
+    "semantic_hash": ""
+  },
+  "PROJECT.md": {
+    "mtime": 1788365411.877631,
+    "seen": 1789056157.6383948,
+    "ast_hash": "212376711e6acb26d1fc39bb28681b77",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1788290657.7227995,
+    "seen": 1789056157.6383958,
+    "ast_hash": "66e8751add02a85d957747a303446a96",
+    "semantic_hash": ""
+  },
+  "SCOPE_AUDIT.md": {
+    "mtime": 1783099893.033156,
+    "seen": 1789056157.6383958,
+    "ast_hash": "26a07e5074a5d8481b1e824c97651263",
+    "semantic_hash": ""
+  },
+  "SOURCE_OF_TRUTH.md": {
+    "mtime": 1783099892.8038034,
+    "seen": 1789056157.638397,
+    "ast_hash": "688bc0e864ed146836d9b72232e49881",
+    "semantic_hash": ""
+  },
+  "index.html": {
+    "mtime": 1783099892.6540103,
+    "seen": 1789056157.638397,
+    "ast_hash": "1897819d9e1414746a872e0ef67976be",
+    "semantic_hash": ""
+  },
+  "spec/00_PRODUCT_BIBLE.md": {
+    "mtime": 1783099894.7883127,
+    "seen": 1789056157.638398,
+    "ast_hash": "4db64f9062f3040abf833964e7c3d01e",
+    "semantic_hash": ""
+  },
+  "spec/10_PERSONAS_AND_ROLES.md": {
+    "mtime": 1783099894.8798106,
+    "seen": 1789056157.638399,
+    "ast_hash": "46d0f83b48213cdb54372fc557b3049d",
+    "semantic_hash": ""
+  },
+  "spec/20_JOURNEYS_AND_NARRATIVE.md": {
+    "mtime": 1783099894.9922202,
+    "seen": 1789056157.638399,
+    "ast_hash": "d20e2e85e8e70ea06710628ad6a296e1",
+    "semantic_hash": ""
+  },
+  "spec/30_DATA_MODEL_AND_SYSTEMS.md": {
+    "mtime": 1783099895.0863369,
+    "seen": 1789056157.6384,
+    "ast_hash": "7c7347b1e7021e4a4858d5eff636f88a",
+    "semantic_hash": ""
+  },
+  "spec/40_FOUNDATION_SYNTHESIS.md": {
+    "mtime": 1783492827.7273414,
+    "seen": 1789056157.6384,
+    "ast_hash": "d666c778357ae34587dc88494c450971",
+    "semantic_hash": ""
+  },
+  "spec/70_REBUILD_PLAN.md": {
+    "mtime": 1788313000.5328257,
+    "seen": 1789056157.638401,
+    "ast_hash": "423b9b781c9f56705bdb2b5a40118861",
+    "semantic_hash": ""
+  },
+  "spec/80_IMPLEMENTER_PLAN.md": {
+    "mtime": 1788365343.2678769,
+    "seen": 1789056157.638401,
+    "ast_hash": "cfe5fe5170d474a9a5bcd743ee1d441f",
+    "semantic_hash": ""
+  },
+  "spec/BUILDER_IMPLEMENTATION_AND_VERIFICATION.md": {
+    "mtime": 1788311553.4742558,
+    "seen": 1789056157.638402,
+    "ast_hash": "f73ed86422d88c782438c9f2f669b9d1",
+    "semantic_hash": ""
+  },
+  "spec/BUILDER_PAYMENT_ECONOMICS_REASSESSMENT.md": {
+    "mtime": 1788335798.3002548,
+    "seen": 1789056157.6384032,
+    "ast_hash": "510940c9a9bbf49069cba5e3483eed38",
+    "semantic_hash": ""
+  },
+  "spec/CONTRARIAN_MODEL_AND_AGENTS.md": {
+    "mtime": 1788335390.6907623,
+    "seen": 1789056157.6384032,
+    "ast_hash": "57f87f7973276f63f139bbf66d58d04c",
+    "semantic_hash": ""
+  },
+  "spec/CONTRARIAN_PAYMENTS_ENGINE.md": {
+    "mtime": 1788335298.0575688,
+    "seen": 1789056157.6384041,
+    "ast_hash": "640677db692ff1f1984bf6f3319834db",
+    "semantic_hash": ""
+  },
+  "spec/OVERSEER_MODEL_AND_AGENT_SYNTHESIS.md": {
+    "mtime": 1788365477.2162886,
+    "seen": 1789056157.638405,
+    "ast_hash": "60146a6643bbef875913ec4da270f42a",
+    "semantic_hash": ""
+  },
+  "spec/STRATEGIST_ARCHITECTURE_AND_CRITIQUE.md": {
+    "mtime": 1788311468.6216912,
+    "seen": 1789056157.638405,
+    "ast_hash": "3a0e7613f59fb008ddf5cce49df2e074",
+    "semantic_hash": ""
+  },
+  "spec/STRATEGIST_PAYMENT_ENGINE_REASSESSMENT.md": {
+    "mtime": 1788364694.4049942,
+    "seen": 1789056157.6384058,
+    "ast_hash": "2a8c679d3e8f133e9200d4a4d9331c28",
+    "semantic_hash": ""
+  },
+  "screenshots/pipeline-drawer.png": {
+    "mtime": 1783099895.3071964,
+    "seen": 1789056157.638407,
+    "ast_hash": "33dfa396160c23a9c5cdc2e0f6eb0ef2",
+    "semantic_hash": ""
+  },
+  "shots/v11-grid.png": {
+    "mtime": 1783099895.3767822,
+    "seen": 1789056157.638407,
+    "ast_hash": "be564f6320df3e20805e9f489901c560",
+    "semantic_hash": ""
   }
 }
