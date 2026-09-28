@@ -1,16 +1,34 @@
 # LeaseRight Product Direction
 
+**As of:** 2026-09-28
+
+**Controlling business source:** [`spec/OVERSEER_MODEL_AND_AGENT_SYNTHESIS.md`](spec/OVERSEER_MODEL_AND_AGENT_SYNTHESIS.md)
+
 ## Core Thesis
 
-LeaseRight is a lease-up operating system for developers and small-to-mid portfolio owners who need to get units rented on time without absorbing the cost and bloat of traditional property management software or full-service brokerage.
+LeaseRight should be underwritten as a rent-payment-volume business with a paid lease-up wedge. Its
+strongest viable form is a paid, owner-controlled plan-to-actual lease-up command center with hybrid
+execution for developers and small-to-mid portfolio owners who need to get units rented on time
+without absorbing the cost and bloat of traditional property management software or full-service
+brokerage.
 
 The promise:
 
-- $1 per unit forever for the core software layer.
 - Developer-first, not property-manager-first.
 - Built around lease-up velocity, not generic property administration.
-- Make it possible to run leasing in-house with fewer people, better visibility, and less coordination drag.
-- Monetize primarily through payments, banking, and related financial workflows instead of expensive software seats.
+- Give the owner one frozen lease-up baseline against weekly actuals, with the owner controlling the
+  data and the building operator working the owner's leads in the command center.
+- Make it possible to run leasing in-house or through a hybrid operator model with better visibility
+  and less coordination drag.
+- Lead commercially with one fixed, upfront five-figure, stage-gated project pilot: paid Model
+  reconstruction, a frozen baseline, and payment diligence first; a conditional 60-day operating
+  test second.
+- Treat `$1/unit` as secondary positioning, not the core promise or the P&L.
+- Screen the intended long-term rent-processing engine at 5–10 basis points of net LeaseRight
+  revenue on processed rent volume; this is an underwriting range, not evidence of realized margin.
+- Keep live rent processing out of the operating pilot. It is a separately authorized beta only
+  after payment-partner economics, legal architecture, shadow reconciliation, production security
+  controls, and operating validation clear their gates.
 
 ## Market Wedge
 
@@ -257,33 +275,60 @@ The product should make inaction visible.
 
 ## Business Model
 
-Entry software pricing / positioning:
+### Near-Term Commercial Wedge
 
-- $1 per unit forever. This is not the primary economic engine; the billing period and final offer
-  remain to be validated. Do not lead the first sales artifact with this number or imply it funds
-  the company; price the initial paid engagement from scoped deliverables and project band.
+The first commercial product is one fixed, upfront five-figure, stage-gated project pilot priced
+from scoped deliverables and project band:
 
-Primary long-term economic engine:
+1. Phase A is paid Model reconstruction, a frozen baseline, and payment diligence.
+2. Phase B is a conditional 60-day operating test, activated only after the Model reconciles and
+   the real workflow, commission policy, and brokerage/payee path are known.
+3. Live rent processing is not Phase B. Until continuity and realized economics are observed,
+   underwrite the near-term company on a profitable project fee.
 
-- A contracted **net** share of rent-processing economics on collectible rent actually routed
-  through LeaseRight's payment partner.
-- Screen 5–10 bps of processed rent volume until a written partner proposal exists; treat 10 bps as
-  sufficient to test a beta, not proof of the core P&L, and 25 bps as a stretch contract case. Do
-  not use 50 bps in the plan.
-- Default to resident-free ACH and processor-funded residual economics where available; treat cards
-  as an optional payment method, not the margin thesis. Track any separate owner-funded
-  application/platform fee as software/platform revenue, not processing-fee-share evidence.
-- Exclude security deposits, third-party payouts, float, late fees, and NSF fees from the core
-  payments case. They carry distinct legal, trust-accounting, and customer-harm risks.
+`$1/unit` is secondary positioning, not the core promise or the P&L. Do not lead the first sales
+artifact with it. The current materials do not define its billing period.
+
+### Intended Long-Term Economic Engine
+
+The intended long-term engine is net LeaseRight revenue on processed rent volume. Processed payment
+volume is collectible rent actually routed through LeaseRight's contracted payment partner, net of
+reversals and excluding checks, cash, and security deposits. Gross resident fees, processor revenue,
+and rent principal are not LeaseRight revenue.
+
+- Use 5–10 net bps of processed rent volume as the commercial underwriting range: 5 bps is the
+  downside and 10 bps is the screen for a tightly gated beta, not proof of the core P&L.
+- Treat 25 bps only as a stretch contract case supported by a written contract. Do not use 50 bps.
+- Default to resident-free ACH and validate any processor residual in writing. Track a separate
+  owner-paid application/platform fee as a different revenue line, not processing-fee-share evidence.
+- Exclude security deposits and third-party payouts from the first beta. Cards are not the margin
+  thesis and require processor and counsel approval of the fee treatment.
 - Potential insurance, screening, and service-marketplace revenue remains later optionality, not
-  part of the payment-engine underwriting.
+  part of payment-engine underwriting.
 
-Implication:
+The payment engine is portfolio-scale, not building-scale, and is not yet evidenced. It becomes the
+core economic engine only when realized dollars per retained unit per year, contract survival at
+stabilization, and a credible acquisition path can retain roughly 50,000 comparable units.
 
-The product must eventually win the payment relationship. The lease-up workflow is the paid trust,
-data, and distribution wedge; net revenue on processed rent volume is the economic engine. Gross
-resident or owner fees are not LeaseRight revenue, and the take rate must be modeled after processor,
-partner, return, dispute, and variable support costs.
+### Live Rent-Processing Gate
+
+Do not move money in Phase B. Live rent processing requires a later, separate authorization after:
+
+1. **Payment-partner validation:** the sponsor controls the payment stack, loan documents permit the
+   payout path, and a written processor proposal produces at least 10 bps expected net take after
+   modeled variable payment costs or a contractual minimum with equivalent economics.
+2. **Legal validation:** payments counsel approves the exact direct-charge, fee-incidence,
+   ACH-authorization, fallback, privacy, and deposit-exclusion design.
+3. **Reconciliation validation:** two shadow-reconciliation cycles balance from obligation through
+   payment, fee, settlement/payout, and ledger; exception ownership is named and data is portable.
+4. **Security and operating validation:** the production controls the synthesis identifies—including
+   a backend, secret management, idempotency, immutable processor events, authorization artifacts,
+   daily ledger reconciliation, RBAC/audit logs, retention and incident procedures, and support
+   escalation—exist before production money movement.
+
+Only then may LeaseRight authorize the synthesis's separate, capped ACH-first beta and measure
+routed volume, adoption, payment success, returns and disputes, reconciliation breaks and labor,
+support contacts, settlement timeliness, and realized net bps.
 
 At the current 260-unit / `$2,180` repository assumptions, 95% occupied/collectible rent and 80%
 LeaseRight adoption produce about `$5.17M` annual processed payment volume. That yields only about
@@ -298,7 +343,8 @@ retained PPV acquired per sales/implementation dollar; net bps alone does not es
 
 ## Strategic Risk
 
-The $1/unit promise is compelling, but the software still needs enough real utility that developers trust it before payment monetization kicks in.
+The `$1/unit` secondary positioning may be compelling, but the software still needs enough real
+utility that developers trust it before payment monetization can be validated.
 
 The biggest product risk is building too much generic property management—or a live payment rail—
 before nailing the lease-up workflow and validating partner economics.
