@@ -348,7 +348,7 @@ const TopBar = ({ t, tab, setTab, onCmdK, layout, setLayout, propIdx, setPropIdx
             <div style={{ position: "absolute", top: "100%", right: 0, width: 220, background: t.surface, border: `1px solid ${t.rule}`, borderTop: `1px solid ${t.accent}`, zIndex: 200, fontFamily: t.sans, boxShadow: "0 12px 32px rgba(0,0,0,0.5)" }}>
               <div style={{ padding: "10px 14px", borderBottom: `1px solid ${t.rule}` }}>
                 <div style={{ fontFamily: t.sans, fontSize: 12, fontWeight: 600, color: t.ink }}>Jordan Mori</div>
-                <div style={{ fontFamily: t.mono, fontSize: 9.5, color: t.inkMute, letterSpacing: 0.3, marginTop: 2 }}>owner · $1/unit · forever</div>
+                <div style={{ fontFamily: t.mono, fontSize: 9.5, color: t.inkMute, letterSpacing: 0.3, marginTop: 2 }}>Owner · Admin</div>
               </div>
               {[["Profile"], ["Org settings"], ["Notifications", "•"], ["Log out"]].map((r, i) => (
                 <button key={i} style={{ display: "flex", width: "100%", padding: "8px 14px", background: "transparent", border: "none", fontFamily: t.sans, fontSize: 12, color: t.inkSoft, textAlign: "left", cursor: "pointer" }}
@@ -446,7 +446,7 @@ const Sidebar = ({ t, open, onClose, tab, setTab }) => {
           <div style={{ width: 24, height: 24, background: t.accent, color: "#0A0A0B", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: t.mono, fontSize: 10, fontWeight: 700 }}>JM</div>
           <div style={{ flex: 1 }}>
             <div style={{ fontFamily: t.sans, fontSize: 11.5, color: t.ink, fontWeight: 500 }}>J. Mori</div>
-            <div style={{ fontFamily: t.mono, fontSize: 9.5, color: t.inkMute, letterSpacing: 0.2 }}>$1/unit · forever</div>
+            <div style={{ fontFamily: t.mono, fontSize: 9.5, color: t.inkMute, letterSpacing: 0.2 }}>Owner · Admin</div>
           </div>
         </div>
       </div>

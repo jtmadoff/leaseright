@@ -1053,6 +1053,7 @@ const PreconView = ({ t, onLaunched }) => {
                     <span style={{ fontFamily: t.mono, fontSize: 11.5, color: t.ink, fontVariantNumeric: "tabular-nums" }}>{v}</span>
                   </div>
                 ))}
+                <div style={{ fontFamily: t.sans, fontSize: 10.5, color: t.inkMute, lineHeight: 1.4, marginTop: 8 }}>Carry is authored demo data and is not computed from the carry rate.</div>
                 <div style={{ fontFamily: t.sans, fontSize: 11.5, color: t.inkSoft, lineHeight: 1.4, marginTop: 10 }}>{sc.note}</div>
               </button>
             ); })}
