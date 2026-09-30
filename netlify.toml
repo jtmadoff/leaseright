@@ -1,5 +1,5 @@
 [build]
-  command = "mkdir -p .netlify-publish/components && cp index.html LeaseRight.html .netlify-publish/ && cp components/*.jsx .netlify-publish/components/"
+  command = "node scripts/stage-site.mjs"
   publish = ".netlify-publish"
 
 [[headers]]

@@ -113,7 +113,7 @@ Scenarios, Review, and Launch in order.
 Netlify runs this staging command before publishing:
 
 ```sh
-mkdir -p .netlify-publish/components && cp index.html LeaseRight.html .netlify-publish/ && cp components/*.jsx .netlify-publish/components/
+node scripts/stage-site.mjs
 ```
 
 The command copies both entry pages (`index.html` and `LeaseRight.html`) and every top-level
@@ -122,3 +122,48 @@ folder is deployed, so repository-only internal folders and `spec/` are delibera
 
 The public entry points are `/`, `/app`, and `/leaseright`; all open the
 LeaseRight prototype.
+
+
+## Property mapping (2026-09-30)
+
+The Property step now leads with address search and a map. `components/property-location.jsx`
+loads Google's current Places autocomplete widget lazily and requests only ID, formatted address,
+and coordinates. A selected result creates a satellite map with a draggable pin; moving the pin
+preserves the address and marks the location as adjusted. Manual entry remains available when
+search is unconfigured, fails, or cannot find a development. Manual entries are explicitly unmapped.
+
+The address, sponsor, place ID, and coordinates save to the existing in-memory project store.
+Saved intake fields and completion progress survive navigation within the page; a reload still
+resets business data. This change adds no durable backend and does not infer rents or unit counts.
+
+Google Cloud setup: project `halogen-goods-421121` (map prospeer), credential `LeaseRight Web`.
+The key is restricted to `https://leaserightbeta.netlify.app/*` and `http://localhost:4174/*`,
+and to Maps JavaScript API and Places API (New). Both APIs are enabled.
+
+The source HTML has an empty key. The dependency-free staging script injects
+`LEASERIGHT_MAPS_KEY` from Netlify's production environment, or the ignored local
+`.netlify/maps-key` file. It copies only public HTML and component files; this is
+configuration injection, not a bundler. The restricted browser key is necessarily
+visible in delivered HTML but is kept out of Git. To preview with live lookup, run
+`node scripts/stage-site.mjs`, then serve `.netlify-publish` on localhost port 4174.
+An empty key sends no Maps requests and retains manual entry.
+
+Development quotas confirmed in Google Cloud: 100 map loads/day, 250 autocomplete
+requests/day, and 100 place detail requests/day. These are project-wide limits.
+Google free allowances are shared across the billing account; these controls are
+not a guarantee of a zero-dollar account bill. Other old Cloud projects have not
+been disabled; map prospeer is now actively used by this integration.
+
+Verification on 2026-09-30: all 11 Node tests pass; static deployment allowlist,
+component integrity, and model checks pass. Automated headless rendering could not
+start Chrome (SIGABRT), so live Chrome testing verified a real Google result at
+25 Dorrance St, Providence, its satellite map, pin dragging, save progress, and
+returning to the Property step with saved fields and adjusted pin intact. A transient
+Google network failure also exercised the manual fallback; a subsequent search
+succeeded. Earlier simulated checks covered invalid coordinate results and mobile layout.
+
+Published to `https://leaserightbeta.netlify.app/leaseright` on 2026-09-30
+(Netlify deploy `6abd692ec41b6e9f4a6aec98`).
+
+The repository's `graphify update .` step could not run on this machine because the `graphify`
+command is unavailable. Graph artifacts remain stale pending regeneration on the canonical host.

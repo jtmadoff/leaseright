@@ -4,6 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>LeaseRight</title>
+<!-- Set only after Google Cloud restrictions and cost controls are verified. -->
+<meta name="leaseright-maps-key" content="" />
 <style>
   html, body { margin: 0; padding: 0; background: #0A0A0B; font-family: ui-sans-serif, -apple-system, "Inter", system-ui, sans-serif; }
   /* Splash — visible while Babel compiles */
@@ -31,6 +33,17 @@
   @keyframes pulse {
     0%, 100% { opacity: 0.2; transform: scale(0.8); }
     50% { opacity: 1; transform: scale(1.1); }
+  }
+  @media (max-width: 800px) {
+    .lr-model-layout { grid-template-columns: minmax(0, 1fr) !important; }
+    .lr-model-sidebar { display: flex; border-right: 0 !important; }
+    .lr-model-sidebar > div { display: none; }
+    .lr-model-sidebar > button { flex: 1; min-width: 82px; padding: 12px 8px !important; }
+    .lr-model-section-header { padding: 16px !important; }
+    .lr-model-section-header > div { min-width: 0; }
+    .lr-model-section-header > div > div:last-child { display: none; }
+    .lr-model-card-wrap { padding: 12px !important; }
+    .lr-intake-steps { padding: 0 8px !important; overflow-x: auto; grid-template-columns: repeat(5, minmax(72px, 1fr)) !important; }
   }
   /* Global smoothness */
   * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
@@ -65,7 +78,8 @@
 <script type="text/babel" src="components/other-views.jsx?v=20260625-model-intake-scope"></script>
 <script type="text/babel" src="components/pipeline-view.jsx?v=20260625-model-intake-scope"></script>
 <script type="text/babel" src="components/inbox-view.jsx?v=20260625-model-intake-scope"></script>
-<script type="text/babel" src="components/module-views.jsx?v=20260928-public-demo-hygiene"></script>
-<script type="text/babel" src="components/app.jsx?v=20260901-property-step"></script>
+<script type="text/babel" src="components/property-location.jsx?v=20260930-mapping"></script>
+<script type="text/babel" src="components/module-views.jsx?v=20260930-mapping"></script>
+<script type="text/babel" src="components/app.jsx?v=20260930-mapping"></script>
 </body>
 </html>

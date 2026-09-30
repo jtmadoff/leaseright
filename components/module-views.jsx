@@ -746,25 +746,30 @@ const PreconView = ({ t, onLaunched }) => {
   const stageLabel = { pre_funding: "Pre-funding", funded_prelaunch: "Funded · pre-launch", active_leaseup: "Active lease-up" }[activeProject?.stage] || "Pre-funding";
   const [modelSection, setModelSection] = useState("intake");
   const [intakeStep, setIntakeStep] = useState("project");
-  const [intakeValues, setIntakeValues] = useState({});
-  const [completedSteps, setCompletedSteps] = useState(new Set());
+  const [intakeValues, setIntakeValues] = useState(() => Object.fromEntries(Object.entries(activeModel?.intake || {}).flatMap(([step, values]) => Object.entries(values).map(([key, value]) => [`${step}:${key}`, value]))));
+  const [propertyLocation, setPropertyLocation] = useState(activeProject?.location || null);
+  const [completedSteps, setCompletedSteps] = useState(() => new Set(activeModel?.completedIntakeSteps || []));
   const [scenarioApproved, setScenarioApproved] = useState(false);
   const [launched, setLaunched] = useState(false);
   const saveProperty = () => dispatch({ type: "updateProject", projectId: activeProject.id, patch: {
     name: intakeValues["project:Project name"] || activeProject.name,
-    address: intakeValues["project:Address"] || activeProject.address,
+    address: intakeValues["project:Address"] ?? "",
+    sponsor: intakeValues["project:Sponsor"] ?? "",
+    location: propertyLocation,
     submarket: intakeValues["project:Submarket"] || activeProject.submarket,
     deliveryDate: intakeValues["project:Delivery date"] || activeProject.deliveryDate,
     targetStabilizationDate: intakeValues["project:Target stabilization"] || activeProject.targetStabilizationDate,
   }});
   const saveCurrentStep = () => {
+    if (!isCurrentValid) return;
     if (intakeStep === "project") saveProperty();
     if (intakeStep === "units") dispatch({ type: "updateProject", projectId: activeProject.id, patch: { unitCount: Number(intakeValues["units:Total units"] || activeProject.unitCount) } });
     const values = Object.fromEntries(currentIntake.fields.map(([key, fallback]) => [key, intakeValues[`${intakeStep}:${key}`] ?? fallback]));
-    dispatch({ type: "updateModel", modelId: activeModel.id, patch: { intake: { ...(activeModel.intake || {}), [intakeStep]: values } } });
+    dispatch({ type: "updateModel", modelId: activeModel.id, patch: { completedIntakeSteps: [...new Set([...completedSteps, intakeStep])], intake: { ...(activeModel.intake || {}), [intakeStep]: values } } });
     setCompletedSteps(done => new Set([...done, intakeStep]));
   };
   const continueIntake = () => {
+    if (!isCurrentValid) return;
     saveCurrentStep();
     if (currentIntakeIndex < intakeSteps.length - 1) setIntakeStep(intakeSteps[currentIntakeIndex + 1].id);
     else setModelSection("scenarios");
@@ -794,7 +799,7 @@ const PreconView = ({ t, onLaunched }) => {
       id: "project",
       label: "Property",
       sub: "Address, market, timing",
-      prompt: "Tell us which property we are modeling.",
+      prompt: "Property & timing",
       fields: [["Project name", ""], ["Sponsor", ""], ["Address", ""], ["Submarket", ""], ["Delivery date", ""], ["Target stabilization", ""]],
       builds: ["Mapped property profile", "Submarket context", "Lease-up timeline"],
     },
@@ -836,7 +841,7 @@ const PreconView = ({ t, onLaunched }) => {
   const requiredFields = intakeStep === "project" ? ["Project name", "Sponsor", "Address", "Delivery date", "Target stabilization"] : currentIntake.fields.map(([key]) => key);
   const isCurrentValid = requiredFields.every(key => String(intakeValues[`${intakeStep}:${key}`] ?? currentIntake.fields.find(([field]) => field === key)?.[1] ?? "").trim());
   const fieldPlaceholders = { "Project name": "Example: River House", "Sponsor": "Owner or development company", "Address": "Street, city, state", "Submarket": "Optional", "Delivery date": "MM / DD / YYYY", "Target stabilization": "MM / DD / YYYY" };
-  const intakeProgress = Math.round(((currentIntakeIndex + 1) / intakeSteps.length) * 100);
+  const intakeProgress = Math.round((completedSteps.size / intakeSteps.length) * 100);
   const guidance = {
     intake: {
       head: "Start with a simple intake, not a spreadsheet.",
@@ -884,8 +889,8 @@ const PreconView = ({ t, onLaunched }) => {
           </div>
         </div>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "220px minmax(0, 1fr)", minHeight: "calc(100vh - 90px - 92px)" }}>
-        <div style={{ borderRight: `1px solid ${t.rule}`, background: t.surface, overflow: "auto" }}>
+      <div className="lr-model-layout" style={{ display: "grid", gridTemplateColumns: "220px minmax(0, 1fr)", minHeight: "calc(100vh - 90px - 92px)" }}>
+        <div className="lr-model-sidebar" style={{ borderRight: `1px solid ${t.rule}`, background: t.surface, overflow: "auto" }}>
           <div style={{ padding: "20px 18px", borderBottom: `1px solid ${t.rule}` }}>
             <Eyebrow t={t}>Plan sections</Eyebrow>
           </div>
@@ -906,16 +911,16 @@ const PreconView = ({ t, onLaunched }) => {
         </div>
 
         <div style={{ borderRight: `1px solid ${t.rule}`, minWidth: 0 }}>
-          <div style={{ padding: "22px 32px", borderBottom: `1px solid ${t.rule}`, background: t.bg, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24 }}>
+          <div className="lr-model-section-header" style={{ padding: "22px 32px", borderBottom: `1px solid ${t.rule}`, background: t.bg, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24 }}>
             <div>
               <Eyebrow t={t} style={{ marginBottom: 7 }}>Currently working on</Eyebrow>
               <div style={{ fontFamily: t.sans, fontSize: 18, fontWeight: 650, color: t.ink }}>{activeTab.label}</div>
               <div style={{ fontFamily: t.sans, fontSize: 12.5, color: t.inkSoft, lineHeight: 1.5, marginTop: 7, maxWidth: 620 }}>{guidance.head}</div>
             </div>
-            <Btn t={t} size="xs" variant="primary" onClick={modelSection === "intake" ? saveCurrentStep : modelSection === "scenarios" ? approveScenario : modelSection === "lender" ? () => setModelSection("launch") : launch}>{modelSection === "launch" ? (launched ? "Board created" : "Create live board") : modelSection === "scenarios" ? "Approve baseline" : modelSection === "lender" ? "Continue to launch" : "Save section"}</Btn>
+            <Btn t={t} size="xs" variant="primary" disabled={modelSection === "intake" && !isCurrentValid} onClick={modelSection === "intake" ? saveCurrentStep : modelSection === "scenarios" ? approveScenario : modelSection === "lender" ? () => setModelSection("launch") : launch}>{modelSection === "launch" ? (launched ? "Board created" : "Create live board") : modelSection === "scenarios" ? "Approve baseline" : modelSection === "lender" ? "Continue to launch" : "Save section"}</Btn>
           </div>
           {modelSection === "intake" && <>
-          <div style={{ padding: 20, borderBottom: `1px solid ${t.rule}` }}>
+          <div className="lr-model-card-wrap" style={{ padding: 20, borderBottom: `1px solid ${t.rule}` }}>
             <div style={{ background: t.surface, border: `1px solid ${t.rule}`, overflow: "hidden" }}>
               <div style={{ padding: "16px 18px", borderBottom: `1px solid ${t.rule}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14 }}>
                 <div style={{ minWidth: 0 }}>
@@ -927,7 +932,7 @@ const PreconView = ({ t, onLaunched }) => {
                   <div style={{ fontFamily: t.mono, fontSize: 9.5, color: t.inkMute, letterSpacing: 1, textTransform: "uppercase" }}>complete</div>
                 </div>
               </div>
-              <div style={{ padding: "0 18px", borderBottom: `1px solid ${t.rule}`, display: "grid", gridTemplateColumns: `repeat(${intakeSteps.length}, minmax(0, 1fr))` }}>
+              <div className="lr-intake-steps" style={{ padding: "0 18px", borderBottom: `1px solid ${t.rule}`, display: "grid", gridTemplateColumns: `repeat(${intakeSteps.length}, minmax(0, 1fr))` }}>
                 {intakeSteps.map((s, i) => {
                   const active = s.id === intakeStep;
                   const done = i < currentIntakeIndex;
@@ -939,34 +944,16 @@ const PreconView = ({ t, onLaunched }) => {
                   );
                 })}
               </div>
-              <div style={{ padding: 18 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(180px, 1fr))", columnGap: 28, rowGap: 4 }}>
-                  {currentIntake.fields.map(([k,v]) => (
+              <div style={{ padding: 24 }}>
+                {intakeStep === "project" && <PropertyLocation key={activeProject.id} t={t} address={intakeValues["project:Address"] ?? ""} location={propertyLocation} onChange={(address, location) => {setIntakeValues(values => ({...values, "project:Address": address})); setPropertyLocation(location); setCompletedSteps(done => {const next = new Set(done); next.delete("project"); return next;});}} />}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(210px, 100%), 1fr))", columnGap: 28, rowGap: 4 }}>
+                  {currentIntake.fields.filter(([k]) => intakeStep !== "project" || k !== "Address").map(([k,v]) => (
                     <label key={k} style={{ display: "block", padding: "15px 0 13px", borderBottom: `1px solid ${t.rule}` }}>
                       <div style={{ fontFamily: t.mono, fontSize: 9.5, letterSpacing: 0.75, textTransform: "uppercase", color: t.inkMute, marginBottom: 8 }}>{k}</div>
                       <input value={intakeValues[`${intakeStep}:${k}`] ?? v} placeholder={fieldPlaceholders[k] || "Enter value"} onChange={e => setIntakeValues(values => ({ ...values, [`${intakeStep}:${k}`]: e.target.value }))} aria-label={k} style={{ width: "100%", minHeight: 30, padding: 0, background: "transparent", border: "none", borderRadius: 0, fontFamily: t.sans, fontSize: 14, color: t.ink, outline: "none" }} />
                     </label>
                   ))}
                 </div>
-                {intakeStep === "project" && (
-                  <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 12 }}>
-                    <div style={{ minHeight: 126, padding: 14, background: t.bg, border: `1px solid ${t.rule}`, position: "relative", overflow: "hidden" }}>
-                      <div style={{ position: "absolute", inset: 0, opacity: 0.28, backgroundImage: `linear-gradient(${t.ruleSoft} 1px, transparent 1px), linear-gradient(90deg, ${t.ruleSoft} 1px, transparent 1px)`, backgroundSize: "24px 24px" }} />
-                      <div style={{ position: "relative", width: 12, height: 12, borderRadius: 12, background: t.accent, boxShadow: `0 0 0 6px ${t.accentSoft}`, margin: "40px auto 10px" }} />
-                      <div style={{ position: "relative", textAlign: "center", fontFamily: t.sans, fontSize: 12.5, color: t.ink, fontWeight: 650 }}>{intakeValues["project:Address"] || "Add an address"}</div>
-                      <div style={{ position: "relative", textAlign: "center", fontFamily: t.sans, fontSize: 11.5, color: t.inkMute, marginTop: 4 }}>{intakeValues["project:Address"] ? "Ready to map the property and comp radius" : "We will map the property here"}</div>
-                    </div>
-                    <div style={{ padding: "10px 6px 10px 20px", borderLeft: `1px solid ${t.rule}` }}>
-                      <div style={{ fontFamily: t.mono, fontSize: 9.5, letterSpacing: 0.8, textTransform: "uppercase", color: t.inkMute, fontWeight: 650, marginBottom: 10 }}>Downstream use</div>
-                      {["Map the property", "Suggest local comps", "Set market rent boundaries"].map((x, i) => (
-                        <div key={x} style={{ display: "flex", gap: 8, padding: "6px 0", borderBottom: i < 2 ? `1px solid ${t.ruleSoft}` : "none" }}>
-                          <Dot c={t.good} size={7} />
-                          <span style={{ fontFamily: t.sans, fontSize: 12, color: t.inkSoft }}>{x}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
                 {intakeStep === "comps" && (
                   <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 10 }}>
                     {intakeComps.map((c, i) => (
