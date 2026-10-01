@@ -167,3 +167,48 @@ Published to `https://leaserightbeta.netlify.app/leaseright` on 2026-09-30
 
 The repository's `graphify update .` step could not run on this machine because the `graphify`
 command is unavailable. Graph artifacts remain stale pending regeneration on the canonical host.
+
+## Providence property discovery (2026-10-01)
+
+The Property intake uses a full-width discovery view: address search, a satellite
+site explorer, and a municipal record panel, followed by project details. Public
+GIS uses Providence's hosted `Parcel_Zoning_FL` service owned by `PVDGIS_Admin`:
+https://services6.arcgis.com/wv9mHoqblhTsnqdG/arcgis/rest/services/Parcel_Zoning_FL/FeatureServer
+The older `webgis.providenceri.gov` host timed out during investigation; the city’s
+hosted ArcGIS service supports anonymous queries and browser CORS. No additional
+API credential, backend, or paid GIS subscription was added.
+
+`components/providence-gis.jsx` queries layer 0 for parcels at the selected pin,
+then searches within 25 metres only if there is no intersection. Nearby matches
+are explicitly labelled; multiple records require a selection. A coarse bounding
+box suppresses requests far outside Providence but is not itself a coverage claim.
+Layer 12 is queried against the entire selected parcel polygon for base zoning;
+multiple intersecting codes remain visible. Historic/flood overlays, legal buildable
+capacity, and property valuation are not part of this first integration.
+
+The map outlines the selected parcel. Map clicks and pin drags clear confirmed
+GIS facts and trigger a new lookup without creating a new Google map instance.
+Only an explicit “Confirm this parcel” stores the municipal snapshot in the
+project's location, including source, retrieval time, tax-roll year, geometry,
+and zoning query status. Confirmation adopts the municipal site address when
+available. Save section/Next section retains this snapshot in the existing
+in-memory project store; reloading the page still resets project data.
+
+Lot area, gross building area, recorded units, year built, stories and use are
+reported as existing assessor facts. Missing/zero sentinel values stay “Not
+reported.” They do not overwrite proposed units, rent assumptions, sponsor, or
+project timing. Source-record and city-viewer links stay visible. Layer errors,
+timeouts, empty results, and ambiguous matches have explicit states; manual
+intake remains available.
+
+Verification: 18 unit tests cover normalization, coverage, intersection/nearby
+queries, multiple candidates, incomplete/error/truncated responses, cancellation,
+and polygon-based zoning queries. Live city data at 25 Dorrance Street returned
+parcel 02000380000, 32,078 sq ft lot area, 120,840 sq ft gross building area,
+1878 year built, and D-1-120 base zoning. These are source-reported values.
+Live browser checks also confirmed parcel confirmation survives section navigation,
+map clicks clear the prior confirmation and retrieve a different parcel, and the
+record view stacks beneath the map at a 390px viewport. The footer Save section
+button now saves through the same validation path as Next section. Browser console
+reported no errors in these checks. The separate headless check remains unavailable
+on this host (Chrome SIGABRT); graphify is still not installed.

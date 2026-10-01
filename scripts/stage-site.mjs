@@ -8,7 +8,10 @@ if (!key) {
   catch (error) { if (error.code !== 'ENOENT') throw error; }
 }
 if (key && !/^[A-Za-z0-9_-]+$/.test(key)) throw new Error('Invalid Maps browser key format');
-await rm('.netlify-publish', { recursive: true, force: true });
+await mkdir('.netlify-publish', { recursive: true });
+for (const name of await readdir('.netlify-publish')) {
+  await rm(`.netlify-publish/${name}`, { recursive: true, force: true });
+}
 await mkdir('.netlify-publish/components', { recursive: true });
 await copyFile('index.html', '.netlify-publish/index.html');
 const html = await readFile('LeaseRight.html', 'utf8');

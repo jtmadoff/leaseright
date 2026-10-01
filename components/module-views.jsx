@@ -799,7 +799,7 @@ const PreconView = ({ t, onLaunched }) => {
       id: "project",
       label: "Property",
       sub: "Address, market, timing",
-      prompt: "Property & timing",
+      prompt: "Property",
       fields: [["Project name", ""], ["Sponsor", ""], ["Address", ""], ["Submarket", ""], ["Delivery date", ""], ["Target stabilization", ""]],
       builds: ["Mapped property profile", "Submarket context", "Lease-up timeline"],
     },
@@ -874,7 +874,7 @@ const PreconView = ({ t, onLaunched }) => {
   const toPath = (pts) => pts.map((p,i) => (i===0?"M":"L") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
   return (
     <div>
-      <div style={{ padding: "26px 32px 24px", borderBottom: `1px solid ${t.rule}`, background: t.bg }}>
+      <div className={modelSection === "intake" ? "lr-intake-intro" : undefined} style={{ padding: "26px 32px 24px", borderBottom: `1px solid ${t.rule}`, background: t.bg }}>
         <div style={{ display: "flex", alignItems: "center", gap: 18, minWidth: 0 }}>
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
@@ -889,7 +889,7 @@ const PreconView = ({ t, onLaunched }) => {
           </div>
         </div>
       </div>
-      <div className="lr-model-layout" style={{ display: "grid", gridTemplateColumns: "220px minmax(0, 1fr)", minHeight: "calc(100vh - 90px - 92px)" }}>
+      <div className={`lr-model-layout ${modelSection === "intake" ? "lr-intake-layout" : ""}`} style={{ display: "grid", gridTemplateColumns: "220px minmax(0, 1fr)", minHeight: "calc(100vh - 90px - 92px)" }}>
         <div className="lr-model-sidebar" style={{ borderRight: `1px solid ${t.rule}`, background: t.surface, overflow: "auto" }}>
           <div style={{ padding: "20px 18px", borderBottom: `1px solid ${t.rule}` }}>
             <Eyebrow t={t}>Plan sections</Eyebrow>
@@ -911,7 +911,7 @@ const PreconView = ({ t, onLaunched }) => {
         </div>
 
         <div style={{ borderRight: `1px solid ${t.rule}`, minWidth: 0 }}>
-          <div className="lr-model-section-header" style={{ padding: "22px 32px", borderBottom: `1px solid ${t.rule}`, background: t.bg, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24 }}>
+          <div className="lr-model-section-header" hidden={modelSection === "intake"} style={{ padding: "22px 32px", borderBottom: `1px solid ${t.rule}`, background: t.bg, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24 }}>
             <div>
               <Eyebrow t={t} style={{ marginBottom: 7 }}>Currently working on</Eyebrow>
               <div style={{ fontFamily: t.sans, fontSize: 18, fontWeight: 650, color: t.ink }}>{activeTab.label}</div>
@@ -922,9 +922,9 @@ const PreconView = ({ t, onLaunched }) => {
           {modelSection === "intake" && <>
           <div className="lr-model-card-wrap" style={{ padding: 20, borderBottom: `1px solid ${t.rule}` }}>
             <div style={{ background: t.surface, border: `1px solid ${t.rule}`, overflow: "hidden" }}>
-              <div style={{ padding: "16px 18px", borderBottom: `1px solid ${t.rule}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14 }}>
+              <div hidden={intakeStep === "project"} style={{ padding: "16px 18px", borderBottom: `1px solid ${t.rule}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14 }}>
                 <div style={{ minWidth: 0 }}>
-                  <Eyebrow t={t} style={{ marginBottom: 7 }}>Guided intake</Eyebrow>
+                  <Eyebrow t={t} style={{ marginBottom: 7 }}>YOUR LEASE-UP PLAN</Eyebrow>
                   <div style={{ fontFamily: t.sans, fontSize: 20, fontWeight: 650, color: t.ink }}>{currentIntake.prompt}</div>
                 </div>
                 <div style={{ width: 92, textAlign: "right", flexShrink: 0 }}>
@@ -935,7 +935,7 @@ const PreconView = ({ t, onLaunched }) => {
               <div className="lr-intake-steps" style={{ padding: "0 18px", borderBottom: `1px solid ${t.rule}`, display: "grid", gridTemplateColumns: `repeat(${intakeSteps.length}, minmax(0, 1fr))` }}>
                 {intakeSteps.map((s, i) => {
                   const active = s.id === intakeStep;
-                  const done = i < currentIntakeIndex;
+                  const done = completedSteps.has(s.id);
                   return (
                     <button key={s.id} disabled={i > completedSteps.size} onClick={() => setIntakeStep(s.id)} style={{ minWidth: 0, display: "flex", alignItems: "center", gap: 8, padding: "13px 8px", background: "transparent", border: "none", borderBottom: `2px solid ${active ? t.accent : "transparent"}`, color: active ? t.ink : t.inkSoft, cursor: i > completedSteps.size ? "default" : "pointer", opacity: i > completedSteps.size ? 0.36 : 1 }}>
                       <span style={{ fontFamily: t.mono, fontSize: 9, color: done ? t.good : active ? t.accent : t.inkMute }}>{done ? "✓" : String(i + 1).padStart(2, "0")}</span>
@@ -944,8 +944,9 @@ const PreconView = ({ t, onLaunched }) => {
                   );
                 })}
               </div>
-              <div style={{ padding: 24 }}>
+              <div className="lr-property-body" style={{ padding: 28 }}>
                 {intakeStep === "project" && <PropertyLocation key={activeProject.id} t={t} address={intakeValues["project:Address"] ?? ""} location={propertyLocation} onChange={(address, location) => {setIntakeValues(values => ({...values, "project:Address": address})); setPropertyLocation(location); setCompletedSteps(done => {const next = new Set(done); next.delete("project"); return next;});}} />}
+                {intakeStep === "project" && <div className="lr-project-details"><h3 className="lr-project-details-title" style={{color:t.ink, fontFamily:t.sans}}>Your project, from here.</h3><p style={{fontFamily:t.sans,fontSize:12,color:t.inkSoft,margin:"0 0 8px"}}>Add the ownership and timing for the plan you’re building.</p></div>}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(210px, 100%), 1fr))", columnGap: 28, rowGap: 4 }}>
                   {currentIntake.fields.filter(([k]) => intakeStep !== "project" || k !== "Address").map(([k,v]) => (
                     <label key={k} style={{ display: "block", padding: "15px 0 13px", borderBottom: `1px solid ${t.rule}` }}>
@@ -998,7 +999,7 @@ const PreconView = ({ t, onLaunched }) => {
                     })}
                   </div>
                 )}
-                <div style={{ marginTop: 20, padding: "12px 0", borderTop: `1px solid ${t.rule}`, borderBottom: `1px solid ${t.rule}`, display: "grid", gridTemplateColumns: "180px 1fr", alignItems: "center", gap: 16 }}>
+                <div hidden={intakeStep === "project"} style={{ marginTop: 20, padding: "12px 0", borderTop: `1px solid ${t.rule}`, borderBottom: `1px solid ${t.rule}`, display: "grid", gridTemplateColumns: "180px 1fr", alignItems: "center", gap: 16 }}>
                   <div style={{ fontFamily: t.mono, fontSize: 9.5, letterSpacing: 0.8, textTransform: "uppercase", color: t.inkMute, fontWeight: 650 }}>Model contribution</div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                     {currentIntake.builds.map((b) => (
@@ -1010,7 +1011,7 @@ const PreconView = ({ t, onLaunched }) => {
                   <Btn t={t} variant="primary" onClick={continueIntake} disabled={!isCurrentValid} style={!isCurrentValid ? { opacity: 0.45 } : undefined}>
                     {currentIntakeIndex === intakeSteps.length - 1 ? "Build lease-up model" : "Next section"}
                   </Btn>
-                  <Btn t={t} variant="ghost">Save and finish later</Btn>
+                  <Btn t={t} variant="ghost" onClick={saveCurrentStep} disabled={!isCurrentValid}>Save section</Btn>
                   <div style={{ flex: 1 }} />
                   <span style={{ fontFamily: t.sans, fontSize: 11.5, color: t.inkMute }}>{isCurrentValid ? "Ready to continue" : "Complete the required fields"}</span>
                 </div>
