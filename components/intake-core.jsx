@@ -9,15 +9,25 @@ function newIntakeProject(id, stage, at) {
 function intakeNumber(value) { return value === "" || value == null || !Number.isFinite(Number(value)) ? null : Number(value); }
 function intakeDate(value) { const time = Date.parse(value + "T00:00:00Z"); return /^\d{4}-\d{2}-\d{2}$/.test(value || "") && Number.isFinite(time) && new Date(time).toISOString().slice(0,10) === value ? time : null; }
 function intakeSafeURL(value) { try { const u = new URL(value); return ["http:","https:"].includes(u.protocol) ? u.href : null; } catch { return null; } }
+function projectSetupIssues(project) {
+  const issues=[];
+  if(!project.name.trim() || project.name==="Untitled project") issues.push("Give the project a name.");
+  if(!project.address.trim()) issues.push("Enter the property address.");
+  if(!RI_TOWNS.includes(project.municipality)) issues.push("Choose the Rhode Island municipality.");
+  const units=intakeNumber(project.draft.totalUnits);
+  if(project.draft.totalUnits!=="" && (!Number.isInteger(units) || units<1 || units>10000)) issues.push("Enter a whole-number unit count, or leave it blank for now.");
+  if(project.draft.deliveryDate && intakeDate(project.draft.deliveryDate)===null) issues.push("Correct the leasing start date, or leave it blank for now.");
+  return issues;
+}
+function intakeLanding(project) {
+  return project.workspaceOpenedAt || project.baselines.length || project.draft.step>0 ? "home" : "setup";
+}
 function intakeIssues(project) {
   const d = project.draft, issues = [];
   const add = (step, message) => issues.push({step, message});
   if (!project.name.trim() || project.name === "Untitled project") add(0,"Name the project.");
-  if (!project.sponsor.trim()) add(0,"Identify the sponsor or owner.");
   if (!project.address.trim()) add(0,"Enter the property address.");
   if (!RI_TOWNS.includes(project.municipality)) add(0,"Select a Rhode Island municipality.");
-  if (!project.developmentType) add(0,"Choose the project type.");
-  if (!project.objective.trim()) add(0,"Describe the decision this plan should support.");
   const total = intakeNumber(d.totalUnits);
   if (!Number.isInteger(total) || total < 1 || total > 10000) add(1,"Enter a whole-number project total between 1 and 10,000 units.");
   if (!d.unitMix.length) add(1,"Add at least one unit type or delivery phase.");
@@ -28,12 +38,11 @@ function intakeIssues(project) {
     if (!Number.isInteger(count) || count < 1 || count > 10000) add(1,`Row ${i+1}: enter a positive whole-number unit count.`);
     else sum += count;
     if (!Number.isInteger(leased) || leased < 0 || leased > count) add(1,`Row ${i+1}: existing leased units must be between zero and the row total.`);
-    if (sqft === null || sqft <= 0 || sqft > 100000) add(1,`Row ${i+1}: enter a valid average unit size.`);
+    if (row.sqft !== "" && (sqft === null || sqft <= 0 || sqft > 100000)) add(1,`Row ${i+1}: enter a valid average unit size.`);
     if (rent === null || rent <= 0 || rent > 100000) add(3,`Row ${i+1}: enter a monthly asking rent.`);
     if (row.availableDate && intakeDate(row.availableDate) === null) add(1,`Row ${i+1}: correct the availability date.`);
   });
   if (total !== null && sum !== total) add(1,`Unit schedule has ${sum} units; project total is ${total}. Reconcile the difference.`);
-  if (!d.researchReviewed) add(2,"Review the research coverage and acknowledge any missing evidence.");
   const start = intakeDate(d.deliveryDate), end = intakeDate(d.targetDate);
   if (start === null) add(4,"Enter a valid leasing start date.");
   if (end === null || (start !== null && end <= start)) add(4,"Target stabilization must be after leasing starts.");
@@ -42,7 +51,6 @@ function intakeIssues(project) {
     const v = intakeNumber(d[key]); if (v === null || v < min || v > max) add(key === "leaseTerm" || key === "freeMonths" ? 3 : 4,`${label}: enter a value from ${min} to ${max}. Enter 0 explicitly if none.`);
   }
   if (+d.freeMonths > +d.leaseTerm) add(3,"Free months cannot exceed the lease term.");
-  if (!d.strategy) add(4,"Choose the leasing execution strategy.");
   return issues;
 }
 function calculateIntake(project) {
@@ -123,4 +131,4 @@ function persistIntakeState(state, storage) {
   if(state.storageError) throw new Error(state.storageError);
   storage.setItem(INTAKE_STORAGE_KEY, JSON.stringify({version:1,activeProjectId:state.activeProjectId,projects:state.projects.filter(p=>p.intakeVersion===1)}));
 }
-Object.assign(window,{RI_TOWNS,INTAKE_STORAGE_KEY,newIntakeProject,intakeIssues,calculateIntake,parseIntakeCSV,intakeSafeURL,intakeUnitTypes,restoreIntakeState,persistIntakeState,validIntakeDraft});
+Object.assign(window,{RI_TOWNS,INTAKE_STORAGE_KEY,newIntakeProject,projectSetupIssues,intakeLanding,intakeIssues,calculateIntake,parseIntakeCSV,intakeSafeURL,intakeUnitTypes,restoreIntakeState,persistIntakeState,validIntakeDraft});

@@ -2,6 +2,21 @@
 
 This is the confirmed Netlify Drop-era LeaseRight prototype.
 
+## Project setup and workspace correction — 2026-10-01
+
+Replaced the six-step entry gate with a short property setup. Name, street address and RI municipality
+open a persistent project overview; unit count and start date are optional. New-project welcome now
+opens setup directly. Existing drafts that progressed beyond the first old intake step and all approved
+projects open the overview without resetting saved data. All detailed editors have a Done action back
+to the project; baseline approval also opens the overview. The overview uses the project's own unit
+schedule, calculated outlook, source count and version history; incomplete assumptions stay unknown.
+
+Research acknowledgment, sponsor, objective, project type and unit size are no longer financial-model
+gates (invalid supplied unit sizes still fail validation). Financial validation remains separate from
+project creation. Unit entry starts with type/count/rent; extra columns are available when needed.
+The map is in Research. Verification now includes 30 passing unit tests, static/model checks, and real-browser setup, editor return, approval navigation and reload checks. Rent assumptions link back to the canonical unit schedule instead of asking
+for rents twice. Local storage and downstream operational limitations remain unchanged.
+
 ## Rhode Island intake — 2026-10-01
 
 New projects now enter a dedicated six-step intake, isolated from the legacy demo screens.

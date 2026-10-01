@@ -11,6 +11,11 @@ function reducer(state, action) {
       const project = newIntakeProject(action.id, action.stage || "pre_funding", action.at);
       return {...state, projects:[...state.projects, project], activeProjectId:project.id};
     }
+    case "finishProjectSetup": {
+      const project=state.projects.find(p=>p.id===action.projectId && p.intakeVersion===1);
+      if(!project || projectSetupIssues(project).length) return state;
+      return {...state, projects:state.projects.map(p=>p.id===project.id?{...p,workspaceOpenedAt:p.workspaceOpenedAt || action.at,updatedAt:action.at}:p)};
+    }
     case "editIntakeProject":
       return {...state, projects:state.projects.map(p => p.id === action.projectId && p.intakeVersion === 1 ? {...p, ...action.patch, draft:{...p.draft,...action.draft}, updatedAt:action.at, approvedBaselineId:action.navigationOnly ? p.approvedBaselineId : null} : p)};
     case "approveIntakeBaseline": {
@@ -18,7 +23,7 @@ function reducer(state, action) {
       if (!project || project.approvedBaselineId || calculateIntake(project).issues.length || !calculateIntake(project).scenarios[1].stabilizeDate) return state;
       const baseline = {id:action.id, approvedAt:action.at, project:JSON.parse(JSON.stringify({...project,baselines:[]})), output:calculateIntake(project)};
       const unitTypes = intakeUnitTypes(project);
-      return {...state, unitTypes:[...state.unitTypes.filter(u=>u.projectId!==project.id),...unitTypes], projects:state.projects.map(p=>p.id===project.id?{...p,unitCount:+p.draft.totalUnits,approvedBaselineId:baseline.id,baselines:[...p.baselines,baseline]}:p)};
+      return {...state, unitTypes:[...state.unitTypes.filter(u=>u.projectId!==project.id),...unitTypes], projects:state.projects.map(p=>p.id===project.id?{...p,unitCount:+p.draft.totalUnits,workspaceOpenedAt:p.workspaceOpenedAt || action.at,approvedBaselineId:baseline.id,baselines:[...p.baselines,baseline]}:p)};
     }
     // Record the first real contact with a lead.
     case "contactLead":

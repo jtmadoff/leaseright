@@ -20,7 +20,7 @@ A lease-up operating system for developers and small-to-mid portfolio owners who
 ## Current implementation update — 2026-10-01
 
 Justin authorized rebuilding intake with Rhode Island as the model state. This supersedes the
-older build pause below for intake work. The new path creates independent projects and persists
+older build pause below for intake work. The entry flow now opens a project overview after a short property setup, with underwriting and research completed inside the workspace. Existing completed intake records open that overview without re-entry. The new path creates independent projects and persists
 drafts in browser storage, with backup export/restore, unit-schedule CSV import, evidence review,
 calculated planning sensitivities and versioned baseline approval. The legacy operational screens
 remain demo-only and are not presented as live output for new projects. Read README.md's Rhode

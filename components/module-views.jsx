@@ -690,7 +690,7 @@ const LeaseRightWelcome = ({ t, onComplete }) => {
             <div style={{ marginBottom: 24, color: t.inkSoft, fontSize: 13, fontWeight: 600 }}>Plan and run multifamily lease-ups</div>
             <h1 style={{ fontSize: 58, lineHeight: 0.98, letterSpacing: -2.2, margin: 0, maxWidth: 520 }}>Know what stabilization will take.</h1>
             <p style={{ fontSize: 17, lineHeight: 1.65, color: t.inkSoft, margin: "26px 0 32px", maxWidth: 500 }}>Build the lease-up plan, approve the financial baseline, and see each week whether the property is on pace to stabilize.</p>
-            <button onClick={() => setStep("stage")} style={{ padding: "14px 21px", border: "none", borderRadius: 3, background: t.accent, color: "#0A0A0B", fontFamily: t.sans, fontSize: 14, fontWeight: 750, cursor: "pointer" }}>Start a project</button>
+            <button onClick={() => onComplete("pre_funding")} style={{ padding: "14px 21px", border: "none", borderRadius: 3, background: t.accent, color: "#0A0A0B", fontFamily: t.sans, fontSize: 14, fontWeight: 750, cursor: "pointer" }}>Start a project</button>
           </section>
           <section style={{ display: "grid", gridTemplateColumns: "96px 1fr", border: `1px solid ${t.rule}`, background: t.surface, boxShadow: "0 30px 80px rgba(0,0,0,0.35)" }}>
             <aside style={{ padding: "18px 12px", borderRight: `1px solid ${t.rule}`, background: t.bg }}>
