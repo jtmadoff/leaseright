@@ -17,6 +17,16 @@ Formerly LeaseUp (renamed over trademark risk). Repo `github.com/jtmadoff/leaser
 
 A lease-up operating system for developers and small-to-mid portfolio owners who need units rented on time without the cost of full property-management software or full-service brokerage. `$1/unit` is secondary positioning; the intended long-term engine is LeaseRight's net share of rent-processing economics on volume routed through it. The current artifact is a static, no-build React prototype used to sell and shape the first paid pilot — it is not a product with a backend.
 
+## Current implementation update — 2026-10-01
+
+Justin authorized rebuilding intake with Rhode Island as the model state. This supersedes the
+older build pause below for intake work. The new path creates independent projects and persists
+drafts in browser storage, with backup export/restore, unit-schedule CSV import, evidence review,
+calculated planning sensitivities and versioned baseline approval. The legacy operational screens
+remain demo-only and are not presented as live output for new projects. Read README.md's Rhode
+Island intake section for tested scope and outstanding work. Account-backed persistence and
+statewide automatic GIS coverage have not been built.
+
 ## What is built today (verified against the code, 2026-09-11)
 
 - **One HTML app, twelve components.** `LeaseRight.html` loads React 18.3.1 and Babel from a CDN with SRI hashes and renders `components/*.jsx` in the browser. No bundler, no server, no persistence beyond the page.

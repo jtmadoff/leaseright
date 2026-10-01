@@ -2,6 +2,35 @@
 
 This is the confirmed Netlify Drop-era LeaseRight prototype.
 
+## Rhode Island intake — 2026-10-01
+
+New projects now enter a dedicated six-step intake, isolated from the legacy demo screens.
+All 39 Rhode Island municipalities are selectable. Automatic parcel/zoning research remains
+Providence-only; other municipalities, permits, development pipeline and rental comps require
+manual research. Official sources: https://www.ri.gov/towns/ and the Providence links in the app.
+No new paid API, backend, package dependency, or account subscription was added.
+
+Working: independent project creation/switching, browser-local drafts, JSON export/restore,
+CSV unit-schedule preview/import, explicit research acknowledgment, source URL/date/notes,
+unit-total reconciliation, date/rent/budget validation, calculated rent and pace sensitivities,
+and versioned approved baseline snapshots. Imported backup locations require reconfirmation.
+Existing seed/demo operational records never enter a real intake project. Approval establishes
+unit-type planning records, not actual doors, leases or a live operational board.
+
+Model scope: continuous daily leasing approximation constrained by phase availability; row-order
+allocation, no turnover, no market forecast. Slower/base/faster vary entered pace by -20%/0/+20%.
+Concessions apply to incremental leases; carry is gross monthly cost prorated by days/30.4375.
+Marketing and staffing/brokerage are entered fixed totals. This is not NOI or cash-flow underwriting.
+The app exposes these assumptions, missing research, and its lack of account synchronization.
+
+Verification: 27 dependency-free tests plus staging/reference/model checks. Real Chrome exercised
+CSV preview/apply, manual address, all sections, calculated output, approval and reload. The
+headless gate reports a skip on this machine because Chrome exits SIGABRT. `graphify update .`
+was attempted but the command is not installed; graph artifacts are stale.
+
+Remaining product work: account-backed persistence, document extraction, additional municipal
+connectors, structured comparable normalization, per-door inventory and downstream live operations.
+
 ## Source of truth
 
 - Canonical local folder: `/Users/jmad/HomeBase/Prospeer/Projects/Active/LeaseRight`
@@ -43,7 +72,7 @@ Run the primary, dependency-free unit-test suite:
 npm test --offline --script-shell=/bin/sh
 ```
 
-The seven Node tests cover exact selector outputs, checked-in seed reference integrity, the selector
+The Node tests cover exact selector outputs, checked-in seed reference integrity, the selector
 self-test, and the prototype validator's missing-script failure path. The suite then validates every
 local script reference in both HTML entry points. It requires no install step, network access, or
 browser. The `package.json` manifest exists only to declare this test command; it adds no runtime or

@@ -68,8 +68,8 @@ const App = () => {
   });
   const [editMode, setEditMode] = useState(false);
   const [tab, setTab] = useState(() => {
-    const saved = localStorage.getItem("leaseright_tab_v1");
-    return saved === "precon" ? "model" : (saved || "model");
+    try { const saved = localStorage.getItem("leaseright_tab_v1");
+    return saved === "precon" ? "model" : (saved || "model"); } catch { return "model"; }
   });
   const propIdx = Math.max(0, state.projects.findIndex(p => p.id === state.activeProjectId));
   const setPropIdx = (idx) => dispatch({ type: "setActiveProject", projectId: state.projects[idx]?.id });
@@ -77,8 +77,8 @@ const App = () => {
   const [sidebar, setSidebar] = useState(false);
   const [toast, setToast] = useState(null);
 
-  useEffect(() => { localStorage.setItem("leaseright_tab_v1", tab); }, [tab]);
-  useEffect(() => { localStorage.setItem("leaseright_tweaks_v2", JSON.stringify(tweaks)); }, [tweaks]);
+  useEffect(() => { try {localStorage.setItem("leaseright_tab_v1", tab);} catch {} }, [tab]);
+  useEffect(() => { try {localStorage.setItem("leaseright_tweaks_v2", JSON.stringify(tweaks));} catch {} }, [tweaks]);
 
   // Remove splash once we've rendered.
   useEffect(() => {
@@ -117,9 +117,11 @@ const App = () => {
 
   const t = THEMES[tweaks.theme];
 
+  const intakeProject = state.projects.find(p => p.id === state.activeProjectId && p.intakeVersion === 1);
+  if (intakeProject) return <IntakeWorkspace key={intakeProject.id} t={t} project={intakeProject} />;
+
   if (!journeyStarted) return <LeaseRightWelcome t={t} onComplete={(stage) => {
-    dispatch({ type: "updateProject", projectId: state.activeProjectId, patch: { name: "New project", city: "", address: "", submarket: "", deliveryDate: "", targetStabilizationDate: "" } });
-    dispatch({ type: "setProjectStage", projectId: state.activeProjectId, stage });
+    dispatch({ type: "createIntakeProject", id: "ri-" + crypto.randomUUID(), stage, at: new Date().toISOString() });
     setTab("model");
     setJourneyStarted(true);
   }} />;

@@ -33,7 +33,7 @@ const PropertyLocation = ({ t, address, location, onChange }) => {
   const current = React.useRef({onChange, location});
   current.current = {onChange, location};
   const [status, setStatus] = React.useState("loading"), [message, setMessage] = React.useState("");
-  const [manual, setManual] = React.useState(false), [maps, setMaps] = React.useState(null);
+  const [manual, setManual] = React.useState(!!address && !location), [maps, setMaps] = React.useState(null);
   const [mapError, setMapError] = React.useState(""), [mapReady, setMapReady] = React.useState(0);
   const [gis, setGis] = React.useState({status:"idle", parcels:[]});
   const [selectedId, setSelectedId] = React.useState(null), [retry, setRetry] = React.useState(0);

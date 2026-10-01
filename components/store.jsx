@@ -6,6 +6,20 @@ const cloneSeed = () => (typeof structuredClone === "function" ? structuredClone
 
 function reducer(state, action) {
   switch (action.type) {
+    case "createIntakeProject": {
+      if (state.projects.some(p => p.id === action.id)) return state;
+      const project = newIntakeProject(action.id, action.stage || "pre_funding", action.at);
+      return {...state, projects:[...state.projects, project], activeProjectId:project.id};
+    }
+    case "editIntakeProject":
+      return {...state, projects:state.projects.map(p => p.id === action.projectId && p.intakeVersion === 1 ? {...p, ...action.patch, draft:{...p.draft,...action.draft}, updatedAt:action.at, approvedBaselineId:action.navigationOnly ? p.approvedBaselineId : null} : p)};
+    case "approveIntakeBaseline": {
+      const project = state.projects.find(p=>p.id === action.projectId && p.intakeVersion === 1);
+      if (!project || project.approvedBaselineId || calculateIntake(project).issues.length || !calculateIntake(project).scenarios[1].stabilizeDate) return state;
+      const baseline = {id:action.id, approvedAt:action.at, project:JSON.parse(JSON.stringify({...project,baselines:[]})), output:calculateIntake(project)};
+      const unitTypes = intakeUnitTypes(project);
+      return {...state, unitTypes:[...state.unitTypes.filter(u=>u.projectId!==project.id),...unitTypes], projects:state.projects.map(p=>p.id===project.id?{...p,unitCount:+p.draft.totalUnits,approvedBaselineId:baseline.id,baselines:[...p.baselines,baseline]}:p)};
+    }
     // Record the first real contact with a lead.
     case "contactLead":
       return { ...state, leads: state.leads.map(l => l.id === action.leadId ? { ...l, contactedAt: action.at || new Date().toISOString(), pipelineStage: "contacted" } : l) };
@@ -67,8 +81,13 @@ function reducer(state, action) {
 }
 
 function StoreProvider({ children }) {
-  const [state, dispatch] = useReducer(reducer, null, () => ({ ...cloneSeed(), activeProjectId: SEED.projects[0]?.id || null }));
-  return <StoreContext.Provider value={{ state, dispatch }}>{children}</StoreContext.Provider>;
+  const [state, dispatch] = useReducer(reducer, null, () => restoreIntakeState(SEED, {getItem:key=>window.localStorage.getItem(key)}));
+  const [saveStatus, setSaveStatus] = React.useState("Saving draft…");
+  React.useEffect(() => {
+    try { persistIntakeState(state, window.localStorage); setSaveStatus("Saved on this browser"); }
+    catch (error) { setSaveStatus("Not saved — " + (state.storageError || "browser storage unavailable or full. Export your project.")); }
+  }, [state]);
+  return <StoreContext.Provider value={{ state, dispatch, saveStatus }}>{children}</StoreContext.Provider>;
 }
 
 function useStore() {
