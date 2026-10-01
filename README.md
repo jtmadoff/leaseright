@@ -2,6 +2,34 @@
 
 This is the confirmed Netlify Drop-era LeaseRight prototype.
 
+## Comparable-market workspace — 2026-10-01
+
+Property setup opens the saved project with a suggested comparison set. Research is now
+Comparables: a ranked, removable set of operator properties with dated source links, bedroom/size
+observations, and starting-price ranges separated by fee basis. Seven reviewed properties cover
+Providence and Pawtucket. This is a finite reviewed index, **not a live rent or vacancy feed**;
+direct operator retrieval returned HTTP 403, so no automated pricing fetch is claimed or deployed.
+One lowest advertised price per property/bedroom enters each range; restricted, waitlist,
+unallocated, missing, future-dated and >30-day-old observations are excluded. Removing a comp
+updates the range and persists locally without changing an approved model. No rent recommendation,
+achieved rent, occupancy, concessions adjustment or comprehensive RI market coverage is inferred.
+
+Providence GIS automatically matches a unique exact address (or unique intersecting parcel)
+and finds apartment-classified records within three miles. Results rank by approximate parcel-center
+distance, recorded unit count and vintage where available. Other tax classifications, including
+small multifamily and tax-stabilization records, are outside this candidate query. Ambiguous records
+are not silently confirmed. Results cache for 24 hours; Refresh city records does not refresh prices.
+Outside Providence, city discovery reports its coverage limit. The property map is in Property.
+The old manual evidence form is removed; previously saved sources remain available in a disclosure.
+Detailed cost-model assumptions remain optional until the owner wants a financial comparison.
+
+No new paid API, subscription, dependency or backend was added. Verification: 38 dependency-free
+tests plus staging/model checks and Chrome interaction checks. `graphify update .` was attempted;
+the command is unavailable, so graph artifacts remain stale. Browser storage is still device-local.
+
+Earlier dated entries below describe the implementation history; this section supersedes their
+research-form, map-location and market-coverage descriptions.
+
 ## Project setup and workspace correction — 2026-10-01
 
 Replaced the six-step entry gate with a short property setup. Name, street address and RI municipality

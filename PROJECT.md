@@ -13,6 +13,16 @@ as_of_source: repository consolidated 2026-09-11 after the first M4D packs; busi
 
 Formerly LeaseUp (renamed over trademark risk). Repo `github.com/jtmadoff/leaseright`, deployed at `leaserightbeta.netlify.app`. This HomeBase folder is canonical; the GitHub repo follows it.
 
+## Current product update — 2026-10-01
+
+Short property setup now opens a persistent browser-local workspace. Comparables automatically
+selects from seven dated operator records in Providence/Pawtucket, with removable matches and
+price-basis-separated observations. Live Providence GIS supplies nearby apartment building
+candidates; operator prices are reviewed evidence, not an automatically refreshed rental feed.
+No paid service or backend was added. See README's latest entry for coverage and validation.
+The September architecture/status sections below are historical; operational demo limitations
+and the lack of account synchronization remain.
+
 ## What it is
 
 A lease-up operating system for developers and small-to-mid portfolio owners who need units rented on time without the cost of full property-management software or full-service brokerage. `$1/unit` is secondary positioning; the intended long-term engine is LeaseRight's net share of rent-processing economics on volume routed through it. The current artifact is a static, no-build React prototype used to sell and shape the first paid pilot — it is not a product with a backend.

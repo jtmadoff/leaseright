@@ -47,8 +47,10 @@ function intakeIssues(project) {
   if (start === null) add(4,"Enter a valid leasing start date.");
   if (end === null || (start !== null && end <= start)) add(4,"Target stabilization must be after leasing starts.");
   if (start !== null && end !== null && end - start > 3650*86400000) add(4,"Keep the planning horizon within ten years.");
-  for (const [key,label,min,max] of [["targetOccupancy","Target occupancy",1,100],["leasesPerWeek","Weekly leasing pace",0.01,1000],["leaseTerm","Lease term",1,120],["freeMonths","Free months",0,120],["marketing","Marketing budget",0,1e9],["staffing","Staffing budget",0,1e9],["monthlyCarry","Monthly carry",0,1e9]]) {
-    const v = intakeNumber(d[key]); if (v === null || v < min || v > max) add(key === "leaseTerm" || key === "freeMonths" ? 3 : 4,`${label}: enter a value from ${min} to ${max}. Enter 0 explicitly if none.`);
+  for (const [key,label,min,max] of [["targetOccupancy","Target occupancy",1,100],["leasesPerWeek","Weekly leasing pace",0.01,1000],["leaseTerm","Lease term",1,120],["freeMonths","Free months",0,120],["marketing","Marketing budget",0,Number.MAX_SAFE_INTEGER],["staffing","Staffing budget",0,Number.MAX_SAFE_INTEGER],["monthlyCarry","Monthly carry",0,Number.MAX_SAFE_INTEGER]]) {
+    const v = intakeNumber(d[key]);
+    const messages={targetOccupancy:"Choose a target occupancy between 1% and 100%.",leasesPerWeek:"Enter a positive weekly leasing pace.",leaseTerm:"Enter the lease length in months.",freeMonths:"Enter the free-rent allowance, or 0 for none.",marketing:"Add a marketing budget to compare total costs.",staffing:"Add the staffing or brokerage budget to compare total costs.",monthlyCarry:"Add monthly carrying costs to compare the cost of time."};
+    if (v === null || v < min || v > max) add(key === "leaseTerm" || key === "freeMonths" ? 3 : 4, v !== null && (v<min || v>max) && ["marketing","staffing","monthlyCarry"].includes(key) ? `${label}: use a non-negative dollar amount.` : messages[key]);
   }
   if (+d.freeMonths > +d.leaseTerm) add(3,"Free months cannot exceed the lease term.");
   return issues;

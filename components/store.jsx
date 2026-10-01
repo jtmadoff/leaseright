@@ -11,6 +11,10 @@ function reducer(state, action) {
       const project = newIntakeProject(action.id, action.stage || "pre_funding", action.at);
       return {...state, projects:[...state.projects, project], activeProjectId:project.id};
     }
+    case "saveMarketDiscovery":
+      return {...state,projects:state.projects.map(p=>p.id===action.projectId && marketFingerprint(p)===action.fingerprint?{...p,marketData:action.data}:p)};
+    case "setMarketExcluded":
+      return {...state,projects:state.projects.map(p=>p.id===action.projectId?{...p,marketExcluded:action.excluded?[...new Set([...(p.marketExcluded||[]),action.compId])]:(p.marketExcluded||[]).filter(id=>id!==action.compId)}:p)};
     case "finishProjectSetup": {
       const project=state.projects.find(p=>p.id===action.projectId && p.intakeVersion===1);
       if(!project || projectSetupIssues(project).length) return state;
