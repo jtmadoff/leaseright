@@ -25,9 +25,10 @@ function leaseRightPlaceLocation(place) {
   if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180 || !place.formattedAddress) {
     throw new Error("This result has no usable street location. Try another address or enter it manually.");
   }
-  return { placeId: place.id || null, address: place.formattedAddress, lat, lng, pinAdjusted: false };
+  const part = type => place.addressComponents?.find(c => c.types?.includes(type));
+  return { placeId: place.id || null, address: place.formattedAddress, lat, lng, pinAdjusted: false, municipality:part("locality")?.longText || "", state:part("administrative_area_level_1")?.shortText || "" };
 }
-const PropertyLocation = ({ t, address, location, onChange }) => {
+const PropertyLocation = ({ t, address, location, onChange, compact=false }) => {
   const searchHost = React.useRef(null), mapHost = React.useRef(null);
   const requestId = React.useRef(0), mapRef = React.useRef(null), markerRef = React.useRef(null);
   const current = React.useRef({onChange, location});
@@ -49,7 +50,7 @@ const PropertyLocation = ({ t, address, location, onChange }) => {
       setStatus("resolving"); setMessage(""); current.current.onChange("", null);
       try {
         const place = placePrediction.toPlace();
-        await place.fetchFields({fields:["id", "formattedAddress", "location"]});
+        await place.fetchFields({fields:["id", "formattedAddress", "location", "addressComponents"]});
         if (disposed || request !== requestId.current) return;
         const next = leaseRightPlaceLocation(place);
         current.current.onChange(next.address, next); setManual(false); setStatus("ready");
@@ -61,6 +62,7 @@ const PropertyLocation = ({ t, address, location, onChange }) => {
       const {PlaceAutocompleteElement} = await api.importLibrary("places");
       if (disposed) return;
       widget = new PlaceAutocompleteElement();
+      widget.includedRegionCodes = ["us"];
       widget.placeholder = "Enter a street address or property name";
       widget.setAttribute("aria-label", "Find your property"); widget.style.width = "100%";
       widget.style.colorScheme = "dark";
@@ -134,8 +136,9 @@ const PropertyLocation = ({ t, address, location, onChange }) => {
   const number = value => value == null ? "Not reported" : new Intl.NumberFormat("en-US", {maximumFractionDigits:0}).format(value);
   const facts = selected ? [["Lot area", selected.lotSqft ? `${number(selected.lotSqft)} sq ft` : selected.lotAcres ? `${selected.lotAcres} acres` : "Not reported"], ["Gross building area", selected.buildingSqft ? `${number(selected.buildingSqft)} sq ft` : "Not reported"], ["Recorded units", number(selected.units)], ["Year built", selected.yearBuilt || "Not reported"], ["Stories", number(selected.floors)], ["Recorded use", selected.use || "Not reported"]] : [];
   const gisMessage = {idle:"Search for an address to find its parcel and public property records.", loading:"Finding the parcel in Providence’s GIS…", outside:"City records are connected for Providence, RI. You can still map this address and enter its details.", empty:"No parcel found at or within 25 metres of the pin. Click inside the property on the map to try again.", error:gis.message}[gis.status];
-  return <section className="lr-property" aria-label="Property location" style={{"--lr-rule":t.rule, "--lr-bg":t.bg, "--lr-surface":t.surface, "--lr-ink":t.ink, "--lr-muted":t.inkSoft, "--lr-accent":t.accent, fontFamily:t.sans}}>
-    <div className="lr-property-heading"><div><div className="lr-kicker">01 / PROPERTY DISCOVERY</div><h2>Start with the place.</h2><p>Find the address. Check the parcel. Build from what’s already known.</p></div><span className="lr-coverage"><span/>Providence, RI · GIS connected</span></div>
+  return <section className={`lr-property ${compact?"lr-property-compact":""}`} aria-label="Property location" style={{"--lr-rule":t.rule, "--lr-bg":t.bg, "--lr-surface":t.surface, "--lr-ink":t.ink, "--lr-muted":t.inkSoft, "--lr-accent":t.accent, fontFamily:t.sans}}>
+    {!compact && <div className="lr-property-heading"><div><div className="lr-kicker">01 / PROPERTY DISCOVERY</div><h2>Start with the place.</h2><p>Find the address. Check the parcel. Build from what’s already known.</p></div><span className="lr-coverage"><span/>Providence, RI · GIS connected</span></div>}
+    {compact && <style>{`.lr-property-compact .lr-property-grid{grid-template-columns:1fr}.lr-property-compact .lr-property-map,.lr-property-compact .lr-map-empty{min-height:320px;height:320px}.lr-property-compact .lr-map-caption{font-size:12px}`}</style>}
     <div className="lr-search-row">
       <div style={{flex:1, minWidth:0}}><div ref={searchHost} style={{display:manual ? "none":"block"}} />
         {status === "loading" && <p role="status">Loading address search…</p>}
@@ -151,7 +154,7 @@ const PropertyLocation = ({ t, address, location, onChange }) => {
         {(!location || !maps || mapError) && <div className="lr-map-empty"><div className="lr-empty-cross">＋</div><div className="lr-empty-parcel" aria-hidden="true"/><strong>{mapError || (manual && address ? "Address entered · not mapped" : "Every plan starts with a property.")}</strong><p>{mapError ? "You can continue below." : "Choose an address to explore the site and its parcel."}</p></div>}
         <div className="lr-map-caption"><span className="lr-pin-dot"/><div><strong>{address || "No property selected"}</strong><p>{location ? "Click the site or drag the pin to check another parcel." : "Satellite imagery + municipal parcel boundaries"}</p></div></div>
       </div>
-      <aside className="lr-facts-panel" aria-label="Public property records">
+      {!compact && <aside className="lr-facts-panel" aria-label="Public property records">
         <div className="lr-facts-heading"><div className="lr-kicker">PUBLIC PROPERTY RECORD</div><span className={confirmed ? "lr-status confirmed" : "lr-status"}>{confirmed ? "Confirmed" : selected ? "Review match" : "Providence GIS"}</span></div>
         {!selected && <div className="lr-record-empty" role="status"><h3>{gis.status === "loading" ? "Looking up the site" : gis.status === "error" ? "Records unavailable" : "A head start on the details."}</h3><p>{gisMessage}</p>{gis.status === "idle" && <div className="lr-record-preview">Parcel boundary<span>Lot & building area</span><span>Recorded use & zoning</span></div>}{gis.status === "error" && <button className="lr-outline-button" onClick={() => setRetry(n => n+1)}>Retry city lookup</button>}</div>}
         {selected && <>
@@ -165,7 +168,7 @@ const PropertyLocation = ({ t, address, location, onChange }) => {
           <div className="lr-record-source">City of Providence · {selected.taxYear ? `${selected.taxYear} tax roll` : "Tax year not reported"}<br/>Retrieved {new Date(gis.retrievedAt).toLocaleDateString("en-US")}<br/><a href={`${PROVIDENCE_PARCELS}/query?f=pjson&objectIds=${encodeURIComponent(selected.id)}&outFields=${encodeURIComponent(PROVIDENCE_FIELDS)}&returnGeometry=false`} target="_blank" rel="noopener noreferrer">View source record ↗</a></div>
         </>}
         <a className="lr-city-link" href={PROVIDENCE_GIS_VIEWER} target="_blank" rel="noopener noreferrer">Open Providence’s GIS viewer ↗</a>
-      </aside>
+      </aside>}
     </div>
   </section>;
 };

@@ -13,6 +13,14 @@ as_of_source: repository consolidated 2026-09-11 after the first M4D packs; busi
 
 Formerly LeaseUp (renamed over trademark risk). Repo `github.com/jtmadoff/leaseright`, deployed at `leaserightbeta.netlify.app`. This HomeBase folder is canonical; the GitHub repo follows it.
 
+## UX correction — 2026-10-01
+
+Restored the original welcome and visual stage choice. Address-first setup infers the town and accepts
+a building total without underwriting. The overview now follows the selected stage and unit count;
+existing-building schedules capture already-leased units. Verified a 25-unit flow in Chrome. The
+finite operator pricing index remains a dated reference, not live rental research. See README for
+scope and test details.
+
 ## Current product update — 2026-10-01
 
 Short property setup now opens a persistent browser-local workspace. Comparables automatically

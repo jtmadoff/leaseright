@@ -668,29 +668,30 @@ const ConcessionsView = ({ t }) => {
 // ═══════════════════════════════════════════════════════════════
 //  MODEL — sponsor intake + absorption model
 // ═══════════════════════════════════════════════════════════════
-const LeaseRightWelcome = ({ t, onComplete }) => {
-  const [step, setStep] = useState("welcome");
-  const [stage, setStage] = useState("pre_funding");
+const LeaseRightWelcome = ({ t, onComplete, initialStep="welcome", initialStage="pre_funding", continueLabel="Find the property →", contextLabel="New project", onCancel }) => {
+  const [step, setStep] = useState(initialStep);
+  const [stage, setStage] = useState(initialStage);
   const stages = [
     { id: "pre_funding", label: "Pre-funding", detail: "Build the lease-up plan and lender-ready assumptions before capital closes." },
     { id: "funded_prelaunch", label: "Funded · pre-launch", detail: "Validate rents, staffing, and launch timing before the first lead arrives." },
-    { id: "active_leaseup", label: "Active lease-up", detail: "Import the current plan and establish a clean baseline for live operations." },
+    { id: "active_leaseup", label: "Already leasing", detail: "Start with your existing building, understand vacancies, and plan the remaining lease-up." },
   ];
   return (
     <div style={{ minHeight: "100vh", background: t.bg, color: t.ink, fontFamily: t.sans }}>
+      <style>{`@media(max-width:760px){.lr-welcome-main{grid-template-columns:1fr!important;padding:40px 24px!important;gap:32px!important}.lr-welcome-main h1{font-size:44px!important}.lr-stage-main{padding:48px 24px!important}.lr-stage-cards{grid-template-columns:1fr!important}.lr-stage-cards button{min-height:150px!important;border-right:0!important;border-bottom:1px solid ${t.rule}!important}}`}</style>
       <div style={{ height: 64, padding: "0 28px", display: "flex", alignItems: "center", borderBottom: `1px solid ${t.rule}` }}>
         <div style={{ width: 24, height: 24, background: t.accent, color: "#0A0A0B", display: "grid", placeItems: "center", fontFamily: t.mono, fontWeight: 800, fontSize: 13 }}>L</div>
         <div style={{ marginLeft: 10, fontSize: 14, fontWeight: 650 }}>LeaseRight</div>
         <div style={{ flex: 1 }} />
-        <div style={{ fontSize: 12, color: t.inkMute }}>Built for the lease-up.</div>
+        {onCancel ? <button onClick={onCancel} style={{background:"none",border:0,color:t.inkSoft,cursor:"pointer"}}>Back to project</button> : <div style={{ fontSize: 12, color: t.inkMute }}>Built for the lease-up.</div>}
       </div>
       {step === "welcome" ? (
-        <main style={{ maxWidth: 1180, margin: "0 auto", padding: "68px 40px 56px", display: "grid", gridTemplateColumns: "0.82fr 1.18fr", gap: 64, alignItems: "center" }}>
+        <main className="lr-welcome-main" style={{ maxWidth: 1180, margin: "0 auto", padding: "68px 40px 56px", display: "grid", gridTemplateColumns: "0.82fr 1.18fr", gap: 64, alignItems: "center" }}>
           <section style={{ paddingBottom: 18 }}>
             <div style={{ marginBottom: 24, color: t.inkSoft, fontSize: 13, fontWeight: 600 }}>Plan and run multifamily lease-ups</div>
             <h1 style={{ fontSize: 58, lineHeight: 0.98, letterSpacing: -2.2, margin: 0, maxWidth: 520 }}>Know what stabilization will take.</h1>
             <p style={{ fontSize: 17, lineHeight: 1.65, color: t.inkSoft, margin: "26px 0 32px", maxWidth: 500 }}>Build the lease-up plan, approve the financial baseline, and see each week whether the property is on pace to stabilize.</p>
-            <button onClick={() => onComplete("pre_funding")} style={{ padding: "14px 21px", border: "none", borderRadius: 3, background: t.accent, color: "#0A0A0B", fontFamily: t.sans, fontSize: 14, fontWeight: 750, cursor: "pointer" }}>Start a project</button>
+            <button onClick={() => setStep("stage")} style={{ padding: "14px 21px", border: "none", borderRadius: 3, background: t.accent, color: "#0A0A0B", fontFamily: t.sans, fontSize: 14, fontWeight: 750, cursor: "pointer" }}>Start a project</button>
           </section>
           <section style={{ display: "grid", gridTemplateColumns: "96px 1fr", border: `1px solid ${t.rule}`, background: t.surface, boxShadow: "0 30px 80px rgba(0,0,0,0.35)" }}>
             <aside style={{ padding: "18px 12px", borderRight: `1px solid ${t.rule}`, background: t.bg }}>
@@ -722,14 +723,14 @@ const LeaseRightWelcome = ({ t, onComplete }) => {
           </section>
         </main>
       ) : (
-        <main style={{ maxWidth: 900, margin: "0 auto", padding: "88px 40px 76px" }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: t.inkMute, marginBottom: 14 }}>New project</div>
+        <main className="lr-stage-main" style={{ maxWidth: 900, margin: "0 auto", padding: "88px 40px 76px" }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: t.inkMute, marginBottom: 14 }}>{contextLabel}</div>
           <h1 style={{ fontSize: 34, letterSpacing: -0.7, margin: 0 }}>Where is this project today?</h1>
           <p style={{ color: t.inkSoft, fontSize: 15, lineHeight: 1.55, margin: "12px 0 30px" }}>Your answer sets the starting workflow and the baseline we need.</p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", borderTop: `1px solid ${t.rule}`, borderBottom: `1px solid ${t.rule}` }}>
-            {stages.map((s, i) => { const active = stage === s.id; return <button key={s.id} onClick={() => setStage(s.id)} style={{ minHeight: 190, padding: "22px 20px", display: "flex", flexDirection: "column", alignItems: "flex-start", background: active ? t.surface : "transparent", border: "none", borderRight: i < stages.length - 1 ? `1px solid ${t.rule}` : "none", borderTop: `3px solid ${active ? t.ink : "transparent"}`, color: t.ink, textAlign: "left", cursor: "pointer" }}><strong style={{ fontSize: 15, fontWeight: 650 }}>{s.label}</strong><span style={{ fontSize: 13, color: t.inkSoft, lineHeight: 1.55, marginTop: 14 }}>{s.detail}</span><span style={{ marginTop: "auto", fontSize: 11.5, fontWeight: 650, color: active ? t.ink : t.inkMute }}>{active ? "Selected" : "Choose"}</span></button>; })}
+          <div className="lr-stage-cards" style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", borderTop: `1px solid ${t.rule}`, borderBottom: `1px solid ${t.rule}` }}>
+            {stages.map((s, i) => { const active = stage === s.id; return <button key={s.id} aria-pressed={active} onClick={() => setStage(s.id)} style={{ minHeight: 190, padding: "22px 20px", display: "flex", flexDirection: "column", alignItems: "flex-start", background: active ? t.surface : "transparent", border: "none", borderRight: i < stages.length - 1 ? `1px solid ${t.rule}` : "none", borderTop: `3px solid ${active ? t.ink : "transparent"}`, color: t.ink, textAlign: "left", cursor: "pointer" }}><strong style={{ fontSize: 15, fontWeight: 650 }}>{s.label}</strong><span style={{ fontSize: 13, color: t.inkSoft, lineHeight: 1.55, marginTop: 14 }}>{s.detail}</span><span style={{ marginTop: "auto", fontSize: 11.5, fontWeight: 650, color: active ? t.ink : t.inkMute }}>{active ? "Selected" : "Choose"}</span></button>; })}
           </div>
-          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 28 }}><button onClick={() => onComplete(stage)} style={{ padding: "12px 18px", border: "none", borderRadius: 4, background: t.accent, color: "#0A0A0B", fontWeight: 700, cursor: "pointer" }}>Continue to property intake →</button></div>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 28 }}><button onClick={() => onComplete(stage)} style={{ padding: "12px 18px", border: "none", borderRadius: 4, background: t.accent, color: "#0A0A0B", fontWeight: 700, cursor: "pointer" }}>{continueLabel}</button></div>
         </main>
       )}
     </div>

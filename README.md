@@ -2,6 +2,27 @@
 
 This is the confirmed Netlify Drop-era LeaseRight prototype.
 
+## Restored stage-led entry — 2026-10-01
+
+The original welcome and three visual stage cards are reachable again: Start a project no longer
+skips stage selection, and New project no longer silently chooses pre-funding. New setup uses address
+search plus a satellite map, inferred municipality, prominent unit count, and optional property name
+(defaulting to the street address). Unknown towns can be searched by prefix; there is no all-town
+select. Manual full-address entry works when Maps is unavailable. Returning to stage selection
+preserves the draft. Existing project data and approved versions are retained.
+
+The overview uses the selected stage and actual unit count, with building/market/plan entry points.
+A 25-unit building can open without a rent schedule, dates or financial assumptions. Already-leasing
+projects expose the leased count alongside unit type/count/rent; a complete schedule summarizes
+leased and remaining units. No occupancy is inferred from public records or invented for an empty
+schedule. Detailed modeling remains optional. The saved pricing index is no longer the home hero;
+live rental-price retrieval remains unimplemented. This correction does not add live operations,
+turnover forecasting, account storage, or a new paid service.
+
+Verification: 40 unit tests; browser welcome → stage → address/25 units → overview → grouped unit
+entry → reload. Static/model checks pass; headless Chrome remains unavailable (SIGABRT), so browser
+interaction and visual checks use the connected Chrome session. Graphify is not installed.
+
 ## Comparable-market workspace — 2026-10-01
 
 Property setup opens the saved project with a suggested comparison set. Research is now

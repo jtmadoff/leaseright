@@ -134,3 +134,16 @@ function persistIntakeState(state, storage) {
   storage.setItem(INTAKE_STORAGE_KEY, JSON.stringify({version:1,activeProjectId:state.activeProjectId,projects:state.projects.filter(p=>p.intakeVersion===1)}));
 }
 Object.assign(window,{RI_TOWNS,INTAKE_STORAGE_KEY,newIntakeProject,projectSetupIssues,intakeLanding,intakeIssues,calculateIntake,parseIntakeCSV,intakeSafeURL,intakeUnitTypes,restoreIntakeState,persistIntakeState,validIntakeDraft});
+
+// Municipality is derived from a selected place or an explicit city segment, never a street-name substring.
+function intakeMunicipality(address,location) {
+  if(location?.state && location.state!=="RI")return "";
+  const parts=[location?.municipality,...String(address||"").split(",").slice(1).map(s=>s.trim().replace(/\s+(?:RI|Rhode Island)(?:\s+\d{5})?$/i,""))];
+  return RI_TOWNS.find(t=>parts.some(p=>String(p||"").toLowerCase()===t.toLowerCase())) || "";
+}
+function intakeProjectFocus(project) {
+  const count=intakeNumber(project.draft.totalUnits);
+  const stage={pre_funding:{label:"Pre-funding",title:"Shape the plan before you commit.",primary:"Explore the market",section:2,detail:"Start with the property and local context. Build financial assumptions when you’re ready."},funded_prelaunch:{label:"Funded · pre-launch",title:"Get the building ready to lease.",primary:"Set up your units",section:1,detail:"Bring in the unit mix you already have, then prepare pricing and launch timing."},active_leaseup:{label:"Already leasing",title:"Start with the building you have.",primary:"Add the current unit mix",section:1,detail:"Capture which units are already leased and which need attention. There’s no need to recreate a development plan."}}[project.stage] || {label:"Planning",title:"Your property, your starting point.",primary:"Set up your units",section:1,detail:"Add details as you need them."};
+  return {...stage,count,small:count!==null&&count<=50};
+}
+Object.assign(window,{intakeMunicipality,intakeProjectFocus});
