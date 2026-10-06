@@ -2,6 +2,26 @@
 
 This is the confirmed Netlify Drop-era LeaseRight prototype.
 
+## Dashboard routing repair — 2026-10-06
+
+Removed the unconditional App return that trapped every intake-version project outside the original
+application shell. Saved projects now land on Dashboard, even with incomplete setup. The original
+navigation remains visible around optional property, unit, market, rent and model editors. Setup has
+an explicit Back to dashboard exit; finishing setup, editor Done and baseline approval return there.
+Stage edits return to the editor they came from. New project still opens the introduction/stage flow.
+
+The project switcher lists saved properties and explicitly labeled example properties. Example
+selection now survives reload without discarding real projects. The original sample dashboard is
+reachable again. Real-property dashboards use saved unit count and complete, valid leased counts;
+unknown or inconsistent positions stay unknown. Unconnected operating modules show an explicit
+empty state, never the example's leads, rent receipts or residents. Account sync and live rental-price
+research remain unbuilt; this repair does not claim otherwise.
+
+Verification: 42 unit tests; static/model gate; connected Chrome verified original example dashboard,
+real 25/20/5 dashboard, unit editor → dashboard, setup exit without completion, switching and reload.
+Headless Chrome still exits SIGABRT; interactive Chrome supplies render/navigation coverage.
+`graphify update .` was attempted but the command is unavailable.
+
 ## Restored stage-led entry — 2026-10-01
 
 The original welcome and three visual stage cards are reachable again: Start a project no longer

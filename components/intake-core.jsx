@@ -122,7 +122,7 @@ function restoreIntakeState(seed, storage) {
       const baseline=p.baselines[p.baselines.length-1];
       if(baseline?.project?.draft?.unitMix) base.unitTypes.push(...intakeUnitTypes({...baseline.project,id:p.id}));
     });
-    base.activeProjectId=saved.projects.some(p=>p.id===saved.activeProjectId)?saved.activeProjectId:(saved.projects[0]?.id || base.activeProjectId);
+    base.activeProjectId=base.projects.some(p=>p.id===saved.activeProjectId)?saved.activeProjectId:(saved.projects[0]?.id || base.activeProjectId);
     return base;
   } catch { return {...base,storageError:"Saved drafts could not be read. Existing browser data has been preserved. Export your current work before closing."}; }
 }
@@ -147,3 +147,12 @@ function intakeProjectFocus(project) {
   return {...stage,count,small:count!==null&&count<=50};
 }
 Object.assign(window,{intakeMunicipality,intakeProjectFocus});
+
+function projectDashboardFacts(project) {
+  const total=intakeNumber(project.draft.totalUnits), rows=project.draft.unitMix;
+  const validTotal=Number.isInteger(total)&&total>0?total:null;
+  const known=validTotal!==null && rows.length>0 && rows.every(r=>Number.isInteger(intakeNumber(r.count))&&+r.count>0&&Number.isInteger(intakeNumber(r.leased))&&+r.leased>=0&&+r.leased<=+r.count) && rows.reduce((n,r)=>n+(+r.count),0)===validTotal;
+  const leased=known?rows.reduce((n,r)=>n+(+r.leased),0):null;
+  return {total:validTotal,leased,remaining:known?validTotal-leased:null,occupancy:known?leased/validTotal*100:null};
+}
+Object.assign(window,{projectDashboardFacts});

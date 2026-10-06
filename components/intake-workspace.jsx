@@ -8,23 +8,25 @@ const intakeMoney = value => value == null ? "—" : new Intl.NumberFormat("en-U
 function IntakeField({label,value,onChange,type="text",children,hint,...rest}) {
   return <label className="ri-field"><span>{label}</span>{children || <input type={type} value={value ?? ""} onChange={e=>onChange(e.target.value)} onInput={type==="date" ? e=>onChange(e.currentTarget.value) : undefined} {...rest} />}{hint && <small>{hint}</small>}</label>;
 }
-function IntakeWorkspace({t,project}) {
+function IntakeWorkspace({t,project,initialView,entryStep=0,embedded=false,onDashboard,onNewProject}) {
   const {state,dispatch,saveStatus} = useStore();
-  const [view,setView]=React.useState(()=>intakeLanding(project));
+  const [view,setView]=React.useState(()=>initialView||intakeLanding(project));
   const market=useProjectMarket(project,dispatch,view!=="setup");
-  const d=project.draft, step=d.step, issues=intakeIssues(project), output=calculateIntake(project);
+  const [localStep,setLocalStep]=React.useState(entryStep);
+  const goHome=()=>onDashboard?onDashboard():setView("home");
+  const d=project.draft, step=embedded?localStep:d.step, issues=intakeIssues(project), output=calculateIntake(project);
   const [unitDetails,setUnitDetails]=React.useState(false);
   const unitColumns=unitDetails?["label","count","sqft","rent","leased","availableDate"]:project.stage==="active_leaseup"?["label","count","rent","leased"]:["label","count","rent"];
   const [csv,setCSV]=React.useState(""), [importRows,setImportRows]=React.useState(null), [message,setMessage]=React.useState("");
   React.useEffect(()=>{window.scrollTo({top:0,behavior:"instant"});},[step,project.id,view]);
   const edit=(patch={},draft={},navigationOnly=false)=>dispatch({type:"editIntakeProject",projectId:project.id,patch,draft,navigationOnly,at:new Date().toISOString()});
   React.useEffect(()=>{if(view==="home" && !project.workspaceOpenedAt) edit({workspaceOpenedAt:new Date().toISOString()}, {},true);},[view,project.workspaceOpenedAt,project.id]);
-  const openSection=index=>{edit({}, {step:index},true);setView("edit");setMessage("");};
+  const openSection=index=>{setLocalStep(index);edit({}, {step:index},true);setView("edit");setMessage("");};
 
   const field=(key,label,type="text",hint)=> <IntakeField label={label} type={type} value={d[key]} onChange={value=>edit({}, {[key]:value})} hint={hint} />;
   const projectField=(key,label,hint)=> <IntakeField label={label} value={project[key]} onChange={value=>edit(key==="address"?{address:value,location:null}:{[key]:value})} hint={hint} />;
   const changeRow=(index,key,value)=>edit({}, {unitMix:d.unitMix.map((r,i)=>i===index?{...r,[key]:value}:r)});
-  const newProject=()=>setView("welcome");
+  const newProject=()=>onNewProject?onNewProject():setView("welcome");
   const download=(name,content,type)=>{const url=URL.createObjectURL(new Blob([content],{type}));const a=document.createElement("a");a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
   const exportProject=()=>download((project.name || "LeaseRight")+".json",JSON.stringify({format:"leaseright-project",version:1,project},null,2),"application/json");
   const restoreProject=async event=>{
@@ -45,10 +47,12 @@ function IntakeWorkspace({t,project}) {
   const focus=intakeProjectFocus(project);
   const knownPosition=d.unitMix.length>0 && rowCount===focus.count && d.unitMix.every(r=>intakeNumber(r.leased)!==null && Number.isInteger(+r.leased) && +r.leased>=0 && +r.leased<=+r.count);
   const leasedCount=knownPosition?d.unitMix.reduce((n,r)=>n+(+r.leased),0):null;
-  if(view==="welcome" || view==="stage" || view==="intro")return <LeaseRightWelcome t={t} initialStep={view==="stage"?"stage":"welcome"} initialStage={project.stage} contextLabel={view==="stage"?project.name:"New project"} continueLabel={view==="stage"&&project.workspaceOpenedAt?"Return to project →":"Find the property →"} onCancel={()=>setView(intakeLanding(project))} onComplete={stage=>{if(view!=="welcome"){edit({stage},{},stage===project.stage);setView(intakeLanding(project));}else dispatch({type:"createIntakeProject",id:"ri-"+crypto.randomUUID(),at:new Date().toISOString(),stage});}}/>;
-  if(view==="setup")return <ProjectStart t={t} project={project} onEdit={edit} saveStatus={saveStatus} onStage={()=>setView("stage")} onCancel={()=>setView("intro")} onFinish={name=>{edit({name});dispatch({type:"finishProjectSetup",projectId:project.id,at:new Date().toISOString()});setView("home");}}/>;
-  return <div className="ri-workspace" style={{"--ri-bg":t.bg,"--ri-surface":t.surface,"--ri-ink":t.ink,"--ri-muted":t.inkSoft,"--ri-rule":t.rule,"--ri-accent":t.accent,fontFamily:t.sans}}>
+  if(view==="welcome" || view==="stage" || view==="intro")return <LeaseRightWelcome t={t} initialStep={view==="stage"?"stage":"welcome"} initialStage={project.stage} contextLabel={view==="stage"?project.name:"New project"} continueLabel={view==="stage"&&project.workspaceOpenedAt?"Return to project →":"Find the property →"} onCancel={()=>setView(initialView==="setup"?"setup":embedded?"edit":intakeLanding(project))} onComplete={stage=>{if(view!=="welcome"){edit({stage},{},stage===project.stage);setView(initialView==="setup"?"setup":embedded?"edit":intakeLanding(project));}else dispatch({type:"createIntakeProject",id:"ri-"+crypto.randomUUID(),at:new Date().toISOString(),stage});}}/>;
+  if(view==="setup")return <ProjectStart t={t} project={project} onEdit={edit} saveStatus={saveStatus} onStage={()=>setView("stage")} onCancel={()=>onDashboard?onDashboard():setView("intro")} onFinish={name=>{edit({name});dispatch({type:"finishProjectSetup",projectId:project.id,at:new Date().toISOString()});goHome();}}/>;
+  return <div className={`ri-workspace ${embedded?"ri-embedded":""}`} style={{"--ri-bg":t.bg,"--ri-surface":t.surface,"--ri-ink":t.ink,"--ri-muted":t.inkSoft,"--ri-rule":t.rule,"--ri-accent":t.accent,fontFamily:t.sans}}>
     <style>{`
+      .ri-embedded{min-height:0!important}.ri-embedded>.ri-header .ri-brand,.ri-embedded>.ri-header .ri-kicker,.ri-embedded>.ri-header select,.ri-embedded>.ri-header .ri-field{display:none}.ri-embedded>.ri-header{justify-content:flex-end;padding:10px 24px}.ri-embedded .ri-nav{padding:8px 24px}.ri-embedded .ri-main{padding-top:20px}
+
       .ri-workspace{background:var(--ri-bg);color:var(--ri-ink);min-height:100vh;font-size:14px;line-height:1.5}
       .ri-workspace *{box-sizing:border-box}.ri-workspace button,.ri-workspace input,.ri-workspace select,.ri-workspace textarea{font:inherit}
       .ri-workspace button{cursor:pointer}.ri-workspace button:disabled{opacity:.45;cursor:not-allowed}
@@ -76,12 +80,12 @@ function IntakeWorkspace({t,project}) {
     `}</style>
     <header className="ri-header"><div><div className="ri-brand">LeaseRight</div><div className="ri-kicker">Rhode Island · Pilot workspace</div></div><div className="ri-actions">
       <label className="ri-field"><span className="ri-kicker">Project</span><select aria-label="Switch project" value={project.id} onChange={e=>dispatch({type:"setActiveProject",projectId:e.target.value})}>{state.projects.filter(p=>p.intakeVersion===1).map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
-      <button className="ri-button" onClick={newProject}>New project</button><button className="ri-button" onClick={exportProject}>Export backup</button>
+      {!embedded && <><button className="ri-button" onClick={goHome}>Dashboard</button><button className="ri-button" onClick={newProject}>New project</button></>}<button className="ri-button" onClick={exportProject}>Export backup</button>
       <label className="ri-button" role="button" tabIndex={0} onKeyDown={e=>{if(e.key==="Enter" || e.key===" "){e.preventDefault();e.currentTarget.querySelector("input").click();}}}>Restore backup<input aria-label="Restore project backup" type="file" accept=".json,application/json" onChange={restoreProject} style={{display:"none"}} /></label>
     </div></header>
     <div className={view==="setup"?"ri-setup-layout":"ri-layout"}>
     {view!=="setup" && <nav className="ri-nav" aria-label="Project navigation">
-      <button aria-current={view==="home"?"page":undefined} onClick={()=>setView("home")}>Overview</button>
+      <button aria-current={view==="home"?"page":undefined} onClick={goHome}>Overview</button>
       {[[0,"Property"],[1,"Unit schedule"],[2,"Comparables"],[3,"Rent assumptions"],[4,"Leasing plan"],[5,"Model & baseline"]].map(([i,label])=><button key={i} aria-current={view==="edit" && step===i?"page":undefined} onClick={()=>openSection(i)}>{label}</button>)}
     </nav>}
     <main className="ri-main"><div className="ri-kicker">{view==="setup"?"New property":project.municipality+" · "+({pre_funding:"Pre-funding",funded_prelaunch:"Pre-launch",active_leaseup:"Lease-up"}[project.stage] || "Planning")}</div>
@@ -139,11 +143,11 @@ function IntakeWorkspace({t,project}) {
       <section className="ri-card"><h2>Leasing pace sensitivities</h2><p>Calculated illustrations, not market forecasts. All cases use the same rents, concessions, and fixed budgets; only weekly leasing pace changes.</p><div className="ri-table-wrap"><table><thead><tr>{["Case","Leases / week","Stabilization","Free rent","Gross carry","Total plan cost"].map(x=><th key={x}>{x}</th>)}</tr></thead><tbody>{output.scenarios.map(s=><tr key={s.name}><td>{s.name}<small style={{display:"block"}}>{s.meetsTarget?"Meets target":"Misses target"}</small></td><td>{s.leasesPerWeek.toFixed(2)}</td><td>{s.stabilizeDate || "Beyond 10 years"}</td><td>{intakeMoney(s.concessionCost)}</td><td>{intakeMoney(s.carryCost)}</td><td>{s.stabilizeDate?intakeMoney(s.totalCost):"Incomplete horizon"}</td></tr>)}</tbody></table></div><p className="ri-muted">Availability-constrained daily approximation; leasing capacity is allocated in unit-row order. Carry = monthly cost × elapsed days ÷ 30.4375. Total plan cost includes free rent, gross carry, and entered marketing and staffing budgets. This is not NOI, a cash-flow forecast, or a valuation.</p></section>
       {!d.sources.length && <div className="ri-notice">No market evidence recorded. An approved version will retain this limitation.</div>}
       {!output.scenarios[1]?.stabilizeDate && <div className="ri-notice">The base case does not stabilize within ten years. Revise the availability or pace before approval.</div>}
-      {approved ? <section className="ri-card"><h2>Baseline approved</h2><p>Version {project.baselines.length} · {new Date(approved.approvedAt).toLocaleString()}. Editing the project creates a new draft; this snapshot remains in its history.</p><p>Project unit types and the planning baseline are established. Tenant records, a live leasing board, and reporting integrations are not connected yet.</p></section> : <button className="ri-button ri-primary" disabled={!output.scenarios[1]?.stabilizeDate} onClick={()=>{dispatch({type:"approveIntakeBaseline",projectId:project.id,id:crypto.randomUUID(),at:new Date().toISOString()});setView("home");}}>Approve baseline & open project →</button>}
+      {approved ? <section className="ri-card"><h2>Baseline approved</h2><p>Version {project.baselines.length} · {new Date(approved.approvedAt).toLocaleString()}. Editing the project creates a new draft; this snapshot remains in its history.</p><p>Project unit types and the planning baseline are established. Tenant records, a live leasing board, and reporting integrations are not connected yet.</p></section> : <button className="ri-button ri-primary" disabled={!output.scenarios[1]?.stabilizeDate} onClick={()=>{dispatch({type:"approveIntakeBaseline",projectId:project.id,id:crypto.randomUUID(),at:new Date().toISOString()});goHome();}}>Approve baseline & open project →</button>}
       </>}
       {project.baselines.length>0 && <details className="ri-card"><summary>Approved version history ({project.baselines.length})</summary>{project.baselines.map((b,i)=><div key={b.id} className="ri-source">Version {i+1} · {new Date(b.approvedAt).toLocaleString()} · {b.output.totalUnits} units<button className="ri-button" style={{marginLeft:12}} onClick={()=>download(`leaseright-baseline-${i+1}.json`,JSON.stringify(b,null,2),"application/json")}>Export snapshot</button></div>)}</details>}
     </>}
-    <footer className="ri-footer"><span className="ri-muted">Changes save automatically.</span><button className="ri-button ri-primary" onClick={()=>setView("home")}>Done · return to project →</button></footer>
+    <footer className="ri-footer"><span className="ri-muted">Changes save automatically.</span><button className="ri-button ri-primary" onClick={goHome}>Done · back to dashboard →</button></footer>
     </>}
     <details className="ri-storage"><summary>Saved on this device</summary><p>Drafts are stored in this browser, not synced to an account. Use Export backup to keep a separate copy.</p></details>
     </main></div>

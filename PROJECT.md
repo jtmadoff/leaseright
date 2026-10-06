@@ -13,6 +13,13 @@ as_of_source: repository consolidated 2026-09-11 after the first M4D packs; busi
 
 Formerly LeaseUp (renamed over trademark risk). Repo `github.com/jtmadoff/leaseright`, deployed at `leaserightbeta.netlify.app`. This HomeBase folder is canonical; the GitHub repo follows it.
 
+## Dashboard access restored — 2026-10-06
+
+Saved properties now open in the original application shell with Dashboard navigation. Intake is an
+optional editor rather than an application-wide route gate. Real properties show their saved unit
+position; the original sample dashboard remains available as an explicitly labeled example. Unwired
+operations remain unavailable for real properties. README documents navigation checks and limits.
+
 ## UX correction — 2026-10-01
 
 Restored the original welcome and visual stage choice. Address-first setup infers the town and accepts

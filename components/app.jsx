@@ -61,18 +61,15 @@ const TweaksPanel = ({ open, onClose, state, onChange, t }) => {
 
 const App = () => {
   const { state, dispatch } = useStore();
-  const [journeyStarted, setJourneyStarted] = useState(false);
+  const [screen,setScreen] = useState(()=>state.projects.some(p=>p.intakeVersion===1)?"dashboard":"welcome");
   const [tweaks, setTweaks] = useState(() => {
     // v8 — new terminal theme, reset stored tweaks
     try { return { ...TWEAK_DEFAULTS, ...JSON.parse(localStorage.getItem("leaseright_tweaks_v2") || "{}") }; } catch { return TWEAK_DEFAULTS; }
   });
   const [editMode, setEditMode] = useState(false);
-  const [tab, setTab] = useState(() => {
-    try { const saved = localStorage.getItem("leaseright_tab_v1");
-    return saved === "precon" ? "model" : (saved || "model"); } catch { return "model"; }
-  });
+  const [tab, setTab] = useState("today");
   const propIdx = Math.max(0, state.projects.findIndex(p => p.id === state.activeProjectId));
-  const setPropIdx = (idx) => dispatch({ type: "setActiveProject", projectId: state.projects[idx]?.id });
+  const setPropIdx = (idx) => {dispatch({ type: "setActiveProject", projectId: state.projects[idx]?.id });setScreen("dashboard");setTab("today");};
   const [cmdK, setCmdK] = useState(false);
   const [sidebar, setSidebar] = useState(false);
   const [toast, setToast] = useState(null);
@@ -118,18 +115,18 @@ const App = () => {
   const t = THEMES[tweaks.theme];
 
   const intakeProject = state.projects.find(p => p.id === state.activeProjectId && p.intakeVersion === 1);
-  if (intakeProject) return <IntakeWorkspace key={intakeProject.id} t={t} project={intakeProject} />;
-
-  if (!journeyStarted) return <LeaseRightWelcome t={t} onComplete={(stage) => {
-    dispatch({ type: "createIntakeProject", id: "ri-" + crypto.randomUUID(), stage, at: new Date().toISOString() });
-    setTab("model");
-    setJourneyStarted(true);
-  }} />;
+  const openDashboard=()=>{setScreen("dashboard");setTab("today");};
+  if(screen==="welcome")return <LeaseRightWelcome t={t} onCancel={openDashboard} onComplete={stage=>{dispatch({type:"createIntakeProject",id:"ri-"+crypto.randomUUID(),stage,at:new Date().toISOString()});setScreen("setup");}}/>;
+  if(screen==="setup" && intakeProject)return <IntakeWorkspace key={intakeProject.id} t={t} project={intakeProject} initialView="setup" onDashboard={openDashboard} onNewProject={()=>setScreen("welcome")}/>;
 
   const setLayout = (l) => updateTweaks({ layout: l });
 
   let body;
-  if (tab === "today") body = <TodayView t={t} layout={tweaks.layout} />;
+  if(intakeProject){
+    const sections={model:5,precon:5,property:0,units:1,market:2,rents:3,concessions:3,plan:4};
+    body=tab==="today"?<ProjectDashboard t={t} project={intakeProject} onNavigate={setTab} onSetup={()=>setScreen("setup")}/>:sections[tab]!==undefined?<IntakeWorkspace key={intakeProject.id+":"+tab} t={t} project={intakeProject} embedded initialView="edit" entryStep={sections[tab]} onDashboard={openDashboard} onNewProject={()=>setScreen("welcome")}/>:<ProjectModuleEmpty t={t} tab={tab} onNavigate={setTab}/>;
+  }
+  else if (tab === "today") body = <TodayView t={t} layout={tweaks.layout} />;
   else if (tab === "rents") body = <RentOptimizer t={t} />;
   else if (tab === "pipeline") body = <PipelineView t={t} />;
   else if (tab === "inbox" || tab === "messages") body = <InboxView t={t} />;
@@ -168,10 +165,11 @@ const App = () => {
         button:focus-visible { outline: 2px solid ${t.accent}; outline-offset: 1px; }
       `}</style>
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-        <TopBar t={t} tab={tab} setTab={setTab} onCmdK={() => setCmdK(true)} layout={tweaks.layout} setLayout={setLayout} propIdx={propIdx} setPropIdx={setPropIdx} project={state.projects[propIdx]} onToggleSidebar={() => setSidebar(v => !v)} />
+        <TopBar t={t} tab={tab} setTab={setTab} onCmdK={() => setCmdK(true)} layout={tweaks.layout} setLayout={setLayout} propIdx={propIdx} setPropIdx={setPropIdx} project={state.projects[propIdx]} projects={state.projects} onNewProject={()=>setScreen("welcome")} onToggleSidebar={() => setSidebar(v => !v)} />
+        {!intakeProject && <div style={{padding:"8px 20px",borderBottom:`1px solid ${t.rule}`,fontSize:12,color:t.inkSoft}}>Example dashboard · sample operating data</div>}
         <div style={{ flex: 1, minWidth: 0, overflow: "auto" }}>{body}</div>
       </div>
-      <Sidebar t={t} open={sidebar} onClose={() => setSidebar(false)} tab={tab} setTab={setTab} />
+      <Sidebar t={t} realProject={!!intakeProject} open={sidebar} onClose={() => setSidebar(false)} tab={tab} setTab={setTab} />
       <CmdK t={t} open={cmdK} onClose={() => setCmdK(false)} setTab={setTab} />
       <TweaksPanel open={editMode} onClose={() => { setEditMode(false); window.parent.postMessage({ type: "__deactivate_edit_mode" }, "*"); }} state={tweaks} onChange={updateTweaks} t={t} />
       {toast && <div style={{ position: "fixed", bottom: 24, left: "50%", background: t.ink, color: t.surface, padding: "8px 14px", borderRadius: 4, fontFamily: t.sans, fontSize: 12, animation: "toastIn 180ms ease-out", zIndex: 300 }}>{toast}</div>}

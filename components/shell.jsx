@@ -277,12 +277,13 @@ const PropertyPeek = ({ t, propIdx, setPropIdx, onClose }) => {
 // ═══════════════════════════════════════════════════════════════
 //  TOP BAR — 2-row Bloomberg-style header
 // ═══════════════════════════════════════════════════════════════
-const TopBar = ({ t, tab, setTab, onCmdK, layout, setLayout, propIdx, setPropIdx, onToggleSidebar, project }) => {
+const TopBar = ({ t, tab, setTab, onCmdK, layout, setLayout, propIdx, setPropIdx, onToggleSidebar, project, projects, onNewProject }) => {
   const [propMenu, setPropMenu] = useState(false);
   const [hoverTab, setHoverTab] = useState(null);
   const [userMenu, setUserMenu] = useState(false);
 
-  const p = project ? { ...project, units: project.unitCount, leased: 121, pace: "ahead" } : PROPERTIES[propIdx];
+  const realProject=project?.intakeVersion===1;
+  const p = project ? { ...project, units: realProject?project.draft.totalUnits:project.unitCount, city:realProject?project.municipality:project.city } : PROPERTIES[propIdx];
 
   // F-key routing
   useEffect(() => {
@@ -313,19 +314,8 @@ const TopBar = ({ t, tab, setTab, onCmdK, layout, setLayout, propIdx, setPropIdx
           <span style={{ fontFamily: t.sans, fontSize: 13, fontWeight: 600, color: t.ink, letterSpacing: -0.1 }}>LeaseRight</span>
         </div>
 
-        {/* Property switcher — hover to peek, click to lock */}
-        <div style={{ position: "relative", borderRight: `1px solid ${t.rule}` }}
-          onMouseEnter={() => setPropMenu(true)}
-          onMouseLeave={() => setPropMenu(false)}>
-          <button style={{ height: "100%", display: "flex", alignItems: "center", gap: 10, padding: "0 14px", background: propMenu ? t.surfaceAlt : "transparent", border: "none", cursor: "pointer", fontFamily: t.sans }}>
-            <span style={{ width: 7, height: 7, background: p.pace === "ahead" ? t.good : p.pace === "behind" ? t.bad : t.inkMute }} />
-            <span style={{ fontSize: 12.5, fontWeight: 600, color: t.ink }}>{p.name}</span>
-            <span style={{ fontSize: 11, color: t.inkMute }}>{p.city}</span>
-            <svg width={8} height={8} viewBox="0 0 10 10" style={{ marginLeft: 2 }}><path d="M2 4l3 3 3-3" stroke={t.inkMute} strokeWidth={1.2} fill="none" strokeLinecap="round" /></svg>
-          </button>
-          {propMenu && <PropertyPeek t={t} propIdx={propIdx} setPropIdx={setPropIdx} onClose={() => setPropMenu(false)} />}
-        </div>
-
+        <label style={{display:"flex",alignItems:"center",padding:"0 14px",gap:10,borderRight:`1px solid ${t.rule}`}}><select aria-label="Switch project" value={propIdx} onChange={e=>setPropIdx(+e.target.value)} style={{maxWidth:240,background:t.bg,color:t.ink,border:0,fontFamily:t.sans,fontSize:13}}>{(projects||PROPERTIES).map((item,i)=><option key={item.id} value={i}>{item.name}{item.intakeVersion===1?"":" · Example"}</option>)}</select></label>
+        <button onClick={onNewProject} style={{background:"none",border:0,color:t.inkSoft,padding:"0 14px",cursor:"pointer"}}>New project</button>
         <div style={{ flex: 1 }} />
 
         {/* Search / cmd-k */}
@@ -336,37 +326,13 @@ const TopBar = ({ t, tab, setTab, onCmdK, layout, setLayout, propIdx, setPropIdx
           <Kbd t={t}>⌘K</Kbd>
         </button>
 
-        {/* User */}
-        <div style={{ position: "relative", borderLeft: `1px solid ${t.rule}` }}
-          onMouseEnter={() => setUserMenu(true)}
-          onMouseLeave={() => setUserMenu(false)}>
-          <button style={{ height: "100%", display: "flex", alignItems: "center", gap: 8, padding: "0 14px", background: userMenu ? t.surfaceAlt : "transparent", border: "none", cursor: "pointer" }}>
-            <div style={{ width: 22, height: 22, background: t.accent, color: "#0A0A0B", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: t.mono, fontSize: 10, fontWeight: 700, letterSpacing: 0 }}>JM</div>
-            <span style={{ fontFamily: t.sans, fontSize: 12, color: t.ink, fontWeight: 500 }}>J. Mori</span>
-          </button>
-          {userMenu && (
-            <div style={{ position: "absolute", top: "100%", right: 0, width: 220, background: t.surface, border: `1px solid ${t.rule}`, borderTop: `1px solid ${t.accent}`, zIndex: 200, fontFamily: t.sans, boxShadow: "0 12px 32px rgba(0,0,0,0.5)" }}>
-              <div style={{ padding: "10px 14px", borderBottom: `1px solid ${t.rule}` }}>
-                <div style={{ fontFamily: t.sans, fontSize: 12, fontWeight: 600, color: t.ink }}>Jordan Mori</div>
-                <div style={{ fontFamily: t.mono, fontSize: 9.5, color: t.inkMute, letterSpacing: 0.3, marginTop: 2 }}>Owner · Admin</div>
-              </div>
-              {[["Profile"], ["Org settings"], ["Notifications", "•"], ["Log out"]].map((r, i) => (
-                <button key={i} style={{ display: "flex", width: "100%", padding: "8px 14px", background: "transparent", border: "none", fontFamily: t.sans, fontSize: 12, color: t.inkSoft, textAlign: "left", cursor: "pointer" }}
-                  onMouseEnter={e => e.currentTarget.style.background = t.hover}
-                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                  <span style={{ flex: 1 }}>{r[0]}</span>
-                  {r[1] && <span style={{ color: t.bad, fontFamily: t.mono, fontSize: 10 }}>{r[1]}</span>}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        {realProject ? <button onClick={()=>setTab("property")} style={{background:"none",border:0,color:t.inkSoft,padding:"0 14px",cursor:"pointer"}}>Property details</button> : <span style={{padding:14,fontSize:11,color:t.inkMute}}>Example workspace</span>}
       </div>
 
       {/* Primary navigation: labels first; shortcuts remain available but stay out of view. */}
-      <div style={{ height: 42, display: "flex", alignItems: "stretch", padding: "0 8px" }}>
+      <div style={{ height: 42, display: "flex", alignItems: "stretch", padding: "0 8px", overflowX:"auto" }}>
         {/* Sidebar toggle */}
-        <button onClick={onToggleSidebar}
+        <button aria-label="All modules" onClick={onToggleSidebar}
           style={{ padding: "0 12px", background: "transparent", border: "none", borderRight: `1px solid ${t.rule}`, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
           onMouseEnter={e => e.currentTarget.style.background = t.surfaceAlt}
           onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
@@ -381,7 +347,7 @@ const TopBar = ({ t, tab, setTab, onCmdK, layout, setLayout, propIdx, setPropIdx
               onMouseLeave={() => setHoverTab(null)}>
               <button onClick={() => setTab(id)}
                 style={{ height: "100%", padding: "0 16px", background: active ? t.surfaceAlt : hovered ? t.hover : "transparent", border: "none", cursor: "pointer", fontFamily: t.sans, fontSize: 12.5, fontWeight: active ? 600 : 500, color: active ? t.ink : t.inkSoft, display: "flex", alignItems: "center", gap: 8, position: "relative", letterSpacing: 0.1, transition: "background 80ms" }}>
-                <span>{label}</span>
+                <span>{id==="today"?"Dashboard":label}</span>
                 {active && <span style={{ position: "absolute", left: 0, right: 0, bottom: -1, height: 2, background: t.accent }} />}
               </button>
             </div>
@@ -391,15 +357,7 @@ const TopBar = ({ t, tab, setTab, onCmdK, layout, setLayout, propIdx, setPropIdx
         {/* Overflow spacer */}
         <div style={{ flex: 1 }} />
 
-        {/* Notifications stay quiet until opened. */}
-        <button aria-label="Notifications" style={{ padding: "0 14px", background: "transparent", border: "none", borderLeft: `1px solid ${t.rule}`, cursor: "pointer", display: "flex", alignItems: "center" }}
-          onMouseEnter={e => e.currentTarget.style.background = t.surfaceAlt}
-          onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-          <span style={{ position: "relative", display: "inline-flex" }}>
-            <svg width={12} height={12} viewBox="0 0 14 14"><path d="M7 1.5a3.5 3.5 0 00-3.5 3.5v2.5L2.5 9v.5h9V9l-1-1.5V5A3.5 3.5 0 007 1.5zM5.5 10.5a1.5 1.5 0 003 0" stroke={t.inkSoft} strokeWidth={1.1} fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            <span style={{ position: "absolute", top: -2, right: -2, width: 5, height: 5, borderRadius: 5, background: t.warn }} />
-          </span>
-        </button>
+
       </div>
     </div>
   );
@@ -408,7 +366,7 @@ const TopBar = ({ t, tab, setTab, onCmdK, layout, setLayout, propIdx, setPropIdx
 // ═══════════════════════════════════════════════════════════════
 //  COLLAPSIBLE LEFT SIDEBAR (⌘\)
 // ═══════════════════════════════════════════════════════════════
-const Sidebar = ({ t, open, onClose, tab, setTab }) => {
+const Sidebar = ({ t, open, onClose, tab, setTab, realProject=false }) => {
   return (
     <>
       {open && <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 99, animation: "slideIn 140ms ease-out" }} />}
@@ -427,7 +385,7 @@ const Sidebar = ({ t, open, onClose, tab, setTab }) => {
               {group.section && <div style={{ padding: "4px 16px 4px", fontFamily: t.mono, fontSize: 9.5, fontWeight: 600, letterSpacing: 1.4, textTransform: "uppercase", color: t.inkMute }}>{group.section}</div>}
               {group.items.map(([id, label, key]) => {
                 const active = tab === id;
-                const badge = NAV_BADGES[id];
+                const badge = realProject?null:NAV_BADGES[id];
                 return (
                   <button key={id} onClick={() => { setTab(id); onClose(); }}
                     style={{ width: "100%", padding: "7px 16px", background: active ? t.accentSoft : "transparent", border: "none", borderLeft: `2px solid ${active ? t.accent : "transparent"}`, cursor: "pointer", textAlign: "left", fontFamily: t.sans, fontSize: 12.5, color: active ? t.ink : t.inkSoft, fontWeight: active ? 600 : 400, display: "flex", alignItems: "center", gap: 8 }}
@@ -443,10 +401,10 @@ const Sidebar = ({ t, open, onClose, tab, setTab }) => {
           ))}
         </div>
         <div style={{ padding: "10px 16px", borderTop: `1px solid ${t.rule}`, display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 24, height: 24, background: t.accent, color: "#0A0A0B", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: t.mono, fontSize: 10, fontWeight: 700 }}>JM</div>
+          <div style={{ width: 24, height: 24, background: t.accent, color: "#0A0A0B", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: t.mono, fontSize: 10, fontWeight: 700 }}>{realProject?"L":"JM"}</div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: t.sans, fontSize: 11.5, color: t.ink, fontWeight: 500 }}>J. Mori</div>
-            <div style={{ fontFamily: t.mono, fontSize: 9.5, color: t.inkMute, letterSpacing: 0.2 }}>Owner · Admin</div>
+            <div style={{ fontFamily: t.sans, fontSize: 11.5, color: t.ink, fontWeight: 500 }}>{realProject?"Local workspace":"J. Mori"}</div>
+            <div style={{ fontFamily: t.mono, fontSize: 9.5, color: t.inkMute, letterSpacing: 0.2 }}>{realProject?"Saved in this browser":"Example account"}</div>
           </div>
         </div>
       </div>
