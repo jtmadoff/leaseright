@@ -1,0 +1,24 @@
+# LeaseRight: static site built with Vite. Netlify runs the build and publishes dist/.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Keep the old beta address working.
+[[redirects]]
+  from = "/leaseright"
+  to = "/"
+  status = 200
+
+# Harvested data changes on its own schedule; never serve a stale copy.
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

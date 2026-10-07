@@ -1,0 +1,1545 @@
+[
+ {
+  "name": "Barrington",
+  "mcode": 100,
+  "centroid": [
+   -71.317,
+   41.74
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://www.axisgis.com/Barringtonri/",
+  "viewerVendor": "AxisGIS",
+  "parcel": null,
+  "parcelNote": "No public parcel service found. Only derivative coastal subsets exist (URI SLAMM layers; a third-party town copy requires a token).",
+  "zoning": null
+ },
+ {
+  "name": "Bristol",
+  "mcode": 101,
+  "centroid": [
+   -71.267,
+   41.677
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://next.axisgis.com/BristolRI",
+  "viewerVendor": "AxisGIS",
+  "parcel": {
+   "url": "https://services3.arcgis.com/GVAMY3vlzaJdIflR/arcgis/rest/services/AxisGISDataSync/FeatureServer/20",
+   "tier": "boundary",
+   "fields": {
+    "parcelId": "Parcel_Num",
+    "address": null,
+    "zoning": null,
+    "lotSqft": "Area",
+    "lotAcres": null,
+    "useDesc": null,
+    "useCode": null,
+    "units": null,
+    "yearBuilt": null,
+    "floors": null,
+    "buildingSqft": null,
+    "taxYear": null
+   },
+   "apartmentWhere": null,
+   "unitsGuard": null,
+   "maxRecordCount": 2000,
+   "dataAsOf": "Layer edited 2026-10-05",
+   "dataYear": 2026,
+   "stale": false,
+   "thirdParty": false,
+   "publisher": "CAI_BristolRI (town AxisGIS sync)",
+   "stats": {
+    "apartments": null,
+    "units10plus": null,
+    "maxUnits": null
+   }
+  },
+  "parcelNote": null,
+  "zoning": {
+   "url": "https://services3.arcgis.com/GVAMY3vlzaJdIflR/arcgis/rest/services/Zoning/FeatureServer/78",
+   "zoneField": "CODE",
+   "descField": "DESCRIPT"
+  }
+ },
+ {
+  "name": "Burrillville",
+  "mcode": 102,
+  "centroid": [
+   -71.665,
+   41.97
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://www.axisgis.com/Burrillvilleri/",
+  "viewerVendor": "AxisGIS",
+  "parcel": {
+   "url": "https://services8.arcgis.com/3HJnCDaJt8fFyjQy/arcgis/rest/services/25090_Burrillville_Parcels/FeatureServer/25",
+   "tier": "full",
+   "fields": {
+    "parcelId": "Parcel_Num",
+    "address": [
+     "PropertyLo"
+    ],
+    "zoning": "Zone1",
+    "lotSqft": null,
+    "lotAcres": "TotalAcres",
+    "useDesc": "LUCDescrip",
+    "useCode": "LUC",
+    "units": "RentalLivU",
+    "yearBuilt": "YearBuilt",
+    "floors": null,
+    "buildingSqft": "GrossBldAr",
+    "taxYear": "BaseYear"
+   },
+   "apartmentWhere": "LUC = '03'",
+   "unitsGuard": null,
+   "maxRecordCount": 2000,
+   "dataAsOf": "CAMA extract run 2024-12-15 (LastRunDat); BaseYear 2024; layer edited 2026-01-21",
+   "dataYear": 2026,
+   "stale": false,
+   "thirdParty": true,
+   "publisher": "HWAdmin02 (consultant account)",
+   "stats": {
+    "apartments": 26,
+    "units10plus": 5,
+    "maxUnits": 98
+   }
+  },
+  "parcelNote": null,
+  "zoning": null
+ },
+ {
+  "name": "Central Falls",
+  "mcode": 103,
+  "centroid": [
+   -71.392,
+   41.89
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://www.axisgis.com/Central_fallsRI/",
+  "viewerVendor": "AxisGIS",
+  "parcel": null,
+  "parcelNote": "No public parcel service found. State directory lists parcel data year 2018.",
+  "zoning": null
+ },
+ {
+  "name": "Charlestown",
+  "mcode": 104,
+  "centroid": [
+   -71.668,
+   41.383
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "http://charlestown.mapxpress.net/",
+  "viewerVendor": "MapXpress",
+  "parcel": null,
+  "parcelNote": "No public parcel service found. The MapXpress vendor publishes only raster label/annotation tiles; a third-party copy requires a token.",
+  "zoning": null
+ },
+ {
+  "name": "Coventry",
+  "mcode": 105,
+  "centroid": [
+   -71.66,
+   41.69
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://www.axisgis.com/CoventryRI/",
+  "viewerVendor": "AxisGIS",
+  "parcel": {
+   "url": "https://services2.arcgis.com/ZViGD3ozRXWS3ZYX/arcgis/rest/services/ParcelPoly_View/FeatureServer/13",
+   "tier": "full",
+   "fields": {
+    "parcelId": "PARCEL_NUM",
+    "address": [
+     "STREET_NUM",
+     "STR_NAME"
+    ],
+    "zoning": "ZONING_COD",
+    "lotSqft": null,
+    "lotAcres": "TOTAL_ACRE",
+    "useDesc": null,
+    "useCode": "PRIM_LUC",
+    "units": "LIV_UNITS",
+    "yearBuilt": "YEAR_BUILT",
+    "floors": null,
+    "buildingSqft": "GROSS_BUIL",
+    "taxYear": "BASE_DEPRE"
+   },
+   "apartmentWhere": "PRIM_LUC = '03'",
+   "unitsGuard": null,
+   "maxRecordCount": 2000,
+   "dataAsOf": "layer edited 2022-06-30; latest SALE_DATE 2022-03-05; BASE_DEPRE 2020",
+   "dataYear": 2022,
+   "stale": true,
+   "thirdParty": true,
+   "publisher": "Compass_Cartographic (consultant)",
+   "stats": {
+    "apartments": 45,
+    "units10plus": 12,
+    "maxUnits": 157
+   }
+  },
+  "parcelNote": null,
+  "zoning": {
+   "url": "https://services.arcgis.com/SvSKeSQcFJgqad7l/arcgis/rest/services/Coventry_Zoning/FeatureServer/0",
+   "zoneField": "Name",
+   "descField": null
+  }
+ },
+ {
+  "name": "Cranston",
+  "mcode": 106,
+  "centroid": [
+   -71.48,
+   41.77
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "http://cranston.maps.arcgis.com/home/index.html",
+  "viewerVendor": "ArcGIS",
+  "parcel": {
+   "url": "https://services5.arcgis.com/bmiwyveTUuaT56jB/arcgis/rest/services/Parcels2/FeatureServer/0",
+   "tier": "full",
+   "fields": {
+    "parcelId": "GIS_ID",
+    "address": [
+     "Location"
+    ],
+    "zoning": "Zoning",
+    "lotSqft": "LandArea_SF",
+    "lotAcres": "LandArea_Acres",
+    "useDesc": "LandUseDescript",
+    "useCode": "LandUseCode",
+    "units": "NumTotalUnits",
+    "yearBuilt": "YearBuilt",
+    "floors": null,
+    "buildingSqft": null,
+    "taxYear": null
+   },
+   "apartmentWhere": "StateCodeDescription = 'Apartments'",
+   "unitsGuard": null,
+   "maxRecordCount": 2000,
+   "dataAsOf": "Layer edited 2026-10-06; latest RecordDate 2026-10-02",
+   "dataYear": 2026,
+   "stale": false,
+   "thirdParty": false,
+   "publisher": "mgiarrusso (City of Cranston)",
+   "stats": {
+    "apartments": 107,
+    "units10plus": 57,
+    "maxUnits": 252
+   }
+  },
+  "parcelNote": null,
+  "zoning": {
+   "url": "https://services5.arcgis.com/bmiwyveTUuaT56jB/arcgis/rest/services/Zoning/FeatureServer/23",
+   "zoneField": "ZONING",
+   "descField": null
+  }
+ },
+ {
+  "name": "Cumberland",
+  "mcode": 107,
+  "centroid": [
+   -71.43,
+   41.97
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://cumberlandri.mapgeo.io",
+  "viewerVendor": "MapGeo",
+  "parcel": null,
+  "parcelNote": "No public parcel service found.",
+  "zoning": null
+ },
+ {
+  "name": "East Greenwich",
+  "mcode": 108,
+  "centroid": [
+   -71.46,
+   41.62
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://www.axisgis.com/east_greenwichri/",
+  "viewerVendor": "AxisGIS",
+  "parcel": {
+   "url": "https://services.arcgis.com/JAbFYGO2wpc9D5YJ/arcgis/rest/services/ParcelsStacked_gdb/FeatureServer/0",
+   "tier": "full",
+   "fields": {
+    "parcelId": "GIS_DBO_Parcels_NewGISPin",
+    "address": [
+     "GIS_dbo_ExtCDMGISExtract_Locati"
+    ],
+    "zoning": "GIS_dbo_ExtCDMGISExtract_Zone1",
+    "lotSqft": "GIS_DBO_Parcels_AreaSF",
+    "lotAcres": "GIS_DBO_Parcels_AreaAcre",
+    "useDesc": "GIS_dbo_ExtCDMGISExtract_LUCDes",
+    "useCode": "GIS_dbo_ExtCDMGISExtract_LUC",
+    "units": "GIS_dbo_ExtCDMGISExtract_NumofB",
+    "yearBuilt": "GIS_dbo_ExtCDMGISExtract_YearBu",
+    "floors": null,
+    "buildingSqft": "GIS_dbo_ExtCDMGISExtract_GrossB",
+    "taxYear": "GIS_dbo_ExtCDMGISExtract_TaxYea"
+   },
+   "apartmentWhere": "GIS_dbo_ExtCDMGISExtract_LUC = '03'",
+   "unitsGuard": null,
+   "maxRecordCount": 2000,
+   "dataAsOf": "CAMA extract 2024-02-23, TaxYea 2024; layer edited 2026-02-05",
+   "dataYear": 2026,
+   "stale": false,
+   "thirdParty": false,
+   "publisher": "mikedoyleeg (Town of East Greenwich)",
+   "stats": {
+    "apartments": 12,
+    "units10plus": 6,
+    "maxUnits": 103
+   }
+  },
+  "parcelNote": null,
+  "zoning": {
+   "url": "https://services.arcgis.com/JAbFYGO2wpc9D5YJ/arcgis/rest/services/Edit_Map_2015_For_Web_1f15b267/FeatureServer/4",
+   "zoneField": "ZONING",
+   "descField": "NEWZONING"
+  }
+ },
+ {
+  "name": "East Providence",
+  "mcode": 109,
+  "centroid": [
+   -71.37,
+   41.81
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://eastprovidenceri.mapgeo.io/",
+  "viewerVendor": "MapGeo",
+  "parcel": null,
+  "parcelNote": "No usable public parcel service. A 2023 housing-model derivative (ecoplan.ca, covers East Providence, Warren, Westerly) has zoning and E911 unit counts per parcel but no parcel ID or address; the source parcel layers require a token.",
+  "zoning": null
+ },
+ {
+  "name": "Exeter",
+  "mcode": 110,
+  "centroid": [
+   -71.585,
+   41.57
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://exeterri.mapgeo.io",
+  "viewerVendor": "MapGeo",
+  "parcel": {
+   "url": "https://services7.arcgis.com/4r7X428DCgHGzmxO/arcgis/rest/services/Exeter_parcels_4/FeatureServer/0",
+   "tier": "boundary",
+   "fields": {
+    "parcelId": "ParcelID",
+    "address": null,
+    "zoning": null,
+    "lotSqft": null,
+    "lotAcres": "GISArea",
+    "useDesc": null,
+    "useCode": null,
+    "units": null,
+    "yearBuilt": null,
+    "floors": null,
+    "buildingSqft": null,
+    "taxYear": null
+   },
+   "apartmentWhere": null,
+   "unitsGuard": null,
+   "maxRecordCount": 2000,
+   "dataAsOf": "Layer edited 2024-12-18; attribute MATCH = 'CAMA MATCH 2023'",
+   "dataYear": 2024,
+   "stale": false,
+   "thirdParty": true,
+   "publisher": "kavanaugh_olivia (individual account)",
+   "stats": {
+    "apartments": null,
+    "units10plus": null,
+    "maxUnits": null
+   }
+  },
+  "parcelNote": null,
+  "zoning": null
+ },
+ {
+  "name": "Foster",
+  "mcode": 111,
+  "centroid": [
+   -71.745,
+   41.81
+  ],
+  "included": false,
+  "excludedReason": "Three apartment-class parcels on record, no public water or sewer for larger projects.",
+  "viewerUrl": "https://fosterri.maps.arcgis.com/home/index.html",
+  "viewerVendor": "ArcGIS",
+  "parcel": {
+   "url": "https://services3.arcgis.com/8RrO0ekquQVFmkUS/arcgis/rest/services/CAMA_2025_w_9_16_2025_data_view_layer/FeatureServer/11",
+   "tier": "basic",
+   "fields": {
+    "parcelId": "parcel_id",
+    "address": [
+     "REM_PRCL_LOCN_NUM_CHAR",
+     "REM_PRCL_LOCN_STREET"
+    ],
+    "zoning": "Zone_2025",
+    "lotSqft": null,
+    "lotAcres": "PRC_TTL_LND_AREA_ACRES",
+    "useDesc": "LND_USE_DESC",
+    "useCode": "LND_USE_CODE",
+    "units": null,
+    "yearBuilt": "VNS_AYB",
+    "floors": null,
+    "buildingSqft": "PRC_LIVING_GBA",
+    "taxYear": null
+   },
+   "apartmentWhere": "LND_USE_CODE IN ('814','104')",
+   "unitsGuard": null,
+   "maxRecordCount": 2000,
+   "dataAsOf": "CAMA table dated 2025-09-16; layer edited 2026-07-30",
+   "dataYear": 2026,
+   "stale": false,
+   "thirdParty": false,
+   "publisher": "mantonellis (Town of Foster org)",
+   "stats": {
+    "apartments": 3,
+    "units10plus": null,
+    "maxUnits": null
+   }
+  },
+  "parcelNote": null,
+  "zoning": {
+   "url": "https://services3.arcgis.com/8RrO0ekquQVFmkUS/arcgis/rest/services/Zoning_2024_view_layer/FeatureServer/0",
+   "zoneField": "Zone",
+   "descField": "Descript"
+  }
+ },
+ {
+  "name": "Glocester",
+  "mcode": 112,
+  "centroid": [
+   -71.69,
+   41.89
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": null,
+  "viewerVendor": null,
+  "parcel": {
+   "url": "https://services9.arcgis.com/nSuGIoEWPiLSutd5/arcgis/rest/services/ArcOnlineParcels/FeatureServer/0",
+   "tier": "basic",
+   "fields": {
+    "parcelId": "PIN",
+    "address": [
+     "Loc"
+    ],
+    "zoning": "Zone",
+    "lotSqft": null,
+    "lotAcres": "Acres",
+    "useDesc": "UCD",
+    "useCode": "LUC",
+    "units": null,
+    "yearBuilt": "YrBuilt",
+    "floors": null,
+    "buildingSqft": "LivArea",
+    "taxYear": null
+   },
+   "apartmentWhere": "LUC IN ('800','800R','814','948')",
+   "unitsGuard": null,
+   "maxRecordCount": 2000,
+   "dataAsOf": "Layer edited 2026-08-08; latest RDate 2025-03-19",
+   "dataYear": 2026,
+   "stale": false,
+   "thirdParty": false,
+   "publisher": "GlocGISAdmin (Town of Glocester)",
+   "stats": {
+    "apartments": 7,
+    "units10plus": null,
+    "maxUnits": null
+   }
+  },
+  "parcelNote": null,
+  "zoning": {
+   "url": "https://services9.arcgis.com/nSuGIoEWPiLSutd5/arcgis/rest/services/Glocester_Data/FeatureServer/3",
+   "zoneField": "ZONETYPE",
+   "descField": "ZONEDESC"
+  }
+ },
+ {
+  "name": "Hopkinton",
+  "mcode": 113,
+  "centroid": [
+   -71.755,
+   41.47
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "http://hopkinton.mapxpress.net/",
+  "viewerVendor": "MapXpress",
+  "parcel": {
+   "url": "https://services3.arcgis.com/6AmZcnIGzphMQkpH/arcgis/rest/services/Hopkinton_Parcels/FeatureServer/0",
+   "tier": "basic",
+   "fields": {
+    "parcelId": "GIS_LINK",
+    "address": [
+     "LOCATION"
+    ],
+    "zoning": "ZONING",
+    "lotSqft": null,
+    "lotAcres": "ACRES",
+    "useDesc": "LAND_USE",
+    "useCode": null,
+    "units": null,
+    "yearBuilt": null,
+    "floors": null,
+    "buildingSqft": null,
+    "taxYear": null
+   },
+   "apartmentWhere": "LAND_USE IN ('Apartment R','Comm Apts')",
+   "unitsGuard": null,
+   "maxRecordCount": 2000,
+   "dataAsOf": "Layer edited 2025-02-28, but latest SALE_DATE is 2019-07-19 (data likely about 2019)",
+   "dataYear": 2025,
+   "stale": false,
+   "thirdParty": true,
+   "publisher": "FandoSites (consultant)",
+   "stats": {
+    "apartments": 9,
+    "units10plus": null,
+    "maxUnits": null
+   }
+  },
+  "parcelNote": null,
+  "zoning": null
+ },
+ {
+  "name": "Jamestown",
+  "mcode": 114,
+  "centroid": [
+   -71.375,
+   41.5
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://www.axisgis.com/Jamestownri/",
+  "viewerVendor": "AxisGIS",
+  "parcel": null,
+  "parcelNote": "No public parcel service found (a third-party copy requires a token).",
+  "zoning": null
+ },
+ {
+  "name": "Johnston",
+  "mcode": 115,
+  "centroid": [
+   -71.51,
+   41.825
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://johnstonri.mapgeo.io",
+  "viewerVendor": "MapGeo",
+  "parcel": {
+   "url": "https://arcgisserver.cranstonri.org/arcgis/rest/services/JohnstonParcels/MapServer/0",
+   "tier": "basic",
+   "fields": {
+    "parcelId": "MapLot",
+    "address": [
+     "d_gis_site_addr"
+    ],
+    "zoning": "d_gis_zone",
+    "lotSqft": "ParcelAr_2",
+    "lotAcres": "d_gis_lot_size",
+    "useDesc": "d_gis_style",
+    "useCode": "d_gis_use_code",
+    "units": null,
+    "yearBuilt": "d_gis_year_built",
+    "floors": "d_gis_stories",
+    "buildingSqft": "d_gis_bld_area",
+    "taxYear": "d_gis_fy"
+   },
+   "apartmentWhere": "d_gis_use_code IN (1114,1115,1126)",
+   "unitsGuard": null,
+   "maxRecordCount": 2000,
+   "dataAsOf": "d_gis_fy = 2015 on every row; layer titled 'Johnston Parcels For Reference Only'; no edit date exposed",
+   "dataYear": 2015,
+   "stale": true,
+   "thirdParty": true,
+   "publisher": "mgiarrusso (City of Cranston server)",
+   "stats": {
+    "apartments": 66,
+    "units10plus": null,
+    "maxUnits": null
+   }
+  },
+  "parcelNote": null,
+  "zoning": null
+ },
+ {
+  "name": "Lincoln",
+  "mcode": 116,
+  "centroid": [
+   -71.45,
+   41.92
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://www.axisgis.com/Lincolnri/",
+  "viewerVendor": "AxisGIS",
+  "parcel": {
+   "url": "https://services.arcgis.com/3RiQsDoOeneF0Q0P/arcgis/rest/services/Lincoln_RI_Parcels/FeatureServer/0",
+   "tier": "basic",
+   "fields": {
+    "parcelId": "Parcel_Num",
+    "address": [
+     "Location"
+    ],
+    "zoning": "Zone",
+    "lotSqft": null,
+    "lotAcres": "Land_Area_",
+    "useDesc": "Use_Descri",
+    "useCode": "Use_Code",
+    "units": null,
+    "yearBuilt": null,
+    "floors": null,
+    "buildingSqft": null,
+    "taxYear": null
+   },
+   "apartmentWhere": "Use_Code IN ('814','814R','948')",
+   "unitsGuard": null,
+   "maxRecordCount": 2000,
+   "dataAsOf": "Layer edited 2025-10-22; latest Sale_Date 2025-06-27",
+   "dataYear": 2025,
+   "stale": false,
+   "thirdParty": true,
+   "publisher": "MHarris@TigheBond (consultant)",
+   "stats": {
+    "apartments": 59,
+    "units10plus": null,
+    "maxUnits": null
+   }
+  },
+  "parcelNote": null,
+  "zoning": null
+ },
+ {
+  "name": "Little Compton",
+  "mcode": 117,
+  "centroid": [
+   -71.12,
+   41.51
+  ],
+  "included": false,
+  "excludedReason": "No multifamily stock or pipeline of 10+ units.",
+  "viewerUrl": "https://www.axisgis.com/little_comptonri/",
+  "viewerVendor": "AxisGIS",
+  "parcel": null,
+  "parcelNote": "No public parcel service found (a third-party copy requires a token).",
+  "zoning": null
+ },
+ {
+  "name": "Middletown",
+  "mcode": 118,
+  "centroid": [
+   -71.28,
+   41.52
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://www.axisgis.com/middletownri",
+  "viewerVendor": "AxisGIS",
+  "parcel": {
+   "url": "https://services5.arcgis.com/h6RSw6HV2SnVSCaN/arcgis/rest/services/MiddletownParcelsAssess1/FeatureServer/0",
+   "tier": "basic",
+   "fields": {
+    "parcelId": "PIN",
+    "address": [
+     "Location"
+    ],
+    "zoning": "Zones",
+    "lotSqft": "GIS_SF",
+    "lotAcres": "GIS_AC",
+    "useDesc": null,
+    "useCode": "USE_CODE",
+    "units": null,
+    "yearBuilt": null,
+    "floors": null,
+    "buildingSqft": null,
+    "taxYear": null
+   },
+   "apartmentWhere": "USE_CODE IN ('1114','1115','1116','1126','112C') OR UseCode IN (1114,1115,1116,1126)",
+   "unitsGuard": null,
+   "maxRecordCount": 2000,
+   "dataAsOf": "Layer edited 2025-03-10; latest Revision 2024-07-30",
+   "dataYear": 2025,
+   "stale": false,
+   "thirdParty": true,
+   "publisher": "communityscale (consultant)",
+   "stats": {
+    "apartments": 29,
+    "units10plus": null,
+    "maxUnits": null
+   }
+  },
+  "parcelNote": null,
+  "zoning": null
+ },
+ {
+  "name": "Narragansett",
+  "mcode": 119,
+  "centroid": [
+   -71.45,
+   41.43
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://narragansettri.mapgeo.io/",
+  "viewerVendor": "MapGeo",
+  "parcel": {
+   "url": "https://services5.arcgis.com/gNCWvgyMokzjHsgX/arcgis/rest/services/Town_of_Narragansett_GIS_Services_WFL1/FeatureServer/2",
+   "tier": "full",
+   "fields": {
+    "parcelId": "parcelid",
+    "address": [
+     "location"
+    ],
+    "zoning": "zone1",
+    "lotSqft": null,
+    "lotAcres": "totalacres",
+    "useDesc": "lucdescription",
+    "useCode": "luc",
+    "units": "numofbuilding",
+    "yearBuilt": "yearbuilt",
+    "floors": null,
+    "buildingSqft": "grossbldarea",
+    "taxYear": "taxyear"
+   },
+   "apartmentWhere": "luc IN ('1114','1115','111C','1126','112C')",
+   "unitsGuard": null,
+   "maxRecordCount": 2000,
+   "dataAsOf": "CAMA extract 2022-10-02, taxyear 2022; layer edited 2025-01-16",
+   "dataYear": 2025,
+   "stale": true,
+   "thirdParty": false,
+   "publisher": "RyanDiPanni9 (Town of Narragansett GIS Services)",
+   "stats": {
+    "apartments": 28,
+    "units10plus": 8,
+    "maxUnits": 56
+   }
+  },
+  "parcelNote": null,
+  "zoning": {
+   "url": "https://services5.arcgis.com/gNCWvgyMokzjHsgX/arcgis/rest/services/2026_Zoning_Polygons/FeatureServer/0",
+   "zoneField": "DISTRICT",
+   "descField": null
+  }
+ },
+ {
+  "name": "New Shoreham",
+  "mcode": 120,
+  "centroid": [
+   -71.578,
+   41.18
+  ],
+  "included": false,
+  "excludedReason": "Block Island: three small apartment parcels on record, no 10+ unit pipeline.",
+  "viewerUrl": "https://bigis.maps.arcgis.com/home/index.html",
+  "viewerVendor": "ArcGIS",
+  "parcel": {
+   "url": "https://services2.arcgis.com/sM9etn5CxYxjHglg/arcgis/rest/services/Parcels2018/FeatureServer/0",
+   "tier": "basic",
+   "fields": {
+    "parcelId": "PLATLOTSUB",
+    "address": [
+     "REM_PRCL_L",
+     "REM_PRCL_1"
+    ],
+    "zoning": null,
+    "lotSqft": "LotArea",
+    "lotAcres": "Land_Acres",
+    "useDesc": null,
+    "useCode": "Primary_Us",
+    "units": null,
+    "yearBuilt": null,
+    "floors": null,
+    "buildingSqft": null,
+    "taxYear": null
+   },
+   "apartmentWhere": "Primary_Us IN ('1114','1116','1126')",
+   "unitsGuard": null,
+   "maxRecordCount": 1000,
+   "dataAsOf": "Layer named Parcels_10_31_2025; edited 2026-07-07",
+   "dataYear": 2026,
+   "stale": false,
+   "thirdParty": false,
+   "publisher": "BlockIslandGIS (Town of New Shoreham)",
+   "stats": {
+    "apartments": 3,
+    "units10plus": null,
+    "maxUnits": null
+   }
+  },
+  "parcelNote": null,
+  "zoning": {
+   "url": "https://services2.arcgis.com/sM9etn5CxYxjHglg/arcgis/rest/services/Zoning/FeatureServer/0",
+   "zoneField": "ZONE_",
+   "descField": "ZoningDistrict"
+  }
+ },
+ {
+  "name": "Newport",
+  "mcode": 121,
+  "centroid": [
+   -71.31,
+   41.485
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://newportri.mapgeo.io/",
+  "viewerVendor": "MapGeo",
+  "parcel": {
+   "url": "https://services2.arcgis.com/URasD5e1uL7MfVOn/arcgis/rest/services/Planning_Pop_Denisty_WFL1/FeatureServer/17",
+   "tier": "boundary",
+   "fields": {
+    "parcelId": "ParcelID",
+    "address": [
+     "Street"
+    ],
+    "zoning": "ZONING",
+    "lotSqft": "Square_Feet",
+    "lotAcres": "Acres",
+    "useDesc": null,
+    "useCode": null,
+    "units": null,
+    "yearBuilt": null,
+    "floors": null,
+    "buildingSqft": null,
+    "taxYear": null
+   },
+   "apartmentWhere": null,
+   "unitsGuard": null,
+   "maxRecordCount": 2000,
+   "dataAsOf": "Layer edited 2026-04-14; CAMA table YearID 2026",
+   "dataYear": 2026,
+   "stale": false,
+   "thirdParty": false,
+   "publisher": "mcrittenden@newportri (City of Newport)",
+   "stats": {
+    "apartments": null,
+    "units10plus": null,
+    "maxUnits": null
+   }
+  },
+  "parcelNote": null,
+  "zoning": null
+ },
+ {
+  "name": "North Kingstown",
+  "mcode": 122,
+  "centroid": [
+   -71.46,
+   41.57
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://next.axisgis.com/North_KingstownRI",
+  "viewerVendor": "AxisGIS",
+  "parcel": {
+   "url": "https://services6.arcgis.com/sX7pEdnB4m3F1tmB/arcgis/rest/services/AxisGISDataSync/FeatureServer/0",
+   "tier": "boundary",
+   "fields": {
+    "parcelId": "ParcelNumber",
+    "address": [
+     "PropertyAddress"
+    ],
+    "zoning": null,
+    "lotSqft": null,
+    "lotAcres": null,
+    "useDesc": null,
+    "useCode": null,
+    "units": null,
+    "yearBuilt": null,
+    "floors": null,
+    "buildingSqft": null,
+    "taxYear": null
+   },
+   "apartmentWhere": null,
+   "unitsGuard": null,
+   "maxRecordCount": 2000,
+   "dataAsOf": "Layer edited 2026-10-05 (nightly-style sync)",
+   "dataYear": 2026,
+   "stale": false,
+   "thirdParty": false,
+   "publisher": "mforlingieri (town AxisGIS sync)",
+   "stats": {
+    "apartments": null,
+    "units10plus": null,
+    "maxUnits": null
+   }
+  },
+  "parcelNote": null,
+  "zoning": null
+ },
+ {
+  "name": "North Providence",
+  "mcode": 123,
+  "centroid": [
+   -71.46,
+   41.86
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "http://northprovidenceri.gov/gis/",
+  "viewerVendor": null,
+  "parcel": null,
+  "parcelNote": "No public parcel service found. The state directory lists no interactive viewer; the town GIS page offers PDF maps.",
+  "zoning": null
+ },
+ {
+  "name": "North Smithfield",
+  "mcode": 124,
+  "centroid": [
+   -71.555,
+   41.97
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://www.axisgis.com/North_Smithfieldri/",
+  "viewerVendor": "AxisGIS",
+  "parcel": {
+   "url": "https://services3.arcgis.com/rjoL4QJH8vzzcd4s/arcgis/rest/services/North_Smithfield_parcels/FeatureServer/0",
+   "tier": "full",
+   "fields": {
+    "parcelId": "Parcel_Num",
+    "address": [
+     "Street",
+     "StreetName"
+    ],
+    "zoning": "Zone1",
+    "lotSqft": null,
+    "lotAcres": "TotalAcres",
+    "useDesc": null,
+    "useCode": "LUC",
+    "units": "RentalLivU",
+    "yearBuilt": "YearBuilt",
+    "floors": null,
+    "buildingSqft": "GrossBldAr",
+    "taxYear": "BaseYear"
+   },
+   "apartmentWhere": "LUC = '03'",
+   "unitsGuard": {
+    "field": "NumofBuild",
+    "max": 1
+   },
+   "maxRecordCount": 2000,
+   "dataAsOf": "CAMA extract 2022-10-04, BaseYear 2021; layer edited 2023-08-15",
+   "dataYear": 2023,
+   "stale": true,
+   "thirdParty": true,
+   "publisher": "WRWC12 (watershed council)",
+   "stats": {
+    "apartments": 16,
+    "units10plus": 5,
+    "maxUnits": 88
+   }
+  },
+  "parcelNote": null,
+  "zoning": null
+ },
+ {
+  "name": "Pawtucket",
+  "mcode": 125,
+  "centroid": [
+   -71.382,
+   41.875
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://pawtucket-dpw.maps.arcgis.com/home/index.html",
+  "viewerVendor": "ArcGIS",
+  "parcel": {
+   "url": "https://services5.arcgis.com/KTVE1BfEqewed0ZV/arcgis/rest/services/ParkingStudy/FeatureServer/5",
+   "tier": "basic",
+   "fields": {
+    "parcelId": "PARCELID",
+    "address": [
+     "REM_PRCL_L"
+    ],
+    "zoning": null,
+    "lotSqft": "LND_UNITS_",
+    "lotAcres": null,
+    "useDesc": "LND_USE_DE",
+    "useCode": "LND_USE_CO",
+    "units": null,
+    "yearBuilt": null,
+    "floors": null,
+    "buildingSqft": null,
+    "taxYear": null
+   },
+   "apartmentWhere": "LND_USE_CO IN ('800','801','814','814C','947','948','109')",
+   "unitsGuard": null,
+   "maxRecordCount": 1000,
+   "dataAsOf": "CAMA join dated 11/2024 (layer name Cama_Join_11_2024); edited 2024-11-26",
+   "dataYear": 2024,
+   "stale": false,
+   "thirdParty": false,
+   "publisher": "pawtucketdpw (City of Pawtucket DPW)",
+   "stats": {
+    "apartments": 340,
+    "units10plus": null,
+    "maxUnits": null
+   }
+  },
+  "parcelNote": null,
+  "zoning": null
+ },
+ {
+  "name": "Portsmouth",
+  "mcode": 126,
+  "centroid": [
+   -71.25,
+   41.6
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://www.axisgis.com/portsmouthri/",
+  "viewerVendor": "AxisGIS",
+  "parcel": {
+   "url": "https://services8.arcgis.com/eBM1JW3Jf2fRLgz7/arcgis/rest/services/AxisGISDataSync/FeatureServer/0",
+   "tier": "basic",
+   "fields": {
+    "parcelId": "ParcelNumber",
+    "address": [
+     "LOCATION"
+    ],
+    "zoning": "ZONE",
+    "lotSqft": null,
+    "lotAcres": "LAND_AREA_IN_ACRES",
+    "useDesc": "USE_DESCRIPT",
+    "useCode": "USE_CODE",
+    "units": null,
+    "yearBuilt": null,
+    "floors": null,
+    "buildingSqft": null,
+    "taxYear": null
+   },
+   "apartmentWhere": "USE_CODE IN ('1114','1115','111C','111J','1126','112Z')",
+   "unitsGuard": null,
+   "maxRecordCount": 2000,
+   "dataAsOf": "Layer edited 2026-10-05; latest SALE_DATE 2026-06-26",
+   "dataYear": 2026,
+   "stale": false,
+   "thirdParty": false,
+   "publisher": "alindo_PortsmouthRI (town AxisGIS sync)",
+   "stats": {
+    "apartments": 31,
+    "units10plus": null,
+    "maxUnits": null
+   }
+  },
+  "parcelNote": null,
+  "zoning": {
+   "url": "https://services8.arcgis.com/eBM1JW3Jf2fRLgz7/arcgis/rest/services/AxisGISDataSync/FeatureServer/62",
+   "zoneField": "CODE",
+   "descField": "DESCRIPT"
+  }
+ },
+ {
+  "name": "Providence",
+  "mcode": 127,
+  "centroid": [
+   -71.415,
+   41.823
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://providence-gis-hub-pvdgis.hub.arcgis.com/",
+  "viewerVendor": "ArcGIS",
+  "parcel": {
+   "url": "https://services6.arcgis.com/wv9mHoqblhTsnqdG/arcgis/rest/services/Parcel_Zoning_FL/FeatureServer/0",
+   "tier": "full",
+   "fields": {
+    "parcelId": "MAP_PAR_ID",
+    "address": [
+     "ParcAddress"
+    ],
+    "zoning": "ZONING",
+    "lotSqft": "AreaSF",
+    "lotAcres": "AreaAC",
+    "useDesc": "MuniUseCodeDesc",
+    "useCode": "MuniUseCode",
+    "units": "NumUnits",
+    "yearBuilt": "YearBuilt",
+    "floors": "NumFloors",
+    "buildingSqft": "GrBldgArea",
+    "taxYear": "TaxRollYear"
+   },
+   "apartmentWhere": "MuniUseCodeDesc = 'Apartments'",
+   "unitsGuard": null,
+   "maxRecordCount": 2000,
+   "dataAsOf": "TaxRollYear 2025; layer edited 2026-10-05 (data 2026-09-11)",
+   "dataYear": 2026,
+   "stale": false,
+   "thirdParty": false,
+   "publisher": "PVDGIS_Admin",
+   "stats": {
+    "apartments": 496,
+    "units10plus": 129,
+    "maxUnits": 225
+   }
+  },
+  "parcelNote": null,
+  "zoning": {
+   "url": "https://services6.arcgis.com/wv9mHoqblhTsnqdG/arcgis/rest/services/Parcel_Zoning_FL/FeatureServer/12",
+   "zoneField": "Code",
+   "descField": "District"
+  }
+ },
+ {
+  "name": "Richmond",
+  "mcode": 128,
+  "centroid": [
+   -71.66,
+   41.5
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://richmondri.mapgeo.io",
+  "viewerVendor": "MapGeo",
+  "parcel": {
+   "url": "https://services7.arcgis.com/D81zwenr9IQWGaWd/arcgis/rest/services/RichmondParcels21_SHP/FeatureServer/0",
+   "tier": "boundary",
+   "fields": {
+    "parcelId": "MBL",
+    "address": null,
+    "zoning": "ZONE_",
+    "lotSqft": "AREA",
+    "lotAcres": "GIS_Acres",
+    "useDesc": null,
+    "useCode": null,
+    "units": null,
+    "yearBuilt": null,
+    "floors": null,
+    "buildingSqft": null,
+    "taxYear": null
+   },
+   "apartmentWhere": null,
+   "unitsGuard": null,
+   "maxRecordCount": 2000,
+   "dataAsOf": "2021 parcels (name RichmondParcels21); edited 2026-04-20 (data 2025-06-10)",
+   "dataYear": 2026,
+   "stale": true,
+   "thirdParty": true,
+   "publisher": "RIEPETE",
+   "stats": {
+    "apartments": null,
+    "units10plus": null,
+    "maxUnits": null
+   }
+  },
+  "parcelNote": null,
+  "zoning": null
+ },
+ {
+  "name": "Scituate",
+  "mcode": 129,
+  "centroid": [
+   -71.62,
+   41.79
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://www.axisgis.com/Scituateri/",
+  "viewerVendor": "AxisGIS",
+  "parcel": null,
+  "parcelNote": "No public parcel service found.",
+  "zoning": null
+ },
+ {
+  "name": "Smithfield",
+  "mcode": 130,
+  "centroid": [
+   -71.545,
+   41.9
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://smithfieldri.mapgeo.io/",
+  "viewerVendor": "MapGeo",
+  "parcel": {
+   "url": "https://services8.arcgis.com/vTOJWLJVUPSk69La/arcgis/rest/services/SmithfieldParcels2026/FeatureServer/2",
+   "tier": "boundary",
+   "fields": {
+    "parcelId": "PARCELID",
+    "address": [
+     "SITEADDRES"
+    ],
+    "zoning": null,
+    "lotSqft": null,
+    "lotAcres": "GIS_AC",
+    "useDesc": null,
+    "useCode": null,
+    "units": null,
+    "yearBuilt": null,
+    "floors": null,
+    "buildingSqft": null,
+    "taxYear": null
+   },
+   "apartmentWhere": null,
+   "unitsGuard": null,
+   "maxRecordCount": 2000,
+   "dataAsOf": "Layer edited 2026-09-16",
+   "dataYear": 2026,
+   "stale": false,
+   "thirdParty": false,
+   "publisher": "gguertin_tos64 (Town of Smithfield)",
+   "stats": {
+    "apartments": null,
+    "units10plus": null,
+    "maxUnits": null
+   }
+  },
+  "parcelNote": null,
+  "zoning": {
+   "url": "https://services8.arcgis.com/vTOJWLJVUPSk69La/arcgis/rest/services/Zoning_Districts_2025/FeatureServer/5",
+   "zoneField": "CODE",
+   "descField": "DESCRIPT"
+  }
+ },
+ {
+  "name": "South Kingstown",
+  "mcode": 131,
+  "centroid": [
+   -71.545,
+   41.45
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://www.axisgis.com/south_kingstownri",
+  "viewerVendor": "AxisGIS",
+  "parcel": {
+   "url": "https://services2.arcgis.com/zDoaAaxknjHlpdti/arcgis/rest/services/AxisGISDataSync/FeatureServer/46",
+   "tier": "basic",
+   "fields": {
+    "parcelId": "ParcelNumber",
+    "address": [
+     "PropertyAddress"
+    ],
+    "zoning": null,
+    "lotSqft": null,
+    "lotAcres": "GISACRES",
+    "useDesc": "Land_Use_Description",
+    "useCode": "Land_Use_Code",
+    "units": null,
+    "yearBuilt": "YearBuilt",
+    "floors": null,
+    "buildingSqft": null,
+    "taxYear": null
+   },
+   "apartmentWhere": "Land_Use_Code IN ('1114','1115','1116','111C','1126','112C')",
+   "unitsGuard": null,
+   "maxRecordCount": 2000,
+   "dataAsOf": "Layer edited 2026-10-05",
+   "dataYear": 2026,
+   "stale": false,
+   "thirdParty": false,
+   "publisher": "skgisadmin (Town of South Kingstown)",
+   "stats": {
+    "apartments": 44,
+    "units10plus": null,
+    "maxUnits": null
+   }
+  },
+  "parcelNote": null,
+  "zoning": {
+   "url": "https://services2.arcgis.com/zDoaAaxknjHlpdti/arcgis/rest/services/AxisGISDataSync/FeatureServer/16",
+   "zoneField": "Zone_",
+   "descField": "ZoneClass"
+  }
+ },
+ {
+  "name": "Tiverton",
+  "mcode": 132,
+  "centroid": [
+   -71.18,
+   41.625
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://www.axisgis.com/Tivertonri/",
+  "viewerVendor": "AxisGIS",
+  "parcel": null,
+  "parcelNote": "No public parcel service found. The town's CAI ArcGIS Online org exposes only stormwater layers publicly; a third-party copy requires a token.",
+  "zoning": null
+ },
+ {
+  "name": "Warren",
+  "mcode": 133,
+  "centroid": [
+   -71.285,
+   41.73
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://www.axisgis.com/warrenri/",
+  "viewerVendor": "AxisGIS",
+  "parcel": null,
+  "parcelNote": "Only a 2013 outline layer with no address or assessment fields.",
+  "zoning": null
+ },
+ {
+  "name": "Warwick",
+  "mcode": 134,
+  "centroid": [
+   -71.42,
+   41.7
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://www.axisgis.com/Warwickri/",
+  "viewerVendor": "AxisGIS",
+  "parcel": {
+   "url": "https://services.arcgis.com/FULpfKXdE8WhHh1Y/arcgis/rest/services/AxisGISDataSync/FeatureServer/20",
+   "tier": "boundary",
+   "fields": {
+    "parcelId": "ParcelNumber",
+    "address": [
+     "PropertyAddress"
+    ],
+    "zoning": null,
+    "lotSqft": null,
+    "lotAcres": null,
+    "useDesc": null,
+    "useCode": null,
+    "units": null,
+    "yearBuilt": null,
+    "floors": null,
+    "buildingSqft": null,
+    "taxYear": null
+   },
+   "apartmentWhere": null,
+   "unitsGuard": null,
+   "maxRecordCount": 2000,
+   "dataAsOf": "Layer edited 2026-10-05",
+   "dataYear": 2026,
+   "stale": false,
+   "thirdParty": false,
+   "publisher": "cai_Warwick (city AxisGIS sync)",
+   "stats": {
+    "apartments": null,
+    "units10plus": null,
+    "maxUnits": null
+   }
+  },
+  "parcelNote": null,
+  "zoning": {
+   "url": "https://services.arcgis.com/FULpfKXdE8WhHh1Y/arcgis/rest/services/Zoning_Districts/FeatureServer/106",
+   "zoneField": "CODE",
+   "descField": "DESCRIPT"
+  }
+ },
+ {
+  "name": "West Greenwich",
+  "mcode": 135,
+  "centroid": [
+   -71.66,
+   41.62
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://www.axisgis.com/West_Greenwichri/",
+  "viewerVendor": "AxisGIS",
+  "parcel": {
+   "url": "https://services2.arcgis.com/nyuz69VCoGyxGrxR/arcgis/rest/services/AxisGISDataSync/FeatureServer/0",
+   "tier": "boundary",
+   "fields": {
+    "parcelId": "ParcelNumber",
+    "address": [
+     "PropertyAddress"
+    ],
+    "zoning": "Zone1",
+    "lotSqft": null,
+    "lotAcres": null,
+    "useDesc": null,
+    "useCode": null,
+    "units": null,
+    "yearBuilt": null,
+    "floors": null,
+    "buildingSqft": null,
+    "taxYear": null
+   },
+   "apartmentWhere": null,
+   "unitsGuard": null,
+   "maxRecordCount": 2000,
+   "dataAsOf": "Layer edited 2026-10-04",
+   "dataYear": 2026,
+   "stale": false,
+   "thirdParty": false,
+   "publisher": "dprovonsil (town AxisGIS sync)",
+   "stats": {
+    "apartments": null,
+    "units10plus": null,
+    "maxUnits": null
+   }
+  },
+  "parcelNote": null,
+  "zoning": null
+ },
+ {
+  "name": "West Warwick",
+  "mcode": 136,
+  "centroid": [
+   -71.52,
+   41.7
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://www.axisgis.com/west_warwickri/",
+  "viewerVendor": "AxisGIS",
+  "parcel": {
+   "url": "https://arcgisserver.cranstonri.org/arcgis/rest/services/WestWarwickParcels/MapServer/0",
+   "tier": "full",
+   "fields": {
+    "parcelId": "Parcel_Num",
+    "address": [
+     "Street",
+     "StreetName"
+    ],
+    "zoning": "Zone1",
+    "lotSqft": null,
+    "lotAcres": "TotalAcres",
+    "useDesc": null,
+    "useCode": "LUC",
+    "units": "RentalLivU",
+    "yearBuilt": "YearBuilt",
+    "floors": null,
+    "buildingSqft": "GrossBldAr",
+    "taxYear": "BaseYear"
+   },
+   "apartmentWhere": "LUC = '03'",
+   "unitsGuard": {
+    "field": "NumofBuild",
+    "max": 1
+   },
+   "maxRecordCount": 2000,
+   "dataAsOf": "CAMA extract 2024-07-16 (LastRunDat), BaseYear 2024; no edit date exposed",
+   "dataYear": 2024,
+   "stale": false,
+   "thirdParty": true,
+   "publisher": "mgiarrusso (City of Cranston server)",
+   "stats": {
+    "apartments": 137,
+    "units10plus": 26,
+    "maxUnits": 156
+   }
+  },
+  "parcelNote": null,
+  "zoning": null
+ },
+ {
+  "name": "Westerly",
+  "mcode": 137,
+  "centroid": [
+   -71.795,
+   41.375
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "http://gis.westerlyri.gov/ags_map/",
+  "viewerVendor": "MapXpress",
+  "parcel": {
+   "url": "https://services3.arcgis.com/6AmZcnIGzphMQkpH/arcgis/rest/services/Westerly_Parcels/FeatureServer/0",
+   "tier": "basic",
+   "fields": {
+    "parcelId": "GIS_LINK",
+    "address": [
+     "LOCATION"
+    ],
+    "zoning": "ZONING",
+    "lotSqft": null,
+    "lotAcres": "ACRES",
+    "useDesc": "LAND_USE",
+    "useCode": "VisionUC",
+    "units": null,
+    "yearBuilt": "YR_BLT",
+    "floors": null,
+    "buildingSqft": null,
+    "taxYear": null
+   },
+   "apartmentWhere": "VisionUC IN ('1114','111R','111C','112R','112C')",
+   "unitsGuard": null,
+   "maxRecordCount": 2000,
+   "dataAsOf": "Layer edited 2025-02-28; latest SALE_DATE 2023-07-17 (data about mid-2023)",
+   "dataYear": 2025,
+   "stale": false,
+   "thirdParty": true,
+   "publisher": "FandoSites (consultant)",
+   "stats": {
+    "apartments": 71,
+    "units10plus": null,
+    "maxUnits": null
+   }
+  },
+  "parcelNote": null,
+  "zoning": null
+ },
+ {
+  "name": "Woonsocket",
+  "mcode": 138,
+  "centroid": [
+   -71.515,
+   42.0
+  ],
+  "included": true,
+  "excludedReason": null,
+  "viewerUrl": "https://www.axisgis.com/WoonsocketRI/",
+  "viewerVendor": "AxisGIS",
+  "parcel": {
+   "url": "https://services3.arcgis.com/xbJIXto6cXXmodeK/arcgis/rest/services/AxisGISDataSync/FeatureServer/20",
+   "tier": "boundary",
+   "fields": {
+    "parcelId": "MAP_LOT",
+    "address": [
+     "Street_Num",
+     "Street_Nam"
+    ],
+    "zoning": null,
+    "lotSqft": "SQFT_AREA",
+    "lotAcres": "AREA_ACRES",
+    "useDesc": null,
+    "useCode": null,
+    "units": null,
+    "yearBuilt": null,
+    "floors": null,
+    "buildingSqft": null,
+    "taxYear": null
+   },
+   "apartmentWhere": null,
+   "unitsGuard": null,
+   "maxRecordCount": 2000,
+   "dataAsOf": "Layer edited 2025-12-18",
+   "dataYear": 2025,
+   "stale": false,
+   "thirdParty": false,
+   "publisher": "CAI_Woonsocket_RI (city AxisGIS sync)",
+   "stats": {
+    "apartments": null,
+    "units10plus": null,
+    "maxUnits": null
+   }
+  },
+  "parcelNote": null,
+  "zoning": {
+   "url": "https://services3.arcgis.com/xbJIXto6cXXmodeK/arcgis/rest/services/Zoning/FeatureServer/119",
+   "zoneField": "CODE",
+   "descField": "DESCRIPT"
+  }
+ }
+]

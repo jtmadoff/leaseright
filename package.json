@@ -1,0 +1,23 @@
+{
+  "name": "leaseright",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4173",
+    "test": "vitest run --exclude tests/live/**",
+    "check:data": "python3 tools/build_data.py --check",
+    "test:live": "NODE_USE_ENV_PROXY=1 vitest run tests/live"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^5.4.11",
+    "vitest": "^2.1.8"
+  }
+}

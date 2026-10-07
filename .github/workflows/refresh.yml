@@ -1,0 +1,82 @@
+name: Refresh market data
+
+# Pulls rent data, validates it and commits it. Netlify redeploys on the push.
+#   - schedule: the 18th of each month (Zillow publishes mid-month) and every Monday for the pipeline
+#   - workflow_dispatch: run on demand from the Actions tab
+on:
+  schedule:
+    - cron: "0 7 18 * *"
+    - cron: "0 8 * * 1"
+  workflow_dispatch:
+    inputs:
+      pull_listings:
+        description: "Also pull rental listings (spends about one API call per town)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      HAS_LEAD_ENGINE: ${{ secrets.LEAD_ENGINE_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      # Rents. The index needs no key. Listings and HUD switch on when their secrets exist.
+      # Listings are pulled on the monthly run, or on a manual run with "pull listings" checked,
+      # to stay inside the API call budget.
+      - name: Harvest rents
+        env:
+          RENTCAST_API_KEY: ${{ (github.event.schedule == '0 7 18 * *' || inputs.pull_listings) && secrets.RENTCAST_API_KEY || '' }}
+          HUD_API_TOKEN: ${{ secrets.HUD_API_TOKEN }}
+          RENTCAST_MAX_CALLS: "45"
+        run: python tools/harvest_rents.py --keep-listings
+
+      # Pipeline. Needs read access to the private Lead Engine repo (LEAD_ENGINE_TOKEN).
+      - name: Check out Lead Engine ledger
+        if: ${{ env.HAS_LEAD_ENGINE == 'true' }}
+        uses: actions/checkout@v5
+        with:
+          repository: jtmadoff/lead-engine
+          token: ${{ secrets.LEAD_ENGINE_TOKEN }}
+          path: lead-engine
+          sparse-checkout: pipeline/leads.json
+          sparse-checkout-cone-mode: false
+
+      - name: Sync pipeline supply
+        run: |
+          if [ -f lead-engine/pipeline/leads.json ]; then
+            python tools/sync_supply.py lead-engine/pipeline/leads.json
+          else
+            echo "Lead Engine ledger not available; keeping the committed pipeline."
+          fi
+          rm -rf lead-engine
+
+      - name: Validate and publish data
+        run: |
+          python tools/test_harvest.py
+          python tools/build_data.py
+
+      - name: Commit refreshed data
+        run: |
+          git config user.name "leaseright-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add pipeline/ public/data/
+          if git diff --cached --quiet; then
+            echo "No data changes."
+          else
+            git commit -m "Market data refresh: $(date -u +%Y-%m-%d)"
+            git push
+          fi

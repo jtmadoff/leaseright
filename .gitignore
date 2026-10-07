@@ -1,0 +1,15 @@
+node_modules
+node_modules/
+dist/
+outputs/
+__pycache__/
+*.pyc
+.DS_Store
+.env
+.env.*
+.netlify/
+.netlify-publish/
+.m4d/tools/
+*.zip
+*.bundle
+.__*
