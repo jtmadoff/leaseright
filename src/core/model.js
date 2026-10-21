@@ -328,6 +328,7 @@ export function simulate(inputs, pace, { through = 0 } = {}) {
     reserveTroughDate: isoDate(start + troughDay * DAY_MS),
     breakevenDate: breakevenDay === null ? null : isoDate(start + breakevenDay * DAY_MS),
     stabilizedMonthlyRent: rate * DAYS_PER_MONTH,
+    leasedPath: leasedByDay, // leases signed by the end of each day, through stabilization
     settledDays,
     horizonDays: horizon,
     finalCumulative: cum,

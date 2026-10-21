@@ -63,11 +63,28 @@ export function newProject(seed = {}) {
     unitMix: [],
     plan: emptyPlan(),
     baselines: [],
+    actuals: [],
+    view: "plan",
     step: 0,
-    supplyId: null,
     createdAt: at,
     updatedAt: at,
     ...seed,
+  };
+}
+
+export const VIEWS = ["home", "plan", "package", "leasing"];
+
+/** One week of leasing activity. Counts are kept as typed so blanks stay blank. */
+export function newActual(seed = {}) {
+  return { id: uid(), weekEnding: "", leads: "", tours: "", applications: "", leases: "", cancellations: "", note: "", ...seed };
+}
+
+/** Fields added after a project was first saved get their defaults here. */
+export function upgradeProject(p) {
+  return {
+    ...p,
+    actuals: Array.isArray(p.actuals) ? p.actuals : [],
+    view: VIEWS.includes(p.view) ? p.view : p.baselines?.length ? "home" : "plan",
   };
 }
 
@@ -93,7 +110,7 @@ export function currentBaseline(project) {
 /** True only when nothing has been entered anywhere, so an untouched draft can be dropped. */
 export function isBlank(p) {
   return (
-    !p.name && !p.address && !p.town && !p.totalUnits && !p.sponsor && !p.projectType && !p.unitMix.length && !p.baselines.length &&
+    !p.name && !p.address && !p.town && !p.totalUnits && !p.sponsor && !p.projectType && !p.unitMix.length && !p.baselines.length && !(p.actuals || []).length &&
     Object.values(p.plan).every((v) => v === "" || v === null || v === undefined)
   );
 }
@@ -126,6 +143,11 @@ export function sanitizeProject(p) {
       .map((r) => newRow(r.beds === "" || r.beds === null || r.beds === undefined || !Number.isFinite(Number(r.beds)) ? "" : Number(r.beds), { label: str(r.label), count: str(r.count), sqft: str(r.sqft), rent: str(r.rent), leased: str(r.leased), availableDate: str(r.availableDate) })),
     plan,
     baselines: p.baselines.filter((b) => b && typeof b.id === "string" && typeof b.approvedAt === "string" && typeof b.key === "string" && b.summary && Number.isFinite(b.summary.reserveNeed) && Number.isFinite(b.summary.leasesPerWeek) && typeof b.summary.stabilizeDate === "string"),
+    actuals: (Array.isArray(p.actuals) ? p.actuals : [])
+      .filter((r) => r && typeof r === "object" && /^\d{4}-\d{2}-\d{2}$/.test(r.weekEnding))
+      .slice(0, 520)
+      .map((r) => newActual({ weekEnding: r.weekEnding, leads: str(r.leads), tours: str(r.tours), applications: str(r.applications), leases: str(r.leases), cancellations: str(r.cancellations), note: str(r.note) })),
+    view: p.baselines.length ? "home" : "plan",
     step: Number.isInteger(p.step) && p.step >= 0 && p.step <= 3 ? p.step : 0,
     // The parcel and zoning are looked up again from the address rather than trusted from the file.
   };
@@ -190,7 +212,7 @@ export function loadState(storage) {
         storage.setItem(backupKey, raw);
         return { ...base, notice: `Saved projects could not be read. A copy was kept in this browser under "${backupKey}" and a fresh workspace was started.` };
       }
-      const projects = saved.projects.filter((p) => !isBlank(p));
+      const projects = saved.projects.map(upgradeProject).filter((p) => !isBlank(p));
       return { ...base, projects, activeId: projects.some((p) => p.id === saved.activeId) ? saved.activeId : projects[0]?.id || null };
     }
     const legacy = storage.getItem(LEGACY_KEY);
@@ -220,13 +242,23 @@ export function reducer(state, action) {
     case "plan":
       return mapProject((p) => touch(p, { plan: { ...p.plan, ...action.patch } }));
     case "step":
-      return mapProject((p) => ({ ...p, step: action.step }));
+      return mapProject((p) => ({ ...p, view: "plan", step: action.step }));
+    case "view":
+      return mapProject((p) => ({ ...p, view: action.view }));
+    case "actual-save":
+      return mapProject((p) => {
+        const exists = p.actuals.some((r) => r.id === action.row.id);
+        const actuals = exists ? p.actuals.map((r) => (r.id === action.row.id ? action.row : r)) : [...p.actuals, action.row];
+        return touch(p, { actuals });
+      });
+    case "actual-delete":
+      return mapProject((p) => touch(p, { actuals: p.actuals.filter((r) => r.id !== action.rowId) }));
     case "approve":
       return mapProject((p) => touch(p, { baselines: [...p.baselines, action.baseline] }));
     // Another tab saved: take its projects, keep this tab's open project if it still exists.
     case "hydrate": {
       const ids = new Set(action.projects.map((p) => p.id));
-      return { ...state, projects: action.projects, activeId: ids.has(state.activeId) ? state.activeId : null };
+      return { ...state, projects: action.projects.map(upgradeProject), activeId: ids.has(state.activeId) ? state.activeId : null };
     }
     case "delete": {
       const projects = state.projects.filter((p) => p.id !== action.id);

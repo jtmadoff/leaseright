@@ -267,7 +267,7 @@ export function ReviewStep({ project, result, data, onStep, onApprove, onMarket 
                 <li>
                   {supply.projects.length
                     ? `${supply.projects.length} proposed multifamily project${supply.projects.length > 1 ? "s" : ""} (${number(supply.units)} units) in ${project.town} and nearby towns.`
-                    : "No proposed multifamily projects of 10+ units nearby in the current pipeline."}
+                    : "No proposed multifamily projects of 10+ units nearby on current planning agendas."}
                 </li>
                 <li>{data.rents?.listings ? "Bedroom-level medians from active listings." : "Listing-based rents by unit type are not connected yet."}</li>
               </ul>

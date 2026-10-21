@@ -12,6 +12,9 @@ import { UnitsStep } from "./views/UnitsStep.jsx";
 import { PlanStep } from "./views/PlanStep.jsx";
 import { ReviewStep, makeBaseline } from "./views/ReviewStep.jsx";
 import { MarketOverlay } from "./views/Market.jsx";
+import { Overview } from "./views/Overview.jsx";
+import { LenderPackage } from "./views/LenderPackage.jsx";
+import { Leasing } from "./views/Leasing.jsx";
 
 const STEPS = ["Property", "Units and rents", "Lease-up plan", "Review"];
 
@@ -63,7 +66,7 @@ function TopBar({ state, project, data, onHome, onNew, onSwitch, onMessage, onAs
         </span>
         {data.supply?.source?.asOf && (
           <span>
-            Pipeline <b>{dateLong(data.supply.source.asOf)}</b>
+            Agendas <b>{dateLong(data.supply.source.asOf)}</b>
           </span>
         )}
       </div>
@@ -89,22 +92,28 @@ function ProjectShell({ project, data }) {
   const { dispatch, saveStatus } = useStore();
   const [marketOpen, setMarketOpen] = useState(false);
   const result = useMemo(() => calculate(project, { townIncluded: isIncluded }), [project]);
+  const view = project.view || "plan";
   const step = Math.max(0, Math.min(3, project.step || 0));
+  const top = () => window.scrollTo({ top: 0 });
   const setStep = (s) => {
     dispatch({ type: "step", id: project.id, step: s });
-    window.scrollTo({ top: 0 });
+    top();
+  };
+  const go = (v) => {
+    dispatch({ type: "view", id: project.id, view: v });
+    top();
   };
   const patch = (p) => dispatch({ type: "patch", id: project.id, patch: p });
   const planPatch = (p) => dispatch({ type: "plan", id: project.id, patch: p });
   const blocking = (s) => result.issues.some((i) => i.blocking && i.step === s);
+  const { baseline, current: baselineCurrent } = currentBaseline(project);
   const done = [
     !!(project.address && project.town && isIncluded(project.town) && num(project.totalUnits) > 0),
     project.unitMix.length > 0 && !blocking(1),
     !blocking(2),
-    currentBaseline(project).current,
+    baselineCurrent,
   ];
-  const approve = (baseline) => dispatch({ type: "approve", id: project.id, baseline });
-  const baselineCurrent = currentBaseline(project).current;
+  const approve = (b) => dispatch({ type: "approve", id: project.id, baseline: b });
   const canSave = result.ready && result.base.reached;
   const units = num(project.totalUnits) || result.inputs.totalUnits || null;
   const b = result.ready ? result.base : null;
@@ -115,18 +124,28 @@ function ProjectShell({ project, data }) {
     ["Stabilized", b?.reached ? dateLong(b.stabilizeDate) : null, b?.reached ? duration(b.leaseUpDays) : "set in step 3"],
     ["Reserve need", b && result.inputs.monthlyCarry ? (b.reserveNeed < 1 ? "None" : moneyShort(b.reserveNeed)) : null, b && result.inputs.monthlyCarry ? (b.reserveNeed < 1 ? "rent covers carry" : `deepest ${dateLong(b.reserveTroughDate)}`) : "needs monthly carry"],
   ];
+  const tab = (key, label) => (
+    <button className={`step tab ${view === key ? "on" : ""}`} aria-current={view === key ? "page" : undefined} onClick={() => go(key)}>
+      {label}
+    </button>
+  );
   return (
     <>
-      <nav className="steps" aria-label="Plan steps">
+      <nav className="steps" aria-label="Project">
+        {tab("home", "Overview")}
+        <span className="divider" />
         {STEPS.map((label, i) => (
           <React.Fragment key={label}>
             {i > 0 && <span className="line" />}
-            <button className={`step ${i === step ? "on" : ""} ${done[i] ? "done" : ""}`} aria-current={i === step ? "step" : undefined} onClick={() => setStep(i)}>
+            <button className={`step ${view === "plan" && i === step ? "on" : ""} ${done[i] ? "done" : ""}`} aria-current={view === "plan" && i === step ? "step" : undefined} onClick={() => setStep(i)}>
               <span className="n">{done[i] ? <Icon.check size={12} /> : i + 1}</span>
               {label}
             </button>
           </React.Fragment>
         ))}
+        <span className="divider" />
+        {tab("package", "Lender package")}
+        {tab("leasing", "Leasing")}
         <span className="spacer" />
         {project.town && (
           <button className="btn small" onClick={() => setMarketOpen(true)}>
@@ -135,45 +154,52 @@ function ProjectShell({ project, data }) {
         )}
       </nav>
       {marketOpen && <MarketOverlay project={project} data={data} onClose={() => setMarketOpen(false)} />}
-      <div className="kpis" aria-label="Plan summary">
-        {kpis.map(([label, value, sub]) => (
-          <div className="kpi" key={label}>
-            <span className="k-label">{label}</span>
-            <span className={`k-val ${value ? "" : "empty"}`}>{value || "–"}</span>
-            <span className="k-sub">{sub}</span>
-          </div>
-        ))}
-      </div>
-      {step === 0 && <PropertyStep project={project} patch={patch} />}
-      {step === 1 && <UnitsStep project={project} patch={patch} data={data} />}
-      {step === 2 && <PlanStep project={project} planPatch={planPatch} result={result} onStep={setStep} />}
-      {step === 3 && <ReviewStep project={project} result={result} data={data} onStep={setStep} onApprove={approve} onMarket={() => setMarketOpen(true)} />}
-      <div className="navbar">
-        <span className="muted small" role="status">
-          {saveStatus}
-        </span>
-        <span className="spacer" />
-        {step > 0 && (
-          <button className="btn" onClick={() => setStep(step - 1)}>
-            <Icon.back /> {STEPS[step - 1]}
-          </button>
-        )}
-        {step < 3 && (
-          <button className="btn primary" onClick={() => setStep(step + 1)}>
-            Next: {STEPS[step + 1]} <Icon.arrow />
-          </button>
-        )}
-        {step === 3 && !baselineCurrent && (
-          <button className="btn primary" disabled={!canSave} title={canSave ? undefined : "The plan has to reach target occupancy first"} onClick={() => approve(makeBaseline(project, result))}>
-            <Icon.check /> Save baseline
-          </button>
-        )}
-        {step === 3 && baselineCurrent && (
-          <button className="btn primary" onClick={() => dispatch({ type: "close" })}>
-            Done: back to projects <Icon.arrow />
-          </button>
-        )}
-      </div>
+      {view === "plan" && (
+        <div className="kpis" aria-label="Plan summary">
+          {kpis.map(([label, value, sub]) => (
+            <div className="kpi" key={label}>
+              <span className="k-label">{label}</span>
+              <span className={`k-val ${value ? "" : "empty"}`}>{value || "–"}</span>
+              <span className="k-sub">{sub}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {view === "home" && <Overview project={project} result={result} data={data} onStep={setStep} onView={go} onMarket={() => setMarketOpen(true)} onApprove={approve} />}
+      {view === "package" && <LenderPackage project={project} data={data} onStep={setStep} onPatch={patch} />}
+      {view === "leasing" && <Leasing project={project} onStep={setStep} onPatch={patch} />}
+      {view === "plan" && step === 0 && <PropertyStep project={project} patch={patch} />}
+      {view === "plan" && step === 1 && <UnitsStep project={project} patch={patch} data={data} />}
+      {view === "plan" && step === 2 && <PlanStep project={project} planPatch={planPatch} result={result} onStep={setStep} />}
+      {view === "plan" && step === 3 && <ReviewStep project={project} result={result} data={data} onStep={setStep} onApprove={approve} onMarket={() => setMarketOpen(true)} />}
+      {view === "plan" && (
+        <div className="navbar">
+          <span className="muted small" role="status">
+            {saveStatus}
+          </span>
+          <span className="spacer" />
+          {step > 0 && (
+            <button className="btn" onClick={() => setStep(step - 1)}>
+              <Icon.back /> {STEPS[step - 1]}
+            </button>
+          )}
+          {step < 3 && (
+            <button className="btn primary" onClick={() => setStep(step + 1)}>
+              Next: {STEPS[step + 1]} <Icon.arrow />
+            </button>
+          )}
+          {step === 3 && !baselineCurrent && (
+            <button className="btn primary" disabled={!canSave} title={canSave ? undefined : "The plan has to reach target occupancy first"} onClick={() => approve(makeBaseline(project, result))}>
+              <Icon.check /> {baseline ? "Save new baseline" : "Save baseline"}
+            </button>
+          )}
+          {step === 3 && baselineCurrent && (
+            <button className="btn primary" onClick={() => go("home")}>
+              Done: project overview <Icon.arrow />
+            </button>
+          )}
+        </div>
+      )}
     </>
   );
 }
@@ -193,19 +219,6 @@ export default function App() {
     window.scrollTo({ top: 0 });
   };
 
-  // Hand-off link from Lead Engine: /?new=1&name=...&town=...&units=...&sponsor=...
-  useEffect(() => {
-    const q = new URLSearchParams(window.location.search);
-    if (q.get("new") !== "1") return;
-    const units = Number(q.get("units"));
-    create({
-      name: (q.get("name") || "").slice(0, 120),
-      town: getTown(q.get("town"))?.name || "",
-      totalUnits: Number.isInteger(units) && units > 0 && units <= 10000 ? String(units) : "",
-      sponsor: (q.get("sponsor") || "").slice(0, 120),
-    });
-    window.history.replaceState(null, "", window.location.pathname);
-  }, []);
 
   return (
     <>

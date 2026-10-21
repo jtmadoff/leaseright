@@ -54,7 +54,7 @@ export function useNearbyBuildings(project) {
   return state;
 }
 
-function useMarket(project, data) {
+export function useMarket(project, data) {
   const nearby = useNearbyBuildings(project);
   return useMemo(() => {
     const index = rentIndex(data.rents, project.town, project.zip);
@@ -90,7 +90,7 @@ function IndexTile({ index }) {
   );
 }
 
-function SimilarTable({ market, compact, data }) {
+export function SimilarTable({ market, compact, data }) {
   const { similar, nearby, subject } = market;
   if (nearby.status === "idle" || nearby.status === "nolocation") return <p className="muted">Pin the property to an address to match buildings near it.</p>;
   if (nearby.status === "loading") return <p className="muted" role="status">Matching apartment buildings near the site.</p>;
@@ -105,6 +105,8 @@ function SimilarTable({ market, compact, data }) {
           : `No apartment building of ${COMP_RULES.minUnits}+ units on record within ${RADIUS} miles.`}
       </p>
     );
+  // The rents column only appears when at least one matched building has published rents.
+  const showRents = !compact && similar.buildings.slice(0, 6).some((b) => publishedRents(data, b.town, b.address));
   return (
     <>
       <div className="tablewrap">
@@ -116,12 +118,12 @@ function SimilarTable({ market, compact, data }) {
               <th className="n">Built</th>
               <th className="n">Miles</th>
               <th className="n">Match</th>
-              {!compact && <th>Published rents</th>}
+              {showRents && <th>Published rents</th>}
             </tr>
           </thead>
           <tbody>
             {similar.buildings.slice(0, compact ? 4 : 6).map((b) => {
-              const pub = compact ? null : publishedRents(data, b.town, b.address);
+              const pub = showRents ? publishedRents(data, b.town, b.address) : null;
               return (
               <tr key={`${b.town}-${b.parcelId}`}>
                 <td className="strong">
@@ -132,7 +134,7 @@ function SimilarTable({ market, compact, data }) {
                 <td className="n">{b.yearBuilt || "–"}</td>
                 <td className="n">{b.distance.toFixed(1)}</td>
                 <td className="n">{b.score}%</td>
-                {!compact && (
+                {showRents && (
                   <td>
                     {pub
                       ? Object.entries(pub.byBed)
@@ -162,7 +164,7 @@ function SimilarTable({ market, compact, data }) {
   );
 }
 
-function BedTable({ market, project }) {
+export function BedTable({ market, project }) {
   const mix = normalizeMix(project.unitMix);
   const yours = (beds) => {
     const rows = mix.filter((r) => r.beds === beds && r.rent);
@@ -207,7 +209,7 @@ function BedTable({ market, project }) {
   );
 }
 
-function SupplyList({ market, limit }) {
+export function SupplyList({ market, limit }) {
   const rows = market.supply.projects;
   if (!rows.length) return <p className="muted">No multifamily filings of 10+ units in this town or the towns around it.</p>;
   return (
@@ -266,7 +268,7 @@ function ListingFeedNote({ listings }) {
 export function MarketDrawer({ project, data, market, onClose }) {
   const zori = sourceById(data.rents, "zori");
   return (
-    <Drawer eyebrow={`${project.town || "Rhode Island"} market`} title="Rents, comparable buildings and pipeline" onClose={onClose}>
+    <Drawer eyebrow={`${project.town || "Rhode Island"} market`} title="Rents, comparable buildings and market activity" onClose={onClose}>
       <div className="sect">Town rent index</div>
       <div className="card">
         <IndexTile index={market.index} />
@@ -384,13 +386,13 @@ export function MarketDrawer({ project, data, market, onClose }) {
       )}
 
       <div className="sect">
-        <span>Pipeline: proposed multifamily</span>
+        <span>Market activity: proposed multifamily</span>
         {data.supply?.source?.asOf && <Chip>Agendas through {dateLong(data.supply.source.asOf)}</Chip>}
       </div>
       <div className="card">
         <SupplyList market={market} />
         <p className="muted small" style={{ marginTop: 10 }}>
-          From Lead Engine: planning and zoning agendas in {project.town} and towns within six miles. Proposed units, not deliveries; most are a year or more from leasing.
+          From Rhode Island planning and zoning agendas in {project.town} and towns within six miles. Proposed units, not deliveries; most are a year or more from leasing.
         </p>
       </div>
     </Drawer>
@@ -405,7 +407,7 @@ export function MarketPanel({ project, data }) {
     return (
       <aside className="aside" aria-label="Market">
         <div className="sect">Market</div>
-        <p className="muted">Set the property address in step 1 and the local rent index, comparable buildings and pipeline appear here.</p>
+        <p className="muted">Set the property address in step 1 and the local rent index, comparable buildings and market activity appear here.</p>
       </aside>
     );
   return (
@@ -426,7 +428,7 @@ export function MarketPanel({ project, data }) {
       </div>
       <div className="card">
         <div className="sect">
-          <span>Pipeline nearby</span>
+          <span>Market activity nearby</span>
           <span className="mono">{market.supply.projects.length ? `${number(market.supply.units)} units` : ""}</span>
         </div>
         <SupplyList market={market} limit={3} />

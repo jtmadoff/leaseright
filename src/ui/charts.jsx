@@ -156,3 +156,144 @@ export function CashChart({ scenarios, startLabel, reserve }) {
     </div>
   );
 }
+
+const MS_DAY = 86400000;
+const toMs = (iso) => Date.parse(iso + "T00:00:00Z");
+const shortDate = (ms) => {
+  const d = new Date(ms);
+  return `${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][d.getUTCMonth()]} ${d.getUTCDate()}`;
+};
+
+/**
+ * Leases signed to date against the baseline. The actual line carries the color; the baseline
+ * is the reference it is judged against; the re-forecast continues the actual line, dashed.
+ */
+export function LeaseChart({ startMs, path, existing, target, totalUnits, weeks, reforecast }) {
+  const wrap = useRef(null);
+  const [hover, setHover] = useState(null);
+  const W = 720;
+  const H = 280;
+  const m = { top: 16, right: 92, bottom: 30, left: 44 };
+  const planEndMs = startMs + path.length * MS_DAY;
+  const lastWeekMs = weeks.length ? toMs(weeks[weeks.length - 1].weekEnding) : startMs;
+  const fcMs = reforecast?.reached ? toMs(reforecast.stabilizeDate) : null;
+  const endMs = Math.max(planEndMs, lastWeekMs, fcMs || 0) + 14 * MS_DAY;
+  const hi = Math.max(totalUnits, ...weeks.map((w) => w.actual));
+  const x = (ms) => m.left + ((ms - startMs) / (endMs - startMs)) * (W - m.left - m.right);
+  const y = (v) => m.top + ((hi - v) * (H - m.top - m.bottom)) / hi;
+  const step = Math.max(1, Math.ceil(path.length / 120));
+  const planPts = [[startMs, existing]];
+  for (let d = 0; d < path.length; d += step) planPts.push([startMs + (d + 1) * MS_DAY, path[d]]);
+  if (path.length) planPts.push([planEndMs, path[path.length - 1]]);
+  const line = (pts) => pts.map(([t, v], i) => `${i ? "L" : "M"}${x(t).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+  const actualPts = [[startMs, existing], ...weeks.map((w) => [toMs(w.weekEnding), w.actual])];
+  const last = actualPts[actualPts.length - 1];
+  const yTicks = [];
+  const yStep = niceStep(hi, 4);
+  for (let v = 0; v <= hi + 1e-9; v += yStep) yTicks.push(v);
+  const xTicks = [];
+  const first = new Date(startMs);
+  let t = Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 1);
+  const months = (endMs - startMs) / (30.44 * MS_DAY);
+  const every = months > 18 ? 3 : months > 9 ? 2 : 1;
+  for (let i = 0; t < endMs; i++) {
+    if (i % every === 0) xTicks.push(t);
+    const d = new Date(t);
+    t = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1);
+  }
+  const plannedAtMs = (ms) => {
+    if (ms <= startMs) return existing;
+    const d = Math.floor((ms - startMs) / MS_DAY);
+    return d >= path.length ? path[path.length - 1] ?? target : path[d];
+  };
+  const onMove = (event) => {
+    if (!weeks.length) return;
+    const box = wrap.current.getBoundingClientRect();
+    const px = ((event.clientX - box.left) / box.width) * W;
+    let best = null;
+    for (const w of weeks) {
+      const dx = Math.abs(x(toMs(w.weekEnding)) - px);
+      if (!best || dx < best.dx) best = { dx, w };
+    }
+    setHover({ w: best.w, left: (x(toMs(best.w.weekEnding)) / W) * box.width });
+  };
+  return (
+    <div className="viz" ref={wrap}>
+      <div className="legend" aria-hidden="true">
+        <span>
+          <i style={{ background: "var(--series-1)" }} />
+          Actual leases
+        </span>
+        <span>
+          <i style={{ background: "var(--series-muted)" }} />
+          Baseline
+        </span>
+        {fcMs && (
+          <span>
+            <i className="dash" />
+            Re-forecast at current pace
+          </span>
+        )}
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Leases signed to date against the baseline plan" onPointerMove={onMove} onPointerLeave={() => setHover(null)}>
+        <g className="grid">
+          {yTicks.map((v) => (
+            <line key={v} x1={m.left} x2={W - m.right} y1={y(v)} y2={y(v)} />
+          ))}
+        </g>
+        <g className="axis">
+          {yTicks.map((v) => (
+            <text key={v} x={m.left - 8} y={y(v) + 3.5} textAnchor="end">
+              {Math.round(v)}
+            </text>
+          ))}
+          {xTicks.map((v) => (
+            <text key={v} x={x(v)} y={H - 8} textAnchor="middle">
+              {monthLabel(new Date(v).toISOString().slice(0, 10))}
+            </text>
+          ))}
+        </g>
+        <line className="zero" x1={m.left} x2={W - m.right} y1={y(target)} y2={y(target)} strokeDasharray="2 4" />
+        <text className="lbl" x={W - m.right + 6} y={y(target) + 4}>
+          Target {target}
+        </text>
+        <path d={line(planPts)} fill="none" stroke="var(--series-muted)" strokeWidth="1.5" strokeLinejoin="round" />
+        {fcMs && <path d={line([last, [fcMs, target]])} fill="none" stroke="var(--series-1)" strokeWidth="2" strokeDasharray="5 5" />}
+        <path d={line(actualPts)} fill="none" stroke="var(--series-1)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+        {weeks.map((w) => (
+          <circle key={w.id || w.weekEnding} cx={x(toMs(w.weekEnding))} cy={y(w.actual)} r={hover?.w === w ? 5 : 3.5} fill="var(--series-1)" stroke="var(--panel)" strokeWidth="2" />
+        ))}
+        {weeks.length > 0 && (
+          <text className="lbl strong" x={x(last[0]) - 6} y={y(last[1]) - 12} textAnchor="end">
+            {Math.round(last[1])} leased
+          </text>
+        )}
+        {hover && <line x1={x(toMs(hover.w.weekEnding))} x2={x(toMs(hover.w.weekEnding))} y1={m.top} y2={H - m.bottom} stroke="var(--fg-faint)" strokeWidth="1" />}
+        <rect x={m.left} y={m.top} width={W - m.left - m.right} height={H - m.top - m.bottom} fill="transparent" />
+      </svg>
+      {hover && (
+        <div className="tip" style={{ left: Math.min(hover.left + 12, (wrap.current?.clientWidth || 600) - 190), top: 40 }}>
+          <div className="tt">Week ending {shortDate(toMs(hover.w.weekEnding))}</div>
+          <div className="r">
+            <span>
+              <i style={{ background: "var(--series-1)" }} />
+              Actual
+            </span>
+            <b>{Math.round(hover.w.actual)}</b>
+          </div>
+          <div className="r">
+            <span>
+              <i style={{ background: "var(--series-muted)" }} />
+              Baseline
+            </span>
+            <b>{Math.round(plannedAtMs(toMs(hover.w.weekEnding)))}</b>
+          </div>
+          <div className="r">
+            <span>Signed that week</span>
+            <b>{hover.w.net}</b>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

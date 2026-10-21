@@ -16,15 +16,24 @@ harvesters write a ledger, a validator publishes it, the app reads it.
 
 ## What a user does
 
-Four steps, one navigation bar, results from step two onward.
+A project has four places, one navigation bar.
 
-1. **Property.** Search any Rhode Island address (state E-911 address file). The town, parcel,
-   existing building and zoning come back from public records. Pick the stage and unit count.
-2. **Units and rents.** Enter the mix by unit type with the town's rent index, similar
-   buildings and nearby pipeline alongside.
-3. **Lease-up plan.** Start date, then a pace or a target date. Everything else has a default.
-4. **Review.** Stabilization date, lease-up reserve, three pace cases compared on one date,
-   what an extra free month has to buy, and a saved baseline.
+- **Overview.** Where the project stands, the one thing to do next, the headline numbers and
+  its rents against local listings. A project with a saved baseline opens here.
+- **Plan** (four steps). Property: any Rhode Island address, with parcel, building and zoning
+  from public records. Units and rents: the mix by unit type, priced against the market.
+  Lease-up plan: start date, a pace or a target date, carry and budgets. Review:
+  stabilization, the lease-up reserve, pace cases, the free-rent test, and Save baseline.
+- **Lender package.** The saved baseline as a document a lender can underwrite: summary,
+  rents against the market, monthly cash and reserve, pace sensitivity, comparable and
+  listed buildings, proposed supply, property record, assumptions and sources. Print or
+  save as PDF from the browser.
+- **Leasing.** Each week's leads, tours, applications, leases and cancellations. Actual
+  against the baseline, the trailing four-week pace, a re-forecast stabilization date, the
+  pace needed to hold the baseline date, and a one-paragraph update to copy into an email.
+
+The market view (rent index, listing medians, comparable buildings, market activity from
+planning agendas) opens from the navigation bar on every screen.
 
 Projects live in the browser (localStorage) with JSON export and restore. Projects from the
 first build are carried over automatically the first time the new version opens.
@@ -115,7 +124,7 @@ and pace. Pace is an input.
 ```bash
 npm install
 npm run dev          # http://localhost:5173
-npm test             # model, comps, market data, parsing (69 tests)
+npm test             # model, comps, market data, parsing (84 tests)
 npm run test:live    # 40 checks against the live Rhode Island services
 python3 tools/test_harvest.py
 python3 tools/build_data.py --check
@@ -148,10 +157,10 @@ tests/         unit tests, plus tests/live for the public services
 
 ## Not built yet
 
-- The operating console: Today, Pipeline, Inbox, Rents, Applications, Reports. On `main` these
-  are sample-data screens that are not connected to a saved project. Here they do not exist yet.
-- Broker versus in-house economics and the lender export from the product direction.
-- Accounts and sync. Work is per browser until there is a backend.
+- Accounts and sync. Work is per browser until there is a backend; use Export to move a project.
+- The rest of the operating console from the product direction: unit-level availability and
+  pricing, the lead inbox, applications, broker and leasing-agent roles.
+- Broker versus in-house economics.
 - Joins for Newport and South Kingstown, where units live on a second layer.
 - A second state. Rhode Island specifics are confined to `src/ri/` and `tools/`.
 

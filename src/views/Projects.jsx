@@ -52,8 +52,7 @@ export function Projects({ projects, data, onOpen, onNew }) {
       }),
     [projects],
   );
-  const started = new Set(projects.map((p) => p.supplyId).filter(Boolean));
-  const pipeline = (data.supply?.projects || []).filter((s) => !started.has(s.id));
+  const activity = [...(data.supply?.projects || [])].sort((a, b) => (b.sourceDate || "").localeCompare(a.sourceDate || "")).slice(0, 10);
   return (
     <div className="page wide">
       <div className="main">
@@ -62,7 +61,7 @@ export function Projects({ projects, data, onOpen, onNew }) {
           <h1>{projects.length ? "Projects" : "Know what stabilization will take."}</h1>
           {!projects.length && (
             <p>
-              Find the property, set the unit mix against the local market, and see the stabilization date and the reserve the lease-up needs. Four steps, with results as you go.
+              Plan the lease-up against the local market, send lenders a plan they can underwrite, then track every week of leasing against it.
             </p>
           )}
           <div className="row" style={{ marginTop: 16 }}>
@@ -84,7 +83,7 @@ export function Projects({ projects, data, onOpen, onNew }) {
                     <th className="n">Units</th>
                     <th className="n">Stabilized</th>
                     <th className="n">Reserve</th>
-                    <th>Baseline</th>
+                    <th>Status</th>
                     <th className="n">Updated</th>
                   </tr>
                 </thead>
@@ -100,7 +99,15 @@ export function Projects({ projects, data, onOpen, onNew }) {
                       <td className="n">{number(Number(p.totalUnits) || r.inputs.totalUnits || null)}</td>
                       <td className="n">{r.ready && r.base.reached ? dateLong(r.base.stabilizeDate) : "–"}</td>
                       <td className="n">{r.ready && r.inputs.monthlyCarry ? moneyShort(r.base.reserveNeed) : "–"}</td>
-                      <td>{baseline.baseline ? <Chip tone={baseline.current ? "good" : "warn"}>{baseline.current ? `v${p.baselines.length}` : `v${p.baselines.length}, edited since`}</Chip> : <span className="muted">Draft</span>}</td>
+                      <td>
+                        {p.actuals?.length ? (
+                          <Chip tone="good">Leasing</Chip>
+                        ) : baseline.baseline ? (
+                          <Chip tone={baseline.current ? "good" : "warn"}>{baseline.current ? `Baseline v${p.baselines.length}` : `v${p.baselines.length}, edited since`}</Chip>
+                        ) : (
+                          <span className="muted">Draft</span>
+                        )}
+                      </td>
                       <td className="n">{relativeDay(p.updatedAt)}</td>
                     </tr>
                   ))}
@@ -110,17 +117,17 @@ export function Projects({ projects, data, onOpen, onNew }) {
           </section>
         )}
 
-        {pipeline.length > 0 && (
+        {activity.length > 0 && (
           <section className="card">
             <h2>
-              Start from the entitlement pipeline
+              Market activity
               <small>
-                {data.supply.source.label}
-                {data.supply.source.asOf ? ` · agendas through ${dateLong(data.supply.source.asOf)}` : ""}
+                Planning and zoning agendas
+                {data.supply.source.asOf ? ` through ${dateLong(data.supply.source.asOf)}` : ""}
               </small>
             </h2>
             <p className="muted" style={{ maxWidth: 760, marginBottom: 12 }}>
-              Multifamily projects of 10+ units now in front of Rhode Island planning boards. Starting from one carries its town, unit count and applicant into a new plan.
+              Multifamily projects of 10+ units in front of Rhode Island planning boards: the supply that may compete with yours. Each project's market view shows the ones near it.
             </p>
             <div className="tablewrap">
               <table className="t">
@@ -130,11 +137,11 @@ export function Projects({ projects, data, onOpen, onNew }) {
                     <th>Town</th>
                     <th className="n">Units</th>
                     <th>Review stage</th>
-                    <th />
+                    <th className="n">Agenda</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {pipeline.map((s) => (
+                  {activity.map((s) => (
                     <tr key={s.id}>
                       <td className="strong">
                         {s.name}
@@ -142,15 +149,8 @@ export function Projects({ projects, data, onOpen, onNew }) {
                       </td>
                       <td>{s.town}</td>
                       <td className="n">{number(s.units)}</td>
-                      <td>
-                        {s.stage}
-                        <span className="sub">{dateLong(s.sourceDate)}</span>
-                      </td>
-                      <td className="n">
-                        <button className="btn small" onClick={() => onNew({ name: s.name, town: s.town, totalUnits: String(s.units), sponsor: s.applicant, stage: "pre_funding", supplyId: s.id })}>
-                          Plan this
-                        </button>
-                      </td>
+                      <td>{s.stage}</td>
+                      <td className="n">{s.agendaUrl ? <a href={s.agendaUrl} target="_blank" rel="noreferrer">{dateLong(s.sourceDate)}</a> : dateLong(s.sourceDate)}</td>
                     </tr>
                   ))}
                 </tbody>
