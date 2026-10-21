@@ -43,7 +43,7 @@ function Coverage() {
   );
 }
 
-export function Projects({ projects, data, onOpen, onNew }) {
+export function Projects({ projects, data, onOpen, onNew, onSample }) {
   const rows = useMemo(
     () =>
       projects.map((p) => {
@@ -68,6 +68,11 @@ export function Projects({ projects, data, onOpen, onNew }) {
             <button className="btn primary" onClick={() => onNew()}>
               <Icon.plus /> {projects.length ? "New project" : "Start a project"}
             </button>
+            {!projects.some((p) => p.sample) && (
+              <button className="btn" onClick={onSample}>
+                Explore a sample project
+              </button>
+            )}
           </div>
         </div>
 

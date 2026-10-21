@@ -28,9 +28,20 @@ A project has four places, one navigation bar.
   rents against the market, monthly cash and reserve, pace sensitivity, comparable and
   listed buildings, proposed supply, property record, assumptions and sources. Print or
   save as PDF from the browser.
-- **Leasing.** Each week's leads, tours, applications, leases and cancellations. Actual
-  against the baseline, the trailing four-week pace, a re-forecast stabilization date, the
-  pace needed to hold the baseline date, and a one-paragraph update to copy into an email.
+- **Leasing.** Where the team works every day once a baseline is saved.
+  - *Today:* tours, applications to decide, leases to sign, follow-ups due and new leads to
+    contact, most urgent first.
+  - *Prospects:* every lead from first contact through tour, application, approval and signed
+    lease (or lost, with a reason), with notes and a history of each move.
+  - *Units:* one tile per apartment by floor, colored by status, built from the unit mix; asking
+    rents, holds and delivery dates per unit; plan rent against average signed rent by type.
+  - *Plan against actual:* the week's numbers add themselves up from the prospects (or from a
+    hand-entered weekly log), measured against the baseline, with the trailing four-week pace,
+    a re-forecast stabilization date, the pace needed to hold the baseline date, and a
+    one-paragraph update to copy into an email.
+
+"Explore a sample project" on the home screen creates a fictional building eight weeks into
+leasing, with made-up prospects at every stage, so every screen can be tried.
 
 The market view (rent index, listing medians, comparable buildings, market activity from
 planning agendas) opens from the navigation bar on every screen.
@@ -124,7 +135,7 @@ and pace. Pace is an input.
 ```bash
 npm install
 npm run dev          # http://localhost:5173
-npm test             # model, comps, market data, parsing (84 tests)
+npm test             # model, comps, market data, parsing (96 tests)
 npm run test:live    # 40 checks against the live Rhode Island services
 python3 tools/test_harvest.py
 python3 tools/build_data.py --check
@@ -158,8 +169,10 @@ tests/         unit tests, plus tests/live for the public services
 ## Not built yet
 
 - Accounts and sync. Work is per browser until there is a backend; use Export to move a project.
-- The rest of the operating console from the product direction: unit-level availability and
-  pricing, the lead inbox, applications, broker and leasing-agent roles.
+  Deliberate for now: the product is being worked out on the front end first.
+- Leads arriving by themselves (listing-site email, web form, text). Today they are typed in.
+- Screening, online applications, lease documents and payments.
+- Owner, leasing agent and broker roles.
 - Broker versus in-house economics.
 - Joins for Newport and South Kingstown, where units live on a second layer.
 - A second state. Rhode Island specifics are confined to `src/ri/` and `tools/`.

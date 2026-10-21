@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useReducer, useState } from "react";
 import { bedsFromLabel } from "../core/model.js";
 import { getTown } from "../ri/towns.js";
+import { localToday } from "../core/format.js";
 
 export const STORAGE_KEY = "leaseright_v2";
 const LEGACY_KEY = "leaseright_ri_intake_v1";
@@ -64,6 +65,10 @@ export function newProject(seed = {}) {
     plan: emptyPlan(),
     baselines: [],
     actuals: [],
+    units: [],
+    prospects: [],
+    leasingTab: "today",
+    leasingSource: "auto",
     view: "plan",
     step: 0,
     createdAt: at,
@@ -73,6 +78,7 @@ export function newProject(seed = {}) {
 }
 
 export const VIEWS = ["home", "plan", "package", "leasing"];
+const STAGE_KEYS = ["lead", "tour", "toured", "applied", "approved", "leased", "lost"];
 
 /** One week of leasing activity. Counts are kept as typed so blanks stay blank. */
 export function newActual(seed = {}) {
@@ -84,7 +90,43 @@ export function upgradeProject(p) {
   return {
     ...p,
     actuals: Array.isArray(p.actuals) ? p.actuals : [],
+    units: Array.isArray(p.units) ? p.units : [],
+    prospects: Array.isArray(p.prospects) ? p.prospects : [],
+    leasingTab: p.leasingTab || "today",
+    leasingSource: p.leasingSource || "auto",
     view: VIEWS.includes(p.view) ? p.view : p.baselines?.length ? "home" : "plan",
+  };
+}
+
+/** A new prospect. Dates are YYYY-MM-DD; a tour time is YYYY-MM-DDTHH:MM. */
+export function newProspect(seed = {}) {
+  return {
+    id: uid(),
+    name: "",
+    phone: "",
+    email: "",
+    source: "",
+    beds: "",
+    moveIn: "",
+    budget: "",
+    stage: "lead",
+    createdAt: localToday(),
+    tourAt: "",
+    touredAt: "",
+    appliedAt: "",
+    approvedAt: "",
+    leasedAt: "",
+    lostAt: "",
+    lostReason: "",
+    cancelledAt: "",
+    unitId: "",
+    leaseRent: "",
+    freeMonths: "",
+    nextAt: "",
+    nextNote: "",
+    notes: [],
+    history: [],
+    ...seed,
   };
 }
 
@@ -110,7 +152,7 @@ export function currentBaseline(project) {
 /** True only when nothing has been entered anywhere, so an untouched draft can be dropped. */
 export function isBlank(p) {
   return (
-    !p.name && !p.address && !p.town && !p.totalUnits && !p.sponsor && !p.projectType && !p.unitMix.length && !p.baselines.length && !(p.actuals || []).length &&
+    !p.name && !p.address && !p.town && !p.totalUnits && !p.sponsor && !p.projectType && !p.unitMix.length && !p.baselines.length && !(p.actuals || []).length && !(p.prospects || []).length &&
     Object.values(p.plan).every((v) => v === "" || v === null || v === undefined)
   );
 }
@@ -147,6 +189,19 @@ export function sanitizeProject(p) {
       .filter((r) => r && typeof r === "object" && /^\d{4}-\d{2}-\d{2}$/.test(r.weekEnding))
       .slice(0, 520)
       .map((r) => newActual({ weekEnding: r.weekEnding, leads: str(r.leads), tours: str(r.tours), applications: str(r.applications), leases: str(r.leases), cancellations: str(r.cancellations), note: str(r.note) })),
+    units: (Array.isArray(p.units) ? p.units : [])
+      .filter((u) => u && typeof u.id === "string")
+      .slice(0, 5000)
+      .map((u) => ({ id: str(u.id), number: str(u.number), floor: Number(u.floor) || 1, typeId: str(u.typeId), label: str(u.label), beds: Number.isFinite(Number(u.beds)) && u.beds !== "" && u.beds !== null ? Number(u.beds) : null, sqft: Number(u.sqft) || null, rent: Number(u.rent) || null, availableDate: str(u.availableDate), hold: !!u.hold, note: str(u.note) })),
+    prospects: (Array.isArray(p.prospects) ? p.prospects : [])
+      .filter((x) => x && typeof x.id === "string")
+      .slice(0, 20000)
+      .map((x) => {
+        const base = newProspect();
+        const clean = Object.fromEntries(Object.keys(base).filter((k) => k !== "notes" && k !== "history").map((k) => [k, str(x[k])]));
+        const list = (v) => (Array.isArray(v) ? v.filter((h) => h && typeof h.text === "string").slice(0, 500).map((h) => ({ at: str(h.at), text: str(h.text) })) : []);
+        return { ...clean, stage: STAGE_KEYS.includes(x.stage) ? x.stage : "lead", notes: list(x.notes), history: list(x.history) };
+      }),
     view: p.baselines.length ? "home" : "plan",
     step: Number.isInteger(p.step) && p.step >= 0 && p.step <= 3 ? p.step : 0,
     // The parcel and zoning are looked up again from the address rather than trusted from the file.
@@ -251,6 +306,18 @@ export function reducer(state, action) {
         const actuals = exists ? p.actuals.map((r) => (r.id === action.row.id ? action.row : r)) : [...p.actuals, action.row];
         return touch(p, { actuals });
       });
+    case "prospect-save":
+      return mapProject((p) => {
+        const list = p.prospects || [];
+        const exists = list.some((x) => x.id === action.prospect.id);
+        return touch(p, { prospects: exists ? list.map((x) => (x.id === action.prospect.id ? action.prospect : x)) : [action.prospect, ...list] });
+      });
+    case "prospect-delete":
+      return mapProject((p) => touch(p, { prospects: (p.prospects || []).filter((x) => x.id !== action.prospectId) }));
+    case "units-set":
+      return mapProject((p) => touch(p, { units: action.units }));
+    case "unit-save":
+      return mapProject((p) => touch(p, { units: (p.units || []).map((u) => (u.id === action.unit.id ? action.unit : u)) }));
     case "actual-delete":
       return mapProject((p) => touch(p, { actuals: p.actuals.filter((r) => r.id !== action.rowId) }));
     case "approve":

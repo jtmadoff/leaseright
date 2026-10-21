@@ -3,6 +3,9 @@ import { Tile, Icon, Field } from "../ui/atoms.jsx";
 import { LeaseChart } from "../ui/charts.jsx";
 import { useStore, currentBaseline, newActual } from "../store/store.jsx";
 import { trackLeasing, weeklySummary, weekEndingFor, TRAILING_WEEKS } from "../core/tracking.js";
+import { unitStatuses, trackProject, leasingSource } from "../core/leasing.js";
+import { localToday } from "../core/format.js";
+import { Today, Prospects, Units, ProspectDrawer, newProspect } from "./LeasingWork.jsx";
 import { parseDate, isoDate, DAY_MS } from "../core/model.js";
 import { dateLong, number } from "../core/format.js";
 
@@ -74,30 +77,10 @@ function LogForm({ project, editing, onDone }) {
   );
 }
 
-export function Leasing({ project, onStep }) {
+function Performance({ project, baseline, t, source, onSource }) {
   const { dispatch } = useStore();
-  const { baseline } = currentBaseline(project);
   const [editing, setEditing] = useState(null);
   const [copied, setCopied] = useState(false);
-  const t = useMemo(() => (baseline ? trackLeasing(project, baseline) : null), [project, baseline]);
-
-  if (!baseline) {
-    return (
-      <div className="page wide">
-        <div className="main">
-          <div className="head">
-            <div className="eyebrow">Leasing</div>
-            <h1>Track leasing against a saved plan</h1>
-            <p>Each week you log leases signed, and LeaseRight measures them against the baseline: ahead or behind, the pace you are actually running, and when the building will really stabilize. Save a baseline first so there is a plan to measure against.</p>
-          </div>
-          <button className="btn primary" onClick={() => onStep(3)}>
-            Review the plan and save a baseline <Icon.arrow />
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   const summary = weeklySummary(t);
   const ver = project.baselines.indexOf(baseline) + 1;
   const ahead = t.daysAhead === null ? null : Math.round(t.daysAhead / 7);
@@ -114,13 +97,12 @@ export function Leasing({ project, onStep }) {
   };
 
   return (
-    <div className="page wide">
-      <div className="main">
+    <>
         <div className="head">
           <div className="eyebrow">
             Leasing · measured against baseline v{ver} of {dateLong(baseline.approvedAt.slice(0, 10))}
           </div>
-          <h1>{t.asOf ? `Leasing as of ${dateLong(t.asOf)}` : "Leasing"}</h1>
+          <h1>{t.asOf ? `Plan against actual, ${dateLong(t.asOf)}` : "Plan against actual"}</h1>
           <p>
             Plan: {number(t.target)} of {number(t.totalUnits)} units leased at {t.planPace.toFixed(1)} a week from {dateLong(isoDate(t.inputs.start))}, stabilized {t.base.reached ? dateLong(t.base.stabilizeDate) : "beyond ten years"}.
           </p>
@@ -173,18 +155,30 @@ export function Leasing({ project, onStep }) {
           </>
         )}
 
+        <div className="row wrap" style={{ marginBottom: 14 }}>
+          <span className="muted small">Count leasing from</span>
+          <button className={`chip ${source === "pipeline" ? "on" : ""}`} onClick={() => onSource("pipeline")}>
+            Prospects, automatically
+          </button>
+          <button className={`chip ${source === "manual" ? "on" : ""}`} onClick={() => onSource("manual")}>
+            Weekly log, by hand
+          </button>
+        </div>
+
         {!t.weeks.length && (
           <div className="notice quiet">
-            Nothing logged yet. Enter each week's leasing below, starting with the week leasing began. Leases already signed before the plan's start date ({number(t.inputs.existingLeased)}) are counted from the baseline.
+            {source === "pipeline"
+              ? "No prospect activity yet. Leads, tours, applications and signed leases entered on the Prospects tab add up here week by week."
+              : `Nothing logged yet. Enter each week's leasing below, starting with the week leasing began. Leases already signed before the plan's start date (${number(t.inputs.existingLeased)}) are counted from the baseline.`}
           </div>
         )}
 
-        <LogForm key={editing?.id || "new"} project={project} editing={editing} onDone={() => setEditing(null)} />
+        {source === "manual" && <LogForm key={editing?.id || "new"} project={project} editing={editing} onDone={() => setEditing(null)} />}
 
         {rows.length > 0 && (
           <section className="card">
             <h2>
-              Weekly log <small>{rows.length} week{rows.length === 1 ? "" : "s"}</small>
+              {source === "pipeline" ? "Week by week" : "Weekly log"} <small>{rows.length} week{rows.length === 1 ? "" : "s"}{source === "pipeline" ? ", from prospects" : ""}</small>
             </h2>
             <div className="tablewrap">
               <table className="t">
@@ -221,12 +215,16 @@ export function Leasing({ project, onStep }) {
                         {Math.round(w.variance)}
                       </td>
                       <td className="n nowrap">
+                        {source === "manual" && (
+                        <>
                         <button className="linkbtn small" onClick={() => setEditing(project.actuals.find((r) => r.id === w.id))}>
                           Edit
                         </button>{" "}
                         <button className="btn ghost small" aria-label={`Delete week ending ${dateLong(w.weekEnding)}`} onClick={() => dispatch({ type: "actual-delete", id: project.id, rowId: w.id })}>
                           <Icon.trash />
                         </button>
+                        </>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -235,7 +233,69 @@ export function Leasing({ project, onStep }) {
             </div>
           </section>
         )}
+    </>
+  );
+}
+
+const TABS = [
+  ["today", "Today"],
+  ["prospects", "Prospects"],
+  ["units", "Units"],
+  ["performance", "Plan against actual"],
+];
+
+export function Leasing({ project, onStep, onPatch }) {
+  const { baseline } = currentBaseline(project);
+  const [prospect, setProspect] = useState(null);
+  const today = localToday();
+  const t = useMemo(() => (baseline ? trackProject(project, baseline, today) : null), [project, baseline, today]);
+  const source = leasingSource(project);
+  const units = useMemo(() => unitStatuses(project.units || [], project.prospects || [], today), [project.units, project.prospects, today]);
+
+  if (!baseline) {
+    return (
+      <div className="page wide">
+        <div className="main">
+          <div className="head">
+            <div className="eyebrow">Leasing</div>
+            <h1>Run the lease-up against a saved plan</h1>
+            <p>Leasing is where the team works every day: today's tours and follow-ups, every prospect from first contact to signed lease, and each unit's status. The week's numbers add themselves up and are measured against the baseline. Save a baseline first so there is a plan to measure against.</p>
+          </div>
+          <button className="btn primary" onClick={() => onStep(3)}>
+            Review the plan and save a baseline <Icon.arrow />
+          </button>
+        </div>
       </div>
+    );
+  }
+
+  const tab = TABS.some(([k]) => k === project.leasingTab) ? project.leasingTab : "today";
+  const go = (k) => onPatch({ leasingTab: k });
+  const openNew = () => setProspect(newProspect());
+  return (
+    <div className="page wide">
+      <div className="main">
+        <nav className="subtabs" aria-label="Leasing">
+          {TABS.map(([k, label]) => (
+            <button key={k} className={tab === k ? "on" : ""} aria-current={tab === k ? "page" : undefined} onClick={() => go(k)}>
+              {label}
+            </button>
+          ))}
+        </nav>
+        {tab === "today" && <Today project={project} track={t} onOpen={setProspect} onNew={openNew} onTab={go} />}
+        {tab === "prospects" && <Prospects project={project} onOpen={setProspect} onNew={openNew} />}
+        {tab === "units" && <Units project={project} onOpenProspect={setProspect} />}
+        {tab === "performance" && <Performance project={project} baseline={baseline} t={t} source={source} onSource={(v) => onPatch({ leasingSource: v })} />}
+      </div>
+      {prospect && (
+        <ProspectDrawer
+          key={prospect.id}
+          project={project}
+          prospect={(project.prospects || []).find((x) => x.id === prospect.id) || prospect}
+          units={units}
+          onClose={() => setProspect(null)}
+        />
+      )}
     </div>
   );
 }

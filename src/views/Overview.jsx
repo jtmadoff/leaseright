@@ -2,15 +2,24 @@ import React, { useMemo } from "react";
 import { Tile, Icon, Chip } from "../ui/atoms.jsx";
 import { currentBaseline, STAGES } from "../store/store.jsx";
 import { normalizeMix, parseDate, isoDate, DAY_MS } from "../core/model.js";
-import { trackLeasing } from "../core/tracking.js";
+import { trackProject, todayTasks } from "../core/leasing.js";
 import { rentIndex, bedMarket, supplyNear } from "../core/market.js";
 import { isIncluded } from "../ri/towns.js";
-import { money, moneyShort, dateLong, number, monthLabel, bedLabel } from "../core/format.js";
+import { money, moneyShort, dateLong, number, monthLabel, bedLabel, localToday } from "../core/format.js";
 import { makeBaseline } from "./ReviewStep.jsx";
 
 /** The one thing to do next, from where the project stands. */
 function nextAction(project, result, baseline, current, track) {
   const blocking = (s) => result.issues.filter((i) => i.blocking && i.step === s);
+  // Once leasing is under way, the day's work comes before anything else.
+  if (baseline && (project.prospects || []).length) {
+    const tasks = todayTasks(project, localToday());
+    if (track?.stabilized) return { title: "Stabilized", body: `Leasing reached its ${track.target}-unit target ${dateLong(track.reforecast.stabilizeDate)}.`, label: "Open leasing", go: { view: "leasing" } };
+    return tasks.length
+      ? { title: `${tasks.length} thing${tasks.length === 1 ? "" : "s"} to do today`, body: tasks.slice(0, 3).map((t) => `${t.title} (${t.p.name})`).join(", ") + (tasks.length > 3 ? ", and more." : "."), label: "Open today", go: { view: "leasing" } }
+      : { title: "Nothing due today", body: "Every tour, application and follow-up is handled. New leads go in on the leasing page.", label: "Open leasing", go: { view: "leasing" } };
+  }
+
   if (!project.address || !project.town || !isIncluded(project.town)) return { title: "Find the property", body: "Search the address so the parcel, zoning and local market load.", label: "Open property", go: { step: 0 } };
   if (!normalizeMix(project.unitMix).length || blocking(1).length)
     return { title: "Set the unit mix and rents", body: blocking(1)[0]?.message || "Add each unit type with its count and asking rent, priced against the market alongside.", label: "Open units and rents", go: { step: 1 } };
@@ -72,7 +81,7 @@ function RentCheck({ project, data }) {
 
 export function Overview({ project, result, data, onStep, onView, onMarket, onApprove }) {
   const { baseline, current } = currentBaseline(project);
-  const track = useMemo(() => (baseline ? trackLeasing(project, baseline) : null), [project, baseline]);
+  const track = useMemo(() => (baseline ? trackProject(project, baseline, localToday()) : null), [project, baseline]);
   const action = nextAction(project, result, baseline, current, track);
   const b = result.ready ? result.base : null;
   const index = rentIndex(data.rents, project.town, project.zip);
@@ -84,7 +93,7 @@ export function Overview({ project, result, data, onStep, onView, onMarket, onAp
     ["Lease-up plan", !result.issues.some((i) => i.blocking && i.step === 2), result.ready ? `${result.inputs.pace.toFixed(1)} leases a week from ${dateLong(project.plan.startDate)}` : "Not complete", () => onStep(2)],
     ["Baseline", current, baseline ? `Version ${project.baselines.length}, ${dateLong(baseline.approvedAt.slice(0, 10))}${current ? "" : ", edited since"}` : "Not saved", () => onStep(3)],
     ["Lender package", !!baseline, baseline ? "Ready to print or save as PDF" : "Needs a baseline", () => onView("package")],
-    ["Leasing", (track?.weeks.length || 0) > 0, track?.weeks.length ? `${track.weeks.length} week${track.weeks.length === 1 ? "" : "s"} logged, through ${dateLong(track.asOf)}` : "Nothing logged", () => onView("leasing")],
+    ["Leasing", (track?.weeks.length || 0) > 0, (project.prospects || []).length ? `${number(project.prospects.length)} prospects, ${(project.units || []).length ? `${number(project.units.length)} units tracked` : "no unit list yet"}` : track?.weeks.length ? `${track.weeks.length} week${track.weeks.length === 1 ? "" : "s"} logged, through ${dateLong(track.asOf)}` : "Not started", () => onView("leasing")],
   ];
   return (
     <div className="page wide">

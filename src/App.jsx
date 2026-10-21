@@ -15,6 +15,7 @@ import { MarketOverlay } from "./views/Market.jsx";
 import { Overview } from "./views/Overview.jsx";
 import { LenderPackage } from "./views/LenderPackage.jsx";
 import { Leasing } from "./views/Leasing.jsx";
+import { sampleProject } from "./store/sample.js";
 
 const STEPS = ["Property", "Units and rents", "Lease-up plan", "Review"];
 
@@ -154,6 +155,11 @@ function ProjectShell({ project, data }) {
         )}
       </nav>
       {marketOpen && <MarketOverlay project={project} data={data} onClose={() => setMarketOpen(false)} />}
+      {project.sample && (
+        <div className="banner" role="note">
+          <span>Sample project with made-up numbers and people, for trying LeaseRight. Delete it from the menu at the top right when you are done.</span>
+        </div>
+      )}
       {view === "plan" && (
         <div className="kpis" aria-label="Plan summary">
           {kpis.map(([label, value, sub]) => (
@@ -263,7 +269,7 @@ export default function App() {
           </span>
         </div>
       )}
-      {project ? <ProjectShell key={project.id} project={project} data={data} /> : <Projects projects={state.projects} data={data} onOpen={(id) => dispatch({ type: "activate", id })} onNew={create} />}
+      {project ? <ProjectShell key={project.id} project={project} data={data} /> : <Projects projects={state.projects} data={data} onOpen={(id) => dispatch({ type: "activate", id })} onNew={create} onSample={() => dispatch({ type: "create", project: sampleProject() })} />}
     </>
   );
 }

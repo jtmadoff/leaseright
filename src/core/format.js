@@ -52,3 +52,8 @@ export function relativeDay(iso) {
   if (days < 30) return `${days} days ago`;
   return dateLong(iso.slice(0, 10));
 }
+
+/** Today's date in the user's time zone, as YYYY-MM-DD. */
+export function localToday(now = new Date()) {
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+}
