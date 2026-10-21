@@ -65,6 +65,9 @@ python3 tools/build_data.py
 git add pipeline public/data && git commit -m "Market data refresh" && git push
 ```
 
+The harvester calls RentCast at most once a calendar month. A second run in the same month
+reuses the last pull and spends nothing; `--force-listings` overrides that.
+
 After cutover, add `RENTCAST_API_KEY` under the repo's Settings, Secrets and variables,
 Actions, and the "Refresh market data" workflow takes over on its schedule.
 
@@ -112,7 +115,7 @@ and pace. Pace is an input.
 ```bash
 npm install
 npm run dev          # http://localhost:5173
-npm test             # model, comps, market data, parsing (68 tests)
+npm test             # model, comps, market data, parsing (69 tests)
 npm run test:live    # 40 checks against the live Rhode Island services
 python3 tools/test_harvest.py
 python3 tools/build_data.py --check

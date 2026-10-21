@@ -349,6 +349,7 @@ def main():
     ap.add_argument("--listings-file", help="aggregate a saved RentCast JSON array instead of calling the API")
     ap.add_argument("--max-calls", type=int, default=int(os.environ.get("RENTCAST_MAX_CALLS", "45")))
     ap.add_argument("--keep-listings", action="store_true", help="carry over the last listings block when no key is set")
+    ap.add_argument("--force-listings", action="store_true", help="call RentCast even if listings were already pulled this month")
     args = ap.parse_args()
 
     previous = json.loads(OUT.read_text()) if OUT.exists() else {}
@@ -388,6 +389,14 @@ def main():
 
     listings = previous.get("listings") if args.keep_listings else None
     key = os.environ.get("RENTCAST_API_KEY")
+    last_pull = (previous.get("listings") or {}).get("pulledAt") or ""
+    this_month = datetime.now(timezone.utc).strftime("%Y-%m")
+    if key and not args.listings_file and not args.force_listings and last_pull[:7] == this_month:
+        # RentCast bills per call past the free tier. One pull a month is the plan, so a second run
+        # in the same month reuses the last pull instead of spending calls.
+        listings = previous.get("listings")
+        key = None
+        print(f"  RentCast: skipped, already pulled {last_pull} (use --force-listings to call again)", file=sys.stderr)
     if args.listings_file:
         listings = aggregate_listings(json.loads(Path(args.listings_file).read_text()))
     elif key:

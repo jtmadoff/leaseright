@@ -441,3 +441,9 @@ export function MarketPanel({ project, data }) {
     </aside>
   );
 }
+
+/** Market drawer on its own, opened from any step. */
+export function MarketOverlay({ project, data, onClose }) {
+  const market = useMarket(project, data);
+  return <MarketDrawer project={project} data={data} market={market} onClose={onClose} />;
+}

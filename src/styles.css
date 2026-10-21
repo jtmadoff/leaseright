@@ -81,6 +81,8 @@ h1, h2, h3, p { margin: 0; }
 .step.done .n { background: var(--good-ghost); border-color: transparent; color: var(--good); }
 .step.on { background: var(--accent-ghost); border-color: var(--accent-dim); color: var(--fg); }
 .step.on .n { border-color: var(--accent); color: var(--accent); background: transparent; }
+.steps .spacer { flex: 1; min-width: 12px; }
+.steps > .btn { flex: none; align-self: center; white-space: nowrap; }
 .steps .line { align-self: center; width: 18px; height: 1px; background: var(--line); flex: none; }
 
 /* ---------------- KPI strip ---------------- */

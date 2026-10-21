@@ -8,6 +8,9 @@ import rents from "../pipeline/rents.json";
 import supply from "../pipeline/supply.json";
 import observations from "../pipeline/operator_observations.json";
 
+// Same ledger with the listing feed switched off, for tests of the fallback paths.
+const rentsNoListings = { ...rents, listings: null };
+
 describe("town registry", () => {
   it("covers all 39 municipalities and excludes three", () => {
     expect(ALL_TOWNS.length).toBe(39);
@@ -123,11 +126,17 @@ describe("market data", () => {
     expect(countyOf("East Greenwich")).toBe("Kent County");
   });
   it("collects operator observations by bedroom", () => {
-    const m = bedMarket({ rents, observations }, "Providence", 1);
+    const m = bedMarket({ rents: rentsNoListings, observations }, "Providence", 1);
     expect(m.observed.length).toBeGreaterThan(2);
     const range = observedRange(m.observed);
     expect(range.min).toBeLessThanOrEqual(range.max);
-    expect(m.listings).toBeNull(); // listing feed not connected in the committed data
+    expect(m.listings).toBeNull();
+  });
+  it("reads listing medians by bedroom when the feed is on", () => {
+    if (!rents.listings) return; // ledger committed before the first pull
+    const m = bedMarket({ rents, observations }, "Providence", 1);
+    expect(m.listings.n).toBeGreaterThan(0);
+    expect(m.listings.median).toBeGreaterThan(500);
   });
   it("finds pipeline supply in and around a town", () => {
     const s = supplyNear(supply, "Providence", { lat: 41.824, lng: -71.412 });
@@ -158,11 +167,11 @@ describe("published rents for a matched building", () => {
     expect(addressKey("12 Eagle St, Providence")).toBe("12 EAGLE ST");
   });
   it("joins operator prices to a parcel by address", () => {
-    const r = publishedRents({ rents, observations }, "Providence", "12 Eagle St");
+    const r = publishedRents({ rents: rentsNoListings, observations }, "Providence", "12 Eagle St");
     expect(r.source).toBe("operator");
     expect(r.name).toBe("US Rubber Lofts");
     expect(r.byBed[2]).toBe(2070); // lowest advertised 2 BR
-    expect(publishedRents({ rents, observations }, "Providence", "1 Nowhere St")).toBeNull();
+    expect(publishedRents({ rents: rentsNoListings, observations }, "Providence", "1 Nowhere St")).toBeNull();
   });
   it("prefers listing medians when the feed has the building", () => {
     const withListings = { ...rents, listings: { town: { Providence: { byBed: {}, buildings: [{ address: "12 Eagle St", zip: "02909", lastSeen: "2026-10-01", byBed: { 2: { median: 2300 } } }] } } } };

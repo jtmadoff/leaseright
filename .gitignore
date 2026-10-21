@@ -13,3 +13,4 @@ __pycache__/
 *.zip
 *.bundle
 .__*
+graphify-out/

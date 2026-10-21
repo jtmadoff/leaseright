@@ -14,7 +14,29 @@ const DEFAULT_TEXT = {
   moveInLag: `Rent starts ${PLAN_DEFAULTS.moveInLag} days after signing`,
 };
 
-export function ReviewStep({ project, result, data, onStep, onApprove }) {
+/** Frozen copy of the inputs and headline results: the plan of record. */
+export function makeBaseline(project, result) {
+  const b = result.base;
+  return {
+    id: `b-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    approvedAt: new Date().toISOString(),
+    key: inputsKey(project),
+    inputs: { unitMix: project.unitMix, plan: project.plan, totalUnits: project.totalUnits },
+    summary: {
+      stabilizeDate: b.stabilizeDate,
+      leaseUpDays: b.leaseUpDays,
+      reserveNeed: b.reserveNeed,
+      netCarry: b.netCarry,
+      grossCarry: b.grossCarry,
+      concessionCost: b.concessionCost,
+      averageRent: result.averageRent,
+      leasesPerWeek: result.inputs.pace,
+      totalUnits: result.totalUnits,
+    },
+  };
+}
+
+export function ReviewStep({ project, result, data, onStep, onApprove, onMarket }) {
   const [table, setTable] = useState(false);
   const { baseline, current } = currentBaseline(project);
 
@@ -249,8 +271,8 @@ export function ReviewStep({ project, result, data, onStep, onApprove }) {
                 </li>
                 <li>{data.rents?.listings ? "Bedroom-level medians from active listings." : "Listing-based rents by unit type are not connected yet."}</li>
               </ul>
-              <button className="linkbtn small" style={{ marginTop: 8 }} onClick={() => onStep(1)}>
-                Open the market view in step 2
+              <button className="linkbtn small" style={{ marginTop: 8 }} onClick={() => (onMarket ? onMarket() : onStep(1))}>
+                Open the market view
               </button>
             </div>
           </div>
@@ -273,23 +295,7 @@ export function ReviewStep({ project, result, data, onStep, onApprove }) {
               className="btn primary"
               disabled={current || !b.reached}
               onClick={() =>
-                onApprove({
-                  id: `b-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
-                  approvedAt: new Date().toISOString(),
-                  key: inputsKey(project),
-                  inputs: { unitMix: project.unitMix, plan: project.plan, totalUnits: project.totalUnits },
-                  summary: {
-                    stabilizeDate: b.stabilizeDate,
-                    leaseUpDays: b.leaseUpDays,
-                    reserveNeed: b.reserveNeed,
-                    netCarry: b.netCarry,
-                    grossCarry: b.grossCarry,
-                    concessionCost: b.concessionCost,
-                    averageRent: result.averageRent,
-                    leasesPerWeek: i.pace,
-                    totalUnits: result.totalUnits,
-                  },
-                })
+                onApprove(makeBaseline(project, result))
               }
             >
               <Icon.check /> {baseline ? "Save new baseline" : "Save baseline"}

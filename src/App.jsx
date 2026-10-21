@@ -10,7 +10,8 @@ import { Projects } from "./views/Projects.jsx";
 import { PropertyStep } from "./views/PropertyStep.jsx";
 import { UnitsStep } from "./views/UnitsStep.jsx";
 import { PlanStep } from "./views/PlanStep.jsx";
-import { ReviewStep } from "./views/ReviewStep.jsx";
+import { ReviewStep, makeBaseline } from "./views/ReviewStep.jsx";
+import { MarketOverlay } from "./views/Market.jsx";
 
 const STEPS = ["Property", "Units and rents", "Lease-up plan", "Review"];
 
@@ -86,6 +87,7 @@ function TopBar({ state, project, data, onHome, onNew, onSwitch, onMessage, onAs
 
 function ProjectShell({ project, data }) {
   const { dispatch, saveStatus } = useStore();
+  const [marketOpen, setMarketOpen] = useState(false);
   const result = useMemo(() => calculate(project, { townIncluded: isIncluded }), [project]);
   const step = Math.max(0, Math.min(3, project.step || 0));
   const setStep = (s) => {
@@ -101,6 +103,9 @@ function ProjectShell({ project, data }) {
     !blocking(2),
     currentBaseline(project).current,
   ];
+  const approve = (baseline) => dispatch({ type: "approve", id: project.id, baseline });
+  const baselineCurrent = currentBaseline(project).current;
+  const canSave = result.ready && result.base.reached;
   const units = num(project.totalUnits) || result.inputs.totalUnits || null;
   const b = result.ready ? result.base : null;
   const kpis = [
@@ -122,7 +127,14 @@ function ProjectShell({ project, data }) {
             </button>
           </React.Fragment>
         ))}
+        <span className="spacer" />
+        {project.town && (
+          <button className="btn small" onClick={() => setMarketOpen(true)}>
+            {project.town} market <Icon.arrow size={13} />
+          </button>
+        )}
       </nav>
+      {marketOpen && <MarketOverlay project={project} data={data} onClose={() => setMarketOpen(false)} />}
       <div className="kpis" aria-label="Plan summary">
         {kpis.map(([label, value, sub]) => (
           <div className="kpi" key={label}>
@@ -135,7 +147,7 @@ function ProjectShell({ project, data }) {
       {step === 0 && <PropertyStep project={project} patch={patch} />}
       {step === 1 && <UnitsStep project={project} patch={patch} data={data} />}
       {step === 2 && <PlanStep project={project} planPatch={planPatch} result={result} onStep={setStep} />}
-      {step === 3 && <ReviewStep project={project} result={result} data={data} onStep={setStep} onApprove={(baseline) => dispatch({ type: "approve", id: project.id, baseline })} />}
+      {step === 3 && <ReviewStep project={project} result={result} data={data} onStep={setStep} onApprove={approve} onMarket={() => setMarketOpen(true)} />}
       <div className="navbar">
         <span className="muted small" role="status">
           {saveStatus}
@@ -149,6 +161,16 @@ function ProjectShell({ project, data }) {
         {step < 3 && (
           <button className="btn primary" onClick={() => setStep(step + 1)}>
             Next: {STEPS[step + 1]} <Icon.arrow />
+          </button>
+        )}
+        {step === 3 && !baselineCurrent && (
+          <button className="btn primary" disabled={!canSave} title={canSave ? undefined : "The plan has to reach target occupancy first"} onClick={() => approve(makeBaseline(project, result))}>
+            <Icon.check /> Save baseline
+          </button>
+        )}
+        {step === 3 && baselineCurrent && (
+          <button className="btn primary" onClick={() => dispatch({ type: "close" })}>
+            Done: back to projects <Icon.arrow />
           </button>
         )}
       </div>
