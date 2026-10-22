@@ -82,7 +82,7 @@ export function newProject(seed = {}) {
   };
 }
 
-export const VIEWS = ["home", "plan", "package", "leasing", "today", "pipeline", "inbox", "rents", "applications", "reports", "listings", "concessions", "market", "units"];
+export const VIEWS = ["home", "plan", "package", "leasing", "today", "pipeline", "inbox", "rents", "applications", "reports", "listings", "concessions", "market", "units", "agent"];
 
 const PLATFORM_NAMES = ["Zillow", "Apartments.com", "Zumper", "Realtor.com", "Facebook Marketplace", "Website"];
 export function defaultPlatforms() {
@@ -111,6 +111,32 @@ export function upgradeProject(p) {
     priceChangedAt: p.priceChangedAt || "",
     view: p.view === "leasing" ? "today" : VIEWS.includes(p.view) ? p.view : p.baselines?.length ? "home" : "plan",
   };
+}
+
+/**
+ * A practice copy of a project: same building, rents, plan and baseline, no prospects, and the
+ * simulated backend switched on from the plan's start. The original is never touched.
+ */
+export function practiceCopy(project, todayIso, startSim) {
+  const fresh = newProject();
+  const copy = {
+    ...project,
+    id: fresh.id,
+    createdAt: fresh.createdAt,
+    updatedAt: fresh.updatedAt,
+    name: `${(project.name || project.address || "Project").replace(/\s*\(practice\)$/, "")} (practice)`,
+    practice: true,
+    sample: false,
+    prospects: [],
+    actuals: [],
+    priceLog: [],
+    dismissed: [],
+    leasingSource: "pipeline",
+    platforms: (project.platforms || defaultPlatforms()).map((f) => ({ ...f, syncedAt: "" })),
+    premium: project.premium ?? "10",
+    view: "today",
+  };
+  return startSim(copy, todayIso, Math.floor(Math.random() * 1e9));
 }
 
 /** A new prospect. Dates are YYYY-MM-DD; a tour time is YYYY-MM-DDTHH:MM. */
@@ -217,7 +243,7 @@ export function sanitizeProject(p) {
         const base = newProspect();
         const clean = Object.fromEntries(Object.keys(base).filter((k) => !["notes", "history", "messages", "app"].includes(k)).map((k) => [k, str(x[k])]));
         const list = (v) => (Array.isArray(v) ? v.filter((h) => h && typeof h.text === "string").slice(0, 500).map((h) => ({ at: str(h.at), text: str(h.text) })) : []);
-        const msgs = Array.isArray(x.messages) ? x.messages.filter((m) => m && typeof m.text === "string").slice(0, 1000).map((m) => ({ id: str(m.id) || uid(), at: str(m.at), dir: m.dir === "in" ? "in" : "out", channel: ["sms", "email", "call", "note"].includes(m.channel) ? m.channel : "note", text: str(m.text) })) : [];
+        const msgs = Array.isArray(x.messages) ? x.messages.filter((m) => m && typeof m.text === "string").slice(0, 1000).map((m) => ({ id: str(m.id) || uid(), at: str(m.at), dir: m.dir === "in" ? "in" : "out", channel: ["sms", "email", "call", "note"].includes(m.channel) ? m.channel : "note", text: str(m.text), ...(m.by === "agent" ? { by: "agent" } : {}) })) : [];
         const a = x.app && typeof x.app === "object" ? x.app : {};
         const app = { credit: str(a.credit), background: str(a.background), income: str(a.income), incomeVerified: !!a.incomeVerified, deposit: str(a.deposit), cosigner: !!a.cosigner, note: str(a.note) };
         return { ...clean, stage: STAGE_KEYS.includes(x.stage) ? x.stage : "lead", notes: list(x.notes), history: list(x.history), messages: msgs, app };
@@ -225,6 +251,9 @@ export function sanitizeProject(p) {
     concessions: (Array.isArray(p.concessions) ? p.concessions : []).filter((c) => c && typeof c.id === "string").slice(0, 100).map((c) => ({ id: str(c.id), name: str(c.name), months: str(c.months), beds: Array.isArray(c.beds) ? c.beds.map(Number).filter(Number.isFinite) : [], startsAt: str(c.startsAt), endsAt: str(c.endsAt), note: str(c.note) })),
     platforms: (Array.isArray(p.platforms) ? p.platforms : defaultPlatforms()).filter((f) => f && typeof f.name === "string").slice(0, 40).map((f) => ({ id: str(f.id) || uid(), name: str(f.name), active: !!f.active, cost: str(f.cost), url: /^https?:\/\//.test(f.url || "") ? str(f.url) : "", syncedAt: str(f.syncedAt) })),
     policy: { minCredit: Number(p.policy?.minCredit) || 620, incomeMultiple: Number(p.policy?.incomeMultiple) || 3 },
+    premium: str(p.premium),
+    agent: p.agent && typeof p.agent === "object" ? { reply: !!p.agent.reply, book: !!p.agent.book, approve: !!p.agent.approve, sync: !!p.agent.sync } : undefined,
+    facts: p.facts && typeof p.facts === "object" ? Object.fromEntries(Object.entries(p.facts).slice(0, 20).map(([k, v]) => [k, str(v)])) : undefined,
     view: p.baselines.length ? "home" : "plan",
     step: Number.isInteger(p.step) && p.step >= 0 && p.step <= 3 ? p.step : 0,
     // The parcel and zoning are looked up again from the address rather than trusted from the file.

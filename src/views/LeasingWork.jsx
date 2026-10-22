@@ -1,10 +1,11 @@
 import React, { useMemo, useState } from "react";
 import { Drawer, Field, Chip } from "../ui/atoms.jsx";
 import { useStore, newProspect } from "../store/store.jsx";
-import { STAGE_LABEL, SOURCES, LOST_REASONS, UNIT_STATUS, moveProspect, generateUnits, unitStatuses, time12, shortDay } from "../core/leasing.js";
+import { STAGE_LABEL, SOURCES, LOST_REASONS, UNIT_STATUS, moveProspect, generateUnits, unitStatuses, time12, shortDay, projectToday } from "../core/leasing.js";
 import { normalizeMix } from "../core/model.js";
 import { activeConcession } from "../core/ops.js";
-import { money, number, dateLong, localToday, bedLabel } from "../core/format.js";
+import { money, number, dateLong, bedLabel } from "../core/format.js";
+import { useToday } from "../ui/clock.js";
 
 const TONE = { lead: "", tour: "warn", toured: "warn", applied: "warn", approved: "good", leased: "good", lost: "bad" };
 const BEDS = [["", "Any"], ["0", "Studio"], ["1", "1 BR"], ["2", "2 BR"], ["3", "3 BR"], ["4", "4 BR"]];
@@ -12,12 +13,12 @@ const BEDS = [["", "Any"], ["0", "Studio"], ["1", "1 BR"], ["2", "2 BR"], ["3", 
 /** What the prospect can do next from their stage, as buttons. */
 function StageActions({ p, units, onMove, defaultFree = "" }) {
   const [mode, setMode] = useState(null);
-  const [tourAt, setTourAt] = useState(p.tourAt || `${localToday()}T14:00`);
+  const today = useToday();
+  const [tourAt, setTourAt] = useState(p.tourAt || `${today}T14:00`);
   const [unitId, setUnitId] = useState(p.unitId || "");
   const [rent, setRent] = useState(p.leaseRent || "");
   const [free, setFree] = useState(p.freeMonths || defaultFree);
   const [reason, setReason] = useState(LOST_REASONS[0]);
-  const today = localToday();
   const open = units.filter((u) => u.status === "available" || u.status === "coming" || u.id === p.unitId);
   const matching = open.filter((u) => p.beds === "" || p.beds === null || String(u.beds) === String(p.beds));
   const unitList = (matching.length ? matching : open).slice(0, 200);
@@ -126,6 +127,7 @@ function StageActions({ p, units, onMove, defaultFree = "" }) {
 
 export function ProspectDrawer({ project, prospect, units, onClose }) {
   const { dispatch } = useStore();
+  const today = useToday();
   const [p, setP] = useState(prospect);
   const [note, setNote] = useState("");
   const isNew = !project.prospects?.some((x) => x.id === prospect.id);
@@ -188,7 +190,7 @@ export function ProspectDrawer({ project, prospect, units, onClose }) {
             {p.stage === "leased" ? `Lease signed ${dateLong(p.leasedAt)} at ${money(Number(p.leaseRent))}${Number(p.freeMonths) ? ` with ${p.freeMonths} month${Number(p.freeMonths) === 1 ? "" : "s"} free` : ""}.` : ""}
             {p.stage === "lost" ? `Lost ${dateLong(p.lostAt)}${p.lostReason ? `: ${p.lostReason}` : ""}.` : ""}
           </p>
-          <StageActions key={`${p.stage}-${(p.history || []).length}`} p={p} units={units} defaultFree={activeConcession(project, unit ? unit.beds : p.beds, localToday())?.months || ""} onMove={(stage, at, extra) => save(moveProspect(p, stage, at, extra))} />
+          <StageActions key={`${p.stage}-${(p.history || []).length}`} p={p} units={units} defaultFree={activeConcession(project, unit ? unit.beds : p.beds, today)?.months || ""} onMove={(stage, at, extra) => save(moveProspect(p, stage, at, extra))} />
 
           <div className="sect" style={{ marginTop: 22 }}>
             Notes and history
@@ -202,7 +204,7 @@ export function ProspectDrawer({ project, prospect, units, onClose }) {
               placeholder="Add a note"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && note.trim()) {
-                  save({ ...p, history: [...(p.history || []), { at: localToday(), text: note.trim() }] });
+                  save({ ...p, history: [...(p.history || []), { at: today, text: note.trim() }] });
                   setNote("");
                 }
               }}
@@ -211,7 +213,7 @@ export function ProspectDrawer({ project, prospect, units, onClose }) {
               className="btn small"
               disabled={!note.trim()}
               onClick={() => {
-                save({ ...p, history: [...(p.history || []), { at: localToday(), text: note.trim() }] });
+                save({ ...p, history: [...(p.history || []), { at: today, text: note.trim() }] });
                 setNote("");
               }}
             >
@@ -244,7 +246,7 @@ export function ProspectDrawer({ project, prospect, units, onClose }) {
 }
 
 function useUnits(project) {
-  return useMemo(() => unitStatuses(project.units || [], project.prospects || [], localToday()), [project.units, project.prospects]);
+  return useMemo(() => unitStatuses(project.units || [], project.prospects || [], projectToday(project)), [project.units, project.prospects, project.sim?.now]);
 }
 
 function UnitDrawer({ project, unit, onClose, onOpenProspect }) {

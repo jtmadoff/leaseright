@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Head } from "./common.jsx";
 import { STAGE_LABEL, want, shortDay, time12 } from "../../core/leasing.js";
-import { money, bedLabel, dateLong, localToday } from "../../core/format.js";
+import { money, bedLabel, dateLong } from "../../core/format.js";
 
 const CHANNEL = { sms: "Text", email: "Email", call: "Call", note: "Note" };
 const FILTERS = [
@@ -11,9 +11,9 @@ const FILTERS = [
   ["applicant", "Applicants"],
 ];
 
-function stamp() {
+function stamp(today) {
   const n = new Date();
-  return `${localToday(n)}T${String(n.getHours()).padStart(2, "0")}:${String(n.getMinutes()).padStart(2, "0")}`;
+  return `${today}T${String(n.getHours()).padStart(2, "0")}:${String(n.getMinutes()).padStart(2, "0")}`;
 }
 const lastOf = (p, dir) => (p.messages || []).filter((m) => !dir || m.dir === dir).map((m) => m.at).sort().pop() || "";
 /** Open prospects whose last message is theirs. Lost and leased threads are closed. */
@@ -25,7 +25,7 @@ export const needsReply = (p) => {
 };
 
 /** Starting points for a reply, by where the prospect stands. Edited before sending. */
-function suggestions(p, project, unit) {
+function suggestions(p, project, unit, today) {
   const name = (p.name || "").split(" ")[0] || "there";
   const bld = project.name?.replace(/\s*\(sample\)$/, "") || "the building";
   const type = p.beds === "" ? "an apartment" : `a ${bedLabel(p.beds).replace("BR", "bedroom").toLowerCase()}`;
@@ -36,7 +36,7 @@ function suggestions(p, project, unit) {
     ];
   if (p.stage === "tour") return [`Hi ${name}, confirming your tour ${p.tourAt ? `${shortDay(p.tourAt.slice(0, 10))} at ${time12(p.tourAt)}` : "this week"}. Text this number when you arrive.`];
   if (p.stage === "toured")
-    return [`Hi ${name}, great to meet you${p.tourAt && p.tourAt.slice(0, 10) === localToday() ? " today" : ""}. Here is the application link. ${unit ? `Unit ${unit.number} is open at ${money(unit.rent)}.` : ""} Happy to hold it for 48 hours once you apply.`.replace("  ", " ")];
+    return [`Hi ${name}, great to meet you${p.tourAt && p.tourAt.slice(0, 10) === today ? " today" : ""}. Here is the application link. ${unit ? `Unit ${unit.number} is open at ${money(unit.rent)}.` : ""} Happy to hold it for 48 hours once you apply.`.replace("  ", " ")];
   if (p.stage === "applied") return [`Hi ${name}, we received your application and are reviewing it now. Expect a decision within two business days.`];
   if (p.stage === "approved") return [`Hi ${name}, you're approved. The lease is ready to sign; once it's signed and the deposit is in, the unit is yours.`];
   return [];
@@ -63,8 +63,8 @@ export function InboxView({ project, today, statuses, focus, dispatch, openProsp
   const waiting = all.filter(needsReply).length;
   const log = (dir) => {
     if (!sel || !draft.trim()) return;
-    const msg = { id: `m${Date.now()}`, at: stamp(), dir, channel, text: draft.trim() };
-    dispatch({ type: "prospect-save", id: project.id, prospect: { ...sel, messages: [...(sel.messages || []), msg] } });
+    const msg = { id: `m${Date.now()}`, at: stamp(today), dir, channel, text: draft.trim() };
+    dispatch({ type: "prospect-save", id: project.id, prospect: { ...sel, messages: [...(sel.messages || []), msg], ...(dir === "out" && sel.needsYou && ["lead", "tour"].includes(sel.stage) ? { needsYou: null } : {}) } });
     setDraft("");
   };
   const mailto = sel?.email ? `mailto:${encodeURIComponent(sel.email)}?subject=${encodeURIComponent(project.name || "Your apartment search")}&body=${encodeURIComponent(draft)}` : null;
@@ -129,17 +129,17 @@ export function InboxView({ project, today, statuses, focus, dispatch, openProsp
                     <div key={m.id || m.at} className={`msg ${m.dir}`}>
                       <div className="bubble">{m.text}</div>
                       <div className="mono small muted">
-                        {m.dir === "out" ? "You" : sel.name.split(" ")[0]} · {CHANNEL[m.channel]} · {dateLong(m.at.slice(0, 10))}
+                        {m.dir === "out" ? (m.by === "agent" ? <span className="by-agent">LeaseRight agent</span> : "You") : sel.name.split(" ")[0]} · {CHANNEL[m.channel]} · {dateLong(m.at.slice(0, 10))}
                         {m.at.length > 10 ? ` ${time12(m.at)}` : ""}
                       </div>
                     </div>
                   ))}
               </div>
               <div className="compose">
-                {suggestions(sel, project, unit).length > 0 && (
+                {suggestions(sel, project, unit, today).length > 0 && (
                   <div className="sugg">
                     <span className="tag accent">Suggested</span>
-                    {suggestions(sel, project, unit).map((s, i) => (
+                    {suggestions(sel, project, unit, today).map((s, i) => (
                       <button key={i} className="btn small" onClick={() => setDraft(s)}>
                         {s.length > 64 ? `${s.slice(0, 62)}…` : s}
                       </button>
@@ -174,7 +174,7 @@ export function InboxView({ project, today, statuses, focus, dispatch, openProsp
                   )}
                 </div>
                 <p className="mono small muted" style={{ marginTop: 6 }}>
-                  Messages are logged here by hand for now. Send by email or text opens your own mail or messages app with the reply filled in.
+                  {project.sim?.on ? "Simulated: a reply you log here reaches the prospect when the clock moves, and they answer on the next day. Live, it goes out by text or email from the project number." : "Messages are logged here by hand until the lead inbox is connected. Send by email or text opens your own mail or messages app with the reply filled in."}
                 </p>
               </div>
             </>

@@ -1,3 +1,4 @@
+import { weeklyLog } from "../../core/sim.js";
 import React from "react";
 import { Head, Band } from "./common.jsx";
 import { useMarket, MarketBody } from "../Market.jsx";
@@ -14,6 +15,51 @@ export function MarketPage({ project, data }) {
         <MarketBody project={project} data={data} market={market} />
       </div>
     </div>
+  );
+}
+
+function WeeklyActivity({ project, types }) {
+  const weeks = weeklyLog(project);
+  const changes = project.priceLog || [];
+  return (
+    <>
+      <Band>Leasing activity by week</Band>
+      <div className="tablewrap">
+        <table className="dtable">
+          <thead>
+            <tr>
+              <th>Week</th>
+              <th className="n">Leads</th>
+              <th className="n">Agent replies</th>
+              <th className="n">First reply</th>
+              <th className="n">To you</th>
+              <th className="n">Tours</th>
+              <th className="n">Apps</th>
+              <th className="n">Leases</th>
+              <th>Rent changes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {weeks.map((w) => {
+              const ch = changes.filter((c) => c.at >= w.from && c.at <= w.to);
+              return (
+                <tr key={w.from}>
+                  <td className="mono">{dateLong(w.from).replace(/, \d{4}$/, "")} to {dateLong(w.to).replace(/, \d{4}$/, "")}</td>
+                  <td className="n">{w.leads}</td>
+                  <td className="n">{w.auto}</td>
+                  <td className="n">{w.responseMedian === null ? "–" : w.responseMedian < 60 ? `${w.responseMedian} min` : `${Math.round(w.responseMedian / 60)} h`}</td>
+                  <td className="n">{w.escalated}</td>
+                  <td className="n">{w.toursHeld}</td>
+                  <td className="n">{w.applications}</td>
+                  <td className={`n ${w.leases ? "pos" : ""}`}>{w.leases}</td>
+                  <td className="small">{ch.map((c) => `${types[c.typeId] || "Unit type"} to ${money(c.to)}`).join(", ") || ""}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
 
@@ -38,6 +84,7 @@ export function ReportsView({ project, today, baseline, go, onStep, children }) 
       ) : (
         <>
           <div className="wrap20">{children}</div>
+          {project.sim?.log?.length ? <WeeklyActivity project={project} types={types} /> : null}
           <Band>Rent changes</Band>
           {!log.length ? (
             <div className="empty">No asking rent changes since leasing began.</div>

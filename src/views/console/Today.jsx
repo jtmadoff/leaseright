@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Icon } from "../../ui/atoms.jsx";
 import { Head, Band } from "./common.jsx";
+import { Digest, PracticeCall } from "./Agent.jsx";
 import { typeMetrics, repriceType } from "../../core/ops.js";
 import { generateUnits, unitStatuses } from "../../core/leasing.js";
 import { newProspect } from "../../store/store.jsx";
@@ -8,7 +9,7 @@ import { listingBuildings } from "../../core/market.js";
 import { money, bedLabel, dateLong } from "../../core/format.js";
 import { isoDate, parseDate, DAY_MS } from "../../core/model.js";
 
-const KIND = { pricing: "Pricing", pace: "Pace", lead: "Lead", application: "Application", lease: "Lease", concession: "Concession" };
+const KIND = { handoff: "Needs you", pricing: "Pricing", pace: "Pace", lead: "Lead", application: "Application", lease: "Lease", concession: "Concession" };
 
 /** Carry out a decision's action against the project. Shared by every console screen. */
 export function useActions({ project, today, go, patch, openProspect }) {
@@ -50,6 +51,8 @@ export function TodayConsole(ops) {
   return (
     <div className="cpage">
       <Head code="F1 · Today" name={project.name} hint={dateLong(today)} />
+      <Digest project={project} />
+      {!(project.prospects || []).length && <PracticeCall {...ops} />}
       <div className="split">
         <div>
           <Band right={<span>sort: priority ↓</span>}>Needs attention · {decided.length}</Band>
@@ -81,7 +84,7 @@ export function TodayConsole(ops) {
               )}
             </div>
           ))}
-          <Band right={<button className="btn small" onClick={() => openProspect(newProspect())}>Add a lead</button>}>Also today · {tasks.length}</Band>
+          <Band right={<button className="btn small" onClick={() => openProspect(newProspect({ createdAt: today }))}>Add a lead</button>}>Also today · {tasks.length}</Band>
           {!tasks.length && <div className="empty">No tours, follow-ups or first contacts due.</div>}
           <ul className="tasks" style={{ padding: "0 14px" }}>
             {tasks.map((t, i) => (

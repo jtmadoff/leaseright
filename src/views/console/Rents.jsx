@@ -45,6 +45,13 @@ export function RentsView({ project, data, today, track, patch, go }) {
           <small>{changes.length ? changes.map((t) => t.label).join(", ") : "none"}</small>
         </div>
         <div>
+          <span>Premium over town listings</span>
+          <b className="premium">
+            <input aria-label="Premium over town listings, percent" type="number" step="1" min="-30" max="60" defaultValue={project.premium ?? ""} placeholder="0" onBlur={(e) => patch({ premium: e.target.value })} />%
+          </b>
+          <small>what a building like this earns over the median</small>
+        </div>
+        <div>
           <span>Annualized impact</span>
           <b className={impact < 0 ? "neg" : ""}>{impact ? `${impact > 0 ? "+" : ""}${money(impact)}` : "$0"}</b>
           <small>on the {plural(vacantUnits, "open unit")}</small>

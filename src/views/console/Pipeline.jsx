@@ -46,7 +46,7 @@ export function PipelineBoard({ project, today, statuses, decided, openProspect,
   return (
     <div className="cpage">
       <Head code="F2 · Pipeline" name={project.name} hint="drag a card to move it">
-        <button className="btn small primary" onClick={() => openProspect(newProspect())}>
+        <button className="btn small primary" onClick={() => openProspect(newProspect({ createdAt: today }))}>
           Add a lead
         </button>
       </Head>

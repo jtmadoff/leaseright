@@ -51,9 +51,21 @@ daily screens, and a sidebar (the menu button at the left of the tabs) with ever
   listing medians, comparable buildings, market activity from planning agendas); plan against
   actual with a re-forecast, plus the rent change log.
 
+**The simulated backend.** The services the product depends on (leads arriving from the listing
+sites, an agent that answers within minutes and books tours, screening, e-signature, listing
+sync) run as stand-ins in the browser, writing the same fields the real services will. A clock in
+the bar under the tabs moves a simulated project a day or a week at a time. Inquiries respond to
+price against what the town pays for a building like this (the listing median plus the
+project's premium, set on Rents), fast replies tour more often, and decisions left waiting cost
+applicants. Today opens with what happened while you were away, and the Leasing agent page holds
+the agent's settings, tour hours, the building facts it answers with, and the practice market's
+assumptions. Any project with a saved baseline can start a practice lease-up: a copy of the
+building on the simulated market, leaving the real project untouched. `docs/BACKEND.md` designs
+each real service, its provider and cost, and the build order.
+
 "Explore a sample project" on the home screen creates a fictional building eight weeks into
-leasing, with made-up prospects, messages, applications, platforms and a concession, so every
-screen can be tried.
+leasing. Its history is produced by the simulated backend itself, with the last two days left
+for you, and its clock keeps running from there.
 
 Projects live in the browser (localStorage) with JSON export and restore. Projects from the
 first build are carried over automatically the first time the new version opens.
@@ -144,7 +156,7 @@ and pace. Pace is an input.
 ```bash
 npm install
 npm run dev          # http://localhost:5173
-npm test             # model, comps, market data, parsing (105 tests)
+npm test             # model, comps, market data, parsing (114 tests)
 npm run test:live    # 40 checks against the live Rhode Island services
 python3 tools/test_harvest.py
 python3 tools/build_data.py --check
@@ -164,11 +176,12 @@ uses Google at all.
 ## Layout
 
 ```
-src/core/      model, comps, market data, leasing pipeline, tracking, operations (ops.js), formatting
+src/core/      model, comps, market data, leasing pipeline, tracking, operations (ops.js), simulated backend (sim.js), formatting
 src/ri/        town registry, ArcGIS adapter (parcels, zoning, E-911 address search)
 src/store/     projects, persistence, migration from the first build
 src/views/     plan steps, overview, lender package, market, project list
-src/views/console/  Today, Pipeline, Inbox, Rents, Applications, Listings, Reports
+src/views/console/  Today, Pipeline, Inbox, Rents, Applications, Listings, Agent, Reports
+docs/          BACKEND.md: the real services behind each stand-in
 src/ui/        fields, drawer, charts, parcel sketch and satellite map
 tools/         harvesters, validator, town registry builder, harvest tests
 pipeline/      source ledgers (committed)
@@ -180,8 +193,9 @@ tests/         unit tests, plus tests/live for the public services
 
 - Accounts and sync. Work is per browser until there is a backend; use Export to move a project.
   Deliberate for now: the product is being worked out on the front end first.
-- Leads arriving by themselves (listing-site email, web form, text). Today they are typed in.
-- Posting to listing sites, online applications, credit checks, lease documents and payments.
+- The real services behind the simulation: lead intake, the leasing agent over text and email,
+  listing feeds, online applications and screening, lease signature and payments. On a real
+  project leads are still typed in. See `docs/BACKEND.md`.
 - Owner, leasing agent and broker roles.
 - Broker versus in-house economics.
 - Joins for Newport and South Kingstown, where units live on a second layer.

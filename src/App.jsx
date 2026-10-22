@@ -16,11 +16,11 @@ import { Overview } from "./views/Overview.jsx";
 import { LenderPackage } from "./views/LenderPackage.jsx";
 import { Performance } from "./views/Leasing.jsx";
 import { ProspectDrawer, Units } from "./views/LeasingWork.jsx";
-import { TodayConsole, PipelineBoard, InboxView, RentsView, ConcessionsView, ApplicationsView, ListingsView, MarketPage, ReportsView } from "./views/Console.jsx";
+import { TodayConsole, PipelineBoard, InboxView, RentsView, ConcessionsView, ApplicationsView, ListingsView, MarketPage, ReportsView, SimBar, AgentView } from "./views/Console.jsx";
+import { ClockContext } from "./ui/clock.js";
 import { needsReply } from "./views/console/Inbox.jsx";
-import { trackProject, unitStatuses, todayTasks, leasingSource } from "./core/leasing.js";
+import { trackProject, unitStatuses, todayTasks, leasingSource, projectToday } from "./core/leasing.js";
 import { decisions } from "./core/ops.js";
-import { localToday } from "./core/format.js";
 import { sampleProject } from "./store/sample.js";
 
 const STEPS = ["Property", "Units and rents", "Lease-up plan", "Review"];
@@ -110,7 +110,7 @@ const TABS = [
 ];
 const SIDE = [
   ["Model", [["home", "Overview"], ["plan", "Property and plan"], ["package", "Lender package"]]],
-  ["Lease-up", [["today", "Today"], ["pipeline", "Pipeline"], ["inbox", "Inbox"], ["rents", "Rents"], ["applications", "Applications"], ["concessions", "Concessions"], ["listings", "Listings"], ["market", "Market"], ["units", "Units"]]],
+  ["Lease-up", [["today", "Today"], ["pipeline", "Pipeline"], ["inbox", "Inbox"], ["rents", "Rents"], ["applications", "Applications"], ["concessions", "Concessions"], ["listings", "Listings"], ["agent", "Leasing agent"], ["market", "Market"], ["units", "Units"]]],
   ["Reporting", [["reports", "Reports"]]],
   ["After stabilization", [["residents", "Residents"], ["collection", "Collection"], ["ledger", "Ledger"], ["maintenance", "Maintenance"]]],
 ];
@@ -125,7 +125,7 @@ function ProjectShell({ project, data }) {
   const result = useMemo(() => calculate(project, { townIncluded: isIncluded }), [project]);
   const view = project.view || "plan";
   const step = Math.max(0, Math.min(3, project.step || 0));
-  const today = localToday();
+  const today = projectToday(project);
   const top = () => window.scrollTo({ top: 0 });
   const setStep = (s) => {
     dispatch({ type: "step", id: project.id, step: s });
@@ -173,7 +173,7 @@ function ProjectShell({ project, data }) {
   const counts = { today: decided.length + tasks.length, inbox: waiting, applications: pendingApps };
   const activeTab = isModel ? "model" : view;
   return (
-    <>
+    <ClockContext.Provider value={today}>
       <nav className="ctabs" aria-label="Project">
         <button className="burger" aria-label="All modules" aria-expanded={sideOpen} onClick={() => setSideOpen((v) => !v)}>
           <span className="mono" style={{ fontSize: 16 }}>≡</span>
@@ -236,7 +236,8 @@ function ProjectShell({ project, data }) {
         </nav>
       )}
       {marketOpen && <MarketOverlay project={project} data={data} onClose={() => setMarketOpen(false)} />}
-      {project.sample && (
+      {project.sim?.on && !isModel && <SimBar project={project} data={data} patch={patch} go={go} />}
+      {project.sample && !project.sim?.on && (
         <div className="crumb" role="note">
           <span className="tag accent">Sample</span>
           <span>Made-up building, numbers and people for trying LeaseRight. Delete it from the menu at the top right when you are done.</span>
@@ -267,6 +268,7 @@ function ProjectShell({ project, data }) {
       {view === "applications" && <ApplicationsView {...ops} />}
       {view === "listings" && <ListingsView {...ops} />}
       {view === "market" && <MarketPage {...ops} />}
+      {view === "agent" && <AgentView {...ops} />}
       {view === "units" && (
         <div className="cpage">
           <div className="chead">
@@ -316,7 +318,7 @@ function ProjectShell({ project, data }) {
           )}
         </div>
       )}
-    </>
+    </ClockContext.Provider>
   );
 }
 
@@ -379,7 +381,7 @@ export default function App() {
           </span>
         </div>
       )}
-      {project ? <ProjectShell key={project.id} project={project} data={data} /> : <Projects projects={state.projects} data={data} onOpen={(id) => dispatch({ type: "activate", id })} onNew={create} onSample={() => dispatch({ type: "create", project: sampleProject() })} />}
+      {project ? <ProjectShell key={project.id} project={project} data={data} /> : <Projects projects={state.projects} data={data} onOpen={(id) => dispatch({ type: "activate", id })} onNew={create} onSample={() => dispatch({ type: "create", project: sampleProject(undefined, data) })} />}
     </>
   );
 }

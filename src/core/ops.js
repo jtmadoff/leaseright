@@ -74,8 +74,10 @@ export function typeMetrics(project, data, todayIso, { planPace = null } = {}) {
     const lastChange = (project.priceLog || []).filter((l) => l.typeId === r.id).map((l) => l.at).sort().pop();
     const cooling = lastChange && parseDate(lastChange) !== null && (today - parseDate(lastChange)) / DAY_MS < 14;
     let suggestion = null;
-    if (!cooling && typePlanPace && sinceStartWeeks >= 3 && available > 0 && velocity < typePlanPace * 0.6 && mk && asking > mk.median * 1.02) {
-      const price = Math.max(round25(mk.median * 1.02), round25(asking * 0.95));
+    // The floor is what the market pays for a building like this: the median plus the project's premium.
+    const fair = mk ? mk.median * (1 + (num(project.premium) || 0) / 100) : null;
+    if (!cooling && typePlanPace && sinceStartWeeks >= 3 && available > 0 && velocity < typePlanPace * 0.6 && fair && asking > fair * 1.02) {
+      const price = Math.max(round25(fair * 1.02), round25(asking * 0.95));
       if (price < asking) suggestion = { rent: price, aboveMarket: price - mk.median, cut: asking - price };
     }
     return {
@@ -92,6 +94,7 @@ export function typeMetrics(project, data, todayIso, { planPace = null } = {}) {
       concession: conc,
       market: mk,
       gap: mk ? asking - mk.median : null,
+      fair,
       dom,
       velocity,
       typePlanPace,
@@ -217,8 +220,9 @@ export function decisions(project, data, todayIso, track) {
       title: `${t.label.replace(/^\w/, (c) => c.toUpperCase())}s have stalled.`,
       sub: `${t.leased} of ${t.count} leased. ${t.dom !== null ? `${Math.round(t.dom)} days on market. ` : ""}${t.velocity.toFixed(1)} a week against ${t.typePlanPace.toFixed(1)} planned.`,
       impact: `${money(t.vacancyCost)}/mo vacant · ${plural(t.available, "unit")} open`,
-      body:
-        t.suggestion.aboveMarket > t.market.median * 0.1
+      body: num(project.premium)
+        ? `Drop asking to ${money(t.suggestion.rent)}, a ${Math.round((t.suggestion.cut / (t.suggestion.rent + t.suggestion.cut)) * 100)}% step. A building like this earns about ${money(t.fair)} in ${project.town}: the listing median of ${money(t.market.median)} (${t.market.n} listings) plus your ${num(project.premium)}% premium. Give tours two weeks to respond before cutting again.`
+        : t.suggestion.aboveMarket > t.market.median * 0.1
           ? `Drop asking to ${money(t.suggestion.rent)}, a 5% step. It is still ${money(t.suggestion.aboveMarket)} above the ${project.town} listing median of ${money(t.market.median)} (${t.market.n} listings), so watch two weeks of tours before cutting again.`
           : `Drop asking to ${money(t.suggestion.rent)}, still ${money(t.suggestion.aboveMarket)} above the ${project.town} listing median of ${money(t.market.median)} (${t.market.n} listings).`,
       actions: [
@@ -255,6 +259,31 @@ export function decisions(project, data, todayIso, track) {
     const lastIn = msgs.filter((m) => m.dir === "in").map((m) => m.at).sort().pop();
     const lastOut = msgs.filter((m) => m.dir === "out").map((m) => m.at).sort().pop();
     const created = dayOf(p.createdAt);
+    if (p.needsYou) {
+      // Handed over by the leasing agent: one item, with the reason it could not act alone.
+      const key = `handoff:${p.id}:${p.needsYou.at}`;
+      if (held(project, key, todayIso)) continue;
+      const app = p.stage === "applied";
+      const lastText = msgs.filter((m) => m.dir === "in").pop()?.text || "";
+      const waitedH = Math.max(0, Math.round((today - (dayOf(p.needsYou.at) ?? today)) / 3600000));
+      out.push({
+        key,
+        kind: "handoff",
+        tone: app && p.needsYou.reason.includes("below") ? "bad" : "warn",
+        title: `${p.name}: ${p.needsYou.reason.toLowerCase()}.`,
+        sub: app ? `Screening is back on unit ${p.unitId?.replace(/^u/, "") || ""}.` : lastText ? `"${lastText.slice(0, 90)}"` : "",
+        impact: waitedH >= 24 ? `waiting ${plural(Math.round(waitedH / 24), "day")}` : "new",
+        body: app ? "Approve and the agent sends the lease for signature. Decline and it tells the applicant." : "The agent answers routine questions on its own. This one needs your judgment; your reply goes out from the Inbox.",
+        actions: app
+          ? [{ label: "Open application", act: { type: "application", prospectId: p.id }, primary: true }]
+          : [
+              { label: "Reply in Inbox", act: { type: "inbox", prospectId: p.id }, primary: true },
+              { label: "Open prospect", act: { type: "open", prospectId: p.id } },
+            ],
+        weight: 2.2 + waitedH / 240,
+      });
+      continue;
+    }
     if (p.stage === "lead" && !lastOut && !p.tourAt && created !== null && today - created >= DAY_MS) {
       const key = `contact:${p.id}`;
       if (!held(project, key, todayIso))

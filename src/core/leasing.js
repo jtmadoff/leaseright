@@ -2,6 +2,10 @@
 
 import { normalizeMix, parseDate, isoDate, DAY_MS, num } from "./model.js";
 import { trackLeasing } from "./tracking.js";
+import { localToday } from "./format.js";
+
+/** The project's today: the simulation clock when one is running, otherwise the calendar. */
+export const projectToday = (project) => (project?.sim?.on && project.sim.now ? project.sim.now : localToday());
 
 /** Prospect stages in the order a lease moves through them. `lost` can be reached from any. */
 export const PSTAGES = [

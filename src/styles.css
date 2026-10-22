@@ -644,3 +644,31 @@ td.warnc { color: var(--warn); } td.posc { color: var(--good); }
   .cbar .newp { padding: 0 10px; }
   .cbar .spacer { display: none; }
 }
+
+/* Simulation clock, digest and agent settings */
+.simbar { display: flex; align-items: center; gap: 12px; padding: 8px 20px; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--accent) 7%, var(--bg)); flex-wrap: wrap; }
+.simbar .when { font-family: var(--mono); font-size: 12px; color: var(--fg-2); }
+.simbar .when b { color: var(--fg); font-weight: 600; }
+.simbar .spacer { flex: 1; }
+.digest { border-bottom: 1px solid var(--line); }
+.digest .kstrip { border-bottom: 0; }
+.digest-line { padding: 0 20px 16px; margin: 0; font-size: 13px; color: var(--fg-2); }
+.agentgrid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; }
+.agentgrid > .ctx { border-left: 1px solid var(--line); background: var(--panel); }
+@media (max-width: 1000px) { .agentgrid { grid-template-columns: minmax(0, 1fr); } .agentgrid > .ctx { border-left: 0; border-top: 1px solid var(--line); } }
+.toggle { display: grid; grid-template-columns: 22px 1fr; gap: 10px; padding: 14px 20px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.toggle input { margin-top: 3px; accent-color: var(--accent); width: 16px; height: 16px; }
+.toggle b { display: block; font-size: 14px; font-weight: 600; color: var(--fg); }
+.toggle small { display: block; font-size: 12.5px; color: var(--fg-3); margin-top: 3px; line-height: 1.5; }
+.cform.pad { padding: 16px 20px; border-bottom: 1px solid var(--line); }
+.cform .wide { grid-column: 1 / -1; }
+table.mini { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }
+table.mini td { padding: 6px 0; border-bottom: 1px solid var(--line); color: var(--fg-2); vertical-align: top; }
+table.mini td + td { text-align: right; padding-left: 10px; }
+.msg .by-agent { color: var(--accent); }
+@media (max-width: 600px) { .simbar { padding: 8px 12px; gap: 8px; } .simbar .muted { display: none; } }
+.rentband b.premium input { width: 64px; background: transparent; border: 0; border-bottom: 1px dashed var(--fg-3); color: var(--fg); font: inherit; padding: 0; text-align: right; }
+.practice { display: flex; gap: 20px; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid var(--line); background: var(--panel); flex-wrap: wrap; }
+.practice b { font-size: 14px; color: var(--fg); }
+.practice p { margin: 4px 0 0; font-size: 13px; color: var(--fg-2); max-width: 720px; line-height: 1.5; }
+table.mini td:first-child { width: 45%; }

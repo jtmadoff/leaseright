@@ -25,8 +25,13 @@ Built, front end only: project overview with a next-step prompt; the Model (guid
 model, baseline approval); the lender package from the saved baseline, printable to PDF; the
 operating console in the old prototype's look (Today decisions, Pipeline board, Inbox, Rents
 and concessions, Applications, Listings syndication, Units, Market, Reports) running on the
-project's own prospects and units, with weekly numbers derived from the pipeline; a fictional sample project.
+project's own prospects and units, with weekly numbers derived from the pipeline; a simulated backend (`src/core/sim.js`) that stands in for lead intake, the leasing
+agent, tours, screening, e-signature and listing sync, driven by a day-by-day clock, with practice
+lease-ups for any project with a baseline; a fictional sample project whose history the simulation produces.
 Planning-agenda data appears as market activity only, never as a way to start a project.
+
+The real services are designed in `docs/BACKEND.md`. A stand-in and its real service must write the
+same fields; change both together.
 
 Not built: accounts and sync (deliberately deferred until the workflow is settled), inbound
 lead capture, posting to listing sites, credit checks and online applications, lease documents, payments, roles, broker versus
@@ -47,7 +52,7 @@ in-house economics, a second state.
 ```bash
 npm install
 npm run dev                          # http://localhost:5173
-npm test                             # 105 unit tests
+npm test                             # 114 unit tests
 npm run test:live                    # 40 checks against live Rhode Island services
 python3 tools/test_harvest.py
 python3 tools/build_data.py --check

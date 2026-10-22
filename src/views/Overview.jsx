@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { Tile, Icon, Chip } from "../ui/atoms.jsx";
 import { currentBaseline, STAGES } from "../store/store.jsx";
 import { normalizeMix, parseDate, isoDate, DAY_MS } from "../core/model.js";
-import { trackProject, todayTasks } from "../core/leasing.js";
+import { trackProject, todayTasks, projectToday } from "../core/leasing.js";
 import { rentIndex, bedMarket, supplyNear } from "../core/market.js";
 import { isIncluded } from "../ri/towns.js";
 import { money, moneyShort, dateLong, number, monthLabel, bedLabel, localToday } from "../core/format.js";
@@ -13,7 +13,7 @@ function nextAction(project, result, baseline, current, track) {
   const blocking = (s) => result.issues.filter((i) => i.blocking && i.step === s);
   // Once leasing is under way, the day's work comes before anything else.
   if (baseline && (project.prospects || []).length) {
-    const tasks = todayTasks(project, localToday());
+    const tasks = todayTasks(project, projectToday(project));
     if (track?.stabilized) return { title: "Stabilized", body: `Leasing reached its ${track.target}-unit target ${dateLong(track.reforecast.stabilizeDate)}.`, label: "Open Today", go: { view: "today" } };
     return tasks.length
       ? { title: `${tasks.length} thing${tasks.length === 1 ? "" : "s"} to do today`, body: tasks.slice(0, 3).map((t) => `${t.title} (${t.p.name})`).join(", ") + (tasks.length > 3 ? ", and more." : "."), label: "Open today", go: { view: "today" } }
@@ -81,7 +81,7 @@ function RentCheck({ project, data }) {
 
 export function Overview({ project, result, data, onStep, onView, onMarket, onApprove }) {
   const { baseline, current } = currentBaseline(project);
-  const track = useMemo(() => (baseline ? trackProject(project, baseline, localToday()) : null), [project, baseline]);
+  const track = useMemo(() => (baseline ? trackProject(project, baseline, projectToday(project)) : null), [project, baseline]);
   const action = nextAction(project, result, baseline, current, track);
   const b = result.ready ? result.base : null;
   const index = rentIndex(data.rents, project.town, project.zip);

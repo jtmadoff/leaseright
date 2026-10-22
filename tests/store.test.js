@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { upgradeProject, sanitizeProject, reducer, newProject, newActual, isBlank } from "../src/store/store.jsx";
+import { upgradeProject, sanitizeProject, reducer, newProject, newActual, isBlank, practiceCopy } from "../src/store/store.jsx";
+import { startSim } from "../src/core/sim.js";
 
 describe("project record", () => {
   it("gives projects saved before the tracker an empty log and a sensible view", () => {
@@ -28,5 +29,16 @@ describe("project record", () => {
   });
   it("does not treat a project with logged weeks as blank", () => {
     expect(isBlank({ ...newProject(), actuals: [newActual({ weekEnding: "2026-10-18" })] })).toBe(false);
+  });
+  it("makes a practice copy that runs on the simulated backend and leaves the original alone", () => {
+    const real = { ...newProject({ name: "258 Pine", unitMix: [{ id: "a", label: "1 bedroom", beds: 1, count: "4", rent: "1900", leased: "0" }], plan: { ...newProject().plan, startDate: "2027-03-01" } }), prospects: [{ id: "x", stage: "lead" }] };
+    const copy = practiceCopy(real, "2026-10-22", startSim);
+    expect(copy.id).not.toBe(real.id);
+    expect(copy.name).toBe("258 Pine (practice)");
+    expect(copy.prospects).toEqual([]);
+    expect(copy.units).toHaveLength(4);
+    expect(copy.sim).toMatchObject({ on: true, now: "2027-03-01" });
+    expect(real.prospects).toHaveLength(1);
+    expect(real.sim).toBeUndefined();
   });
 });
