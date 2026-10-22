@@ -57,7 +57,12 @@ sync) run as stand-ins in the browser, writing the same fields the real services
 the bar under the tabs moves a simulated project a day or a week at a time. Inquiries respond to
 price against what the town pays for a building like this (the listing median plus the
 project's premium, set on Rents), fast replies tour more often, and decisions left waiting cost
-applicants. Today opens with what happened while you were away, and the Leasing agent page holds
+applicants. "Run today" plays the day back as a live feed (leads arriving, the agent's replies, tours,
+applications, signatures, handoffs) before the new state lands; "Run the week" does seven days.
+Today opens with the lease-up's stakes (leased against target, ahead or behind, the daily cost of
+vacancy, the projected stabilization date against the plan, free rent given) and what happened
+while you were away. On a simulated project a pricing decision carries an eight-week forecast run
+both ways from the same seed, so the cut is judged on rent signed, not on hope. The Leasing agent page holds
 the agent's settings, tour hours, the building facts it answers with, and the practice market's
 assumptions. Any project with a saved baseline can start a practice lease-up: a copy of the
 building on the simulated market, leaving the real project untouched. `docs/BACKEND.md` designs
@@ -156,7 +161,7 @@ and pace. Pace is an input.
 ```bash
 npm install
 npm run dev          # http://localhost:5173
-npm test             # model, comps, market data, parsing (114 tests)
+npm test             # model, comps, market data, parsing (115 tests)
 npm run test:live    # 40 checks against the live Rhode Island services
 python3 tools/test_harvest.py
 python3 tools/build_data.py --check

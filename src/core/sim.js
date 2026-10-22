@@ -534,3 +534,74 @@ export function startSim(project, todayIso, seed = 1) {
 }
 
 export { hash, stream };
+
+// ---------- what a day produced, as a feed ----------
+
+const STAGE_EVENT = {
+  tour: (p) => ({ kind: "tour", text: `booked a tour for ${slotWords(p.tourAt)}` }),
+  toured: () => ({ kind: "toured", text: "toured the building" }),
+  applied: (p) => ({ kind: "applied", text: `applied for unit ${p.unitId.replace(/^u/, "")}; screening ordered` }),
+  approved: () => ({ kind: "approved", text: "approved; lease sent for signature" }),
+  leased: (p) => ({ kind: "leased", text: `signed unit ${p.unitId.replace(/^u/, "")} at $${Math.round(num(p.leaseRent) || 0).toLocaleString("en-US")} a month` }),
+  lost: (p) => ({ kind: "lost", text: `lost: ${(p.lostReason || "no reason given").toLowerCase()}` }),
+};
+
+/** Everything that happened between two states of a project on day D, in time order, for a live feed. */
+export function dayEvents(before, after, D) {
+  const prev = new Map((before.prospects || []).map((p) => [p.id, p]));
+  const out = [];
+  for (const p of after.prospects || []) {
+    const was = prev.get(p.id);
+    const seen = new Set((was?.messages || []).map((m) => m.id));
+    for (const m of p.messages || []) {
+      if (seen.has(m.id) || day(m.at) !== D) continue;
+      if (m.dir === "in" && !was) out.push({ at: m.at, kind: "lead", who: p.name, text: `New lead from ${p.source}: "${m.text}"`, prospectId: p.id });
+      else if (m.dir === "in") out.push({ at: m.at, kind: "in", who: p.name, text: `"${m.text}"`, prospectId: p.id });
+      else out.push({ at: m.at, kind: m.by === "agent" ? "agent" : "you", who: p.name, text: m.text, prospectId: p.id });
+    }
+    if (p.needsYou && (!was?.needsYou || was.needsYou.at !== p.needsYou.at)) out.push({ at: p.needsYou.at, kind: "handoff", who: p.name, text: `Handed to you: ${p.needsYou.reason.toLowerCase()}`, prospectId: p.id });
+    if (was && was.stage !== p.stage && STAGE_EVENT[p.stage]) {
+      const e = STAGE_EVENT[p.stage](p);
+      const at = p.stage === "tour" ? (p.messages || []).filter((m) => day(m.at) === D).map((m) => m.at).sort().pop() || `${D}T12:00` : p.stage === "toured" ? p.tourAt : p.stage === "leased" ? `${D}T19:30` : p.stage === "applied" ? `${D}T18:00` : `${D}T15:00`;
+      out.push({ at, kind: e.kind, who: p.name, text: e.text, prospectId: p.id });
+    }
+  }
+  if ((after.sim?.log || []).slice(-1)[0]?.synced) out.push({ at: `${D}T03:00`, kind: "sync", who: "", text: `New prices pushed to ${plural((after.sim.log.slice(-1)[0] || {}).synced, "listing")}` });
+  return out.sort((a, b) => a.at.localeCompare(b.at));
+}
+const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+
+// ---------- what-if forecasts ----------
+
+/** A stand-in for the person during a forecast: approves clean applications, answers handoffs the next morning. */
+export function autoPerson(project) {
+  const now = project.sim.now;
+  return {
+    ...project,
+    prospects: (project.prospects || []).map((p) => {
+      if (!p.needsYou) return p;
+      if (p.stage === "applied") {
+        const unit = (project.units || []).find((u) => u.id === p.unitId);
+        const check = applicationCheck(p, project.policy, unit?.rent);
+        return check.status === "review" ? { ...moveProspect(p, "lost", now, { lostReason: "Did not qualify" }), needsYou: null } : { ...moveProspect(p, "approved", now), needsYou: null };
+      }
+      return { ...p, needsYou: null, messages: [...(p.messages || []), { id: `${p.id}-f${(p.messages || []).length}`, at: `${now}T09:15`, dir: "out", channel: "sms", text: "Thanks, happy to help." }] };
+    }),
+  };
+}
+
+/**
+ * Run a project forward `weeks` weeks with and without a change, and compare where each lands:
+ * leases signed, monthly rent on them, units still open. The seed is shared, so the only
+ * difference is the change itself.
+ */
+export function whatIf(project, data, change, weeks = 8) {
+  const run = (p) => {
+    const end = advance({ ...p, sim: { ...p.sim, seed: (p.sim.seed || 1) + 7 } }, data, weeks * 7, autoPerson);
+    const leased = (end.prospects || []).filter((x) => x.stage === "leased" && x.leasedAt > p.sim.now);
+    const open = unitStatuses(end.units, end.prospects, end.sim.now).filter((u) => u.status === "available").length;
+    const leads = (end.sim.log || []).slice(-weeks * 7).reduce((n, d) => n + d.leads, 0);
+    return { leases: leased.length, rent: leased.reduce((s, x) => s + (num(x.leaseRent) || 0), 0), open, leads };
+  };
+  return { weeks, before: run(project), after: run(change(project)) };
+}

@@ -236,11 +236,21 @@ function ProjectShell({ project, data }) {
         </nav>
       )}
       {marketOpen && <MarketOverlay project={project} data={data} onClose={() => setMarketOpen(false)} />}
-      {project.sim?.on && !isModel && <SimBar project={project} data={data} patch={patch} go={go} />}
+      {project.sim?.on && !isModel && <SimBar project={project} data={data} patch={patch} go={go} openProspect={setProspect} track={track} />}
       {project.sample && !project.sim?.on && (
         <div className="crumb" role="note">
           <span className="tag accent">Sample</span>
-          <span>Made-up building, numbers and people for trying LeaseRight. Delete it from the menu at the top right when you are done.</span>
+          <span>This sample was made before the simulated backend existed, so it cannot run forward.</span>
+          <button
+            className="btn small primary"
+            disabled={!data.rents}
+            onClick={() => {
+              dispatch({ type: "delete", id: project.id });
+              dispatch({ type: "create", project: sampleProject(undefined, data) });
+            }}
+          >
+            Replace it with the live sample
+          </button>
         </div>
       )}
       {view === "plan" && (

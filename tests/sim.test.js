@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { advanceDay, advance, demand, digestSince, needsYou, startSim, fairRent, reach, weeklyLog } from "../src/core/sim.js";
+import { advanceDay, advance, demand, digestSince, needsYou, startSim, fairRent, reach, weeklyLog, dayEvents, whatIf } from "../src/core/sim.js";
 import { generateUnits, unitStatuses } from "../src/core/leasing.js";
 
 const mix = [
@@ -101,5 +101,21 @@ describe("simulated backend", () => {
     expect(next.project.platforms.every((f) => f.syncedAt === "2026-04-06")).toBe(true);
     const manual = advanceDay({ ...p, agent: { ...p.agent, sync: false } }, data);
     expect(manual.digest.synced).toBe(0);
+  });
+
+  it("turns a day into a feed in time order and forecasts a price cut against the same seed", () => {
+    const p = advance(project(), data, 10, person);
+    const next = advanceDay(p, data).project;
+    const ev = dayEvents(p, next, p.sim.now);
+    expect(ev.length).toBeGreaterThan(0);
+    expect(ev.map((e) => e.at)).toEqual([...ev.map((e) => e.at)].sort());
+    expect(ev.some((e) => e.kind === "lead")).toBe(true);
+    expect(ev.some((e) => e.kind === "agent")).toBe(true);
+    const cut = (x) => ({ ...x, units: x.units.map((u) => (u.typeId === "two" ? { ...u, rent: 2000 } : u)), priceChangedAt: x.sim.now });
+    const w = whatIf(p, data, cut, 6);
+    expect(w.after.leads).toBeGreaterThan(w.before.leads);
+    expect(w.after.leases).toBeGreaterThanOrEqual(w.before.leases);
+    // Same seed, no change: identical outcome.
+    expect(whatIf(p, data, (x) => x, 4).after).toEqual(whatIf(p, data, (x) => x, 4).before);
   });
 });

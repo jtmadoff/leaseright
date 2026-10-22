@@ -52,7 +52,7 @@ in-house economics, a second state.
 ```bash
 npm install
 npm run dev                          # http://localhost:5173
-npm test                             # 114 unit tests
+npm test                             # 115 unit tests
 npm run test:live                    # 40 checks against live Rhode Island services
 python3 tools/test_harvest.py
 python3 tools/build_data.py --check

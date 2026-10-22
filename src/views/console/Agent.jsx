@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Head, KStrip, Band, plural } from "./common.jsx";
-import { advance, digestSince, needsYou, demand, startSim, SIM, REACH, DEFAULT_AGENT, DEFAULT_HOURS } from "../../core/sim.js";
+import { advanceDay, dayEvents, digestSince, needsYou, demand, startSim, SIM, REACH, DEFAULT_AGENT, DEFAULT_HOURS } from "../../core/sim.js";
+import { unitStatuses, time12 } from "../../core/leasing.js";
 import { practiceCopy } from "../../store/store.jsx";
 import { dateLong, money } from "../../core/format.js";
 import { parseDate } from "../../core/model.js";
@@ -8,40 +9,168 @@ import { parseDate } from "../../core/model.js";
 const DOW = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const weekday = (iso) => DOW[new Date(parseDate(iso)).getUTCDay()];
 
-/** The clock for a simulated project: move a day or a week, and see what the agent did meanwhile. */
-export function SimBar({ project, data, patch, go }) {
-  const [busy, setBusy] = useState(false);
+const EVENT_LABEL = { lead: "Lead", agent: "Agent", you: "You", in: "Reply", handoff: "To you", tour: "Tour booked", toured: "Toured", applied: "Applied", approved: "Approved", leased: "Signed", lost: "Lost", sync: "Listings" };
+const BIG = new Set(["handoff", "toured", "applied", "approved", "leased", "lost", "lead"]);
+const t12 = (at) => time12(at) || "";
+
+/**
+ * Plays a day (or a week) back as it happened: the clock runs from 7 am and the feed fills in
+ * as events pass. The new state lands when the playback ends, so nothing on screen moves early.
+ */
+export function DayPlayer({ days, onDone, onOpen }) {
+  const [di, setDi] = useState(0);
+  const [mins, setMins] = useState(7 * 60);
+  const week = days.length > 1;
+  const perDay = week ? 1400 : 7000;
+  const feedRef = useRef(null);
+  useEffect(() => {
+    const t0 = performance.now();
+    let raf;
+    const tick = () => {
+      const el = (performance.now() - t0) / perDay;
+      const idx = Math.min(days.length - 1, Math.floor(el));
+      const frac = Math.min(1, el - Math.floor(el));
+      setDi(idx);
+      setMins(7 * 60 + frac * 15 * 60);
+      if (el < days.length) raf = requestAnimationFrame(tick);
+      else setMins(22 * 60);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [days, perDay]);
+  const finished = di === days.length - 1 && mins >= 22 * 60;
+  const shown = days.slice(0, di + 1).flatMap((d, i) =>
+    d.events
+      .filter((e) => (week ? BIG.has(e.kind) : true))
+      .filter((e) => i < di || minutesOf(e.at) <= mins)
+      .map((e) => ({ ...e, day: d.day })),
+  );
+  useEffect(() => {
+    if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight;
+  }, [shown.length]);
+  const today = days[di];
+  const totals = days.slice(0, di + 1).reduce(
+    (a, d) => {
+      for (const e of d.events) if (a[e.kind] !== undefined && (di > days.indexOf(d) || minutesOf(e.at) <= mins)) a[e.kind]++;
+      return a;
+    },
+    { lead: 0, agent: 0, tour: 0, applied: 0, leased: 0, handoff: 0 },
+  );
+  return (
+    <>
+      <div className="scrim" />
+      <div className="player" role="dialog" aria-label="The day as it happened">
+        <div className="phead">
+          <span className="tag accent">{week ? "Week" : "Day"} in progress</span>
+          <span className="pclock">
+            <b>{weekday(today.day)}</b> {dateLong(today.day)} · <span className="mono">{finished ? "end of day" : t12(`${today.day}T${String(Math.floor(mins / 60)).padStart(2, "0")}:${String(Math.floor(mins % 60)).padStart(2, "0")}`)}</span>
+          </span>
+          <span className="spacer" />
+          <button className="btn small ghost" onClick={onDone}>
+            {finished ? "Close" : "Skip ahead"}
+          </button>
+        </div>
+        <div className="ptally">
+          <span>
+            Leads <b>{totals.lead}</b>
+          </span>
+          <span>
+            Agent replies <b>{totals.agent}</b>
+          </span>
+          <span>
+            Tours booked <b>{totals.tour}</b>
+          </span>
+          <span>
+            Applications <b>{totals.applied}</b>
+          </span>
+          <span>
+            Signed <b className={totals.leased ? "good" : ""}>{totals.leased}</b>
+          </span>
+          <span>
+            To you <b className={totals.handoff ? "warn" : ""}>{totals.handoff}</b>
+          </span>
+        </div>
+        <div className="pfeed" ref={feedRef}>
+          {!shown.length && <div className="muted small" style={{ padding: 16 }}>Quiet so far.</div>}
+          {shown.map((e, i) => (
+            <button key={`${e.day}-${i}`} className={`pev ${e.kind}`} onClick={() => e.prospectId && onOpen(e.prospectId)}>
+              <span className="mono small muted">
+                {week ? `${e.day.slice(5).replace("-", "/")} ` : ""}
+                {t12(e.at)}
+              </span>
+              <span className={`pk ${e.kind}`}>{EVENT_LABEL[e.kind]}</span>
+              <span className="ptext">
+                {e.who && <b>{e.who}</b>} {e.text}
+              </span>
+            </button>
+          ))}
+        </div>
+        {finished && (
+          <div className="pfoot">
+            <span className="muted small">{week ? "Seven days" : "The day"} ran with the agent on. Today's decisions are ready.</span>
+            <button className="btn primary small" onClick={onDone}>
+              Open Today
+            </button>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+const minutesOf = (at) => {
+  const m = /T(\d\d):(\d\d)/.exec(at || "");
+  return m ? Number(m[1]) * 60 + Number(m[2]) : 9 * 60;
+};
+
+/** The clock for a simulated project: run a day or a week and watch it happen. */
+export function SimBar({ project, data, patch, go, openProspect, track }) {
+  const [play, setPlay] = useState(null);
   const now = project.sim.now;
-  const run = (days) => {
-    if (!data.rents || busy) return;
-    setBusy(true);
-    // Let the button paint its busy state before a week of simulation runs.
-    setTimeout(() => {
-      const next = advance(project, data, days);
-      patch({ units: next.units, platforms: next.platforms, prospects: next.prospects, sim: { ...next.sim, lastRun: { days, to: next.sim.now } } });
-      setBusy(false);
-      go("today");
-    }, 30);
+  const run = (n) => {
+    if (!data.rents || play) return;
+    const days = [];
+    let p = project;
+    for (let k = 0; k < n; k++) {
+      const next = advanceDay(p, data).project;
+      days.push({ day: p.sim.now, events: dayEvents(p, next, p.sim.now) });
+      p = next;
+    }
+    setPlay({ days, next: p, n });
+  };
+  const done = () => {
+    const { next, n } = play;
+    patch({ units: next.units, platforms: next.platforms, prospects: next.prospects, sim: { ...next.sim, lastRun: { days: n, to: next.sim.now } } });
+    setPlay(null);
+    go("today");
   };
   const waiting = needsYou(project).length;
+  const open = unitStatuses(project.units || [], project.prospects || [], now).filter((u) => u.status === "available");
+  const burn = open.reduce((s, u) => s + (u.rent || 0), 0) / 30.44;
   return (
-    <div className="simbar" role="region" aria-label="Simulation clock">
-      <span className="tag accent">{project.sample ? "Sample" : "Practice"} · simulated</span>
-      <span className="when">
-        <b>{weekday(now)}</b> {dateLong(now)} · morning
-      </span>
-      <span className="spacer" />
-      {waiting > 0 && <span className="muted small">{plural(waiting, "item")} waiting on you</span>}
-      <button className="btn small" disabled={busy || !data.rents} onClick={() => run(1)}>
-        {busy ? "Running…" : "Next day"}
-      </button>
-      <button className="btn small" disabled={busy || !data.rents} onClick={() => run(7)}>
-        Next week
-      </button>
-      <button className="btn small ghost" onClick={() => go("agent")}>
-        Agent settings
-      </button>
-    </div>
+    <>
+      <div className="simbar" role="region" aria-label="Simulation clock">
+        <span className="tag accent">{project.sample ? "Sample" : "Practice"} · simulated</span>
+        <span className="when">
+          <b>{weekday(now)}</b> {dateLong(now)} · morning
+        </span>
+        <span className="burn mono">
+          {money(Math.round(burn))} a day vacant
+          {track && track.daysAhead !== null && !track.stabilized ? ` · ${Math.abs(track.daysAhead) <= 3 ? "on schedule" : `${Math.abs(Math.round(track.daysAhead / 7))} wk ${track.daysAhead < 0 ? "behind" : "ahead"}`}` : ""}
+        </span>
+        <span className="spacer" />
+        {waiting > 0 && <span className="muted small">{plural(waiting, "item")} waiting on you</span>}
+        <button className="btn small primary" disabled={!!play || !data.rents} onClick={() => run(1)}>
+          Run today
+        </button>
+        <button className="btn small" disabled={!!play || !data.rents} onClick={() => run(7)}>
+          Run the week
+        </button>
+        <button className="btn small ghost" onClick={() => go("agent")}>
+          Agent
+        </button>
+      </div>
+      {play && <DayPlayer days={play.days} onDone={done} onOpen={(id) => { done(); openProspect((play.next.prospects || []).find((x) => x.id === id)); }} />}
+    </>
   );
 }
 

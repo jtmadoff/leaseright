@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Icon } from "../../ui/atoms.jsx";
 import { Head, Band } from "./common.jsx";
 import { Digest, PracticeCall } from "./Agent.jsx";
+import { whatIf } from "../../core/sim.js";
+import { LeaseChart } from "../../ui/charts.jsx";
+import { KStrip } from "./common.jsx";
 import { typeMetrics, repriceType } from "../../core/ops.js";
 import { generateUnits, unitStatuses } from "../../core/leasing.js";
 import { newProspect } from "../../store/store.jsx";
@@ -37,10 +40,22 @@ export function useActions({ project, today, go, patch, openProspect }) {
 }
 
 export function TodayConsole(ops) {
-  const { project, data, today, track, decided, tasks, openProspect, go } = ops;
+  const { project, data, today, track, decided, tasks, openProspect, go, baseline } = ops;
   const run = useActions(ops);
   const [open, setOpen] = useState(0);
   const sel = decided[open] || decided[0] || null;
+  const [showChart, setShowChart] = useState(false);
+  // On a simulated project, a pricing decision carries an eight-week forecast with and without the cut.
+  const forecast = useMemo(() => {
+    if (!project.sim?.on || !data.rents || sel?.kind !== "pricing") return null;
+    const act = sel.actions.find((a) => a.act.type === "price")?.act;
+    if (!act) return null;
+    return whatIf(project, data, (p) => {
+      const st = unitStatuses(p.units, p.prospects || [], today);
+      return { ...p, units: repriceType(p.units, act.typeId, act.rent, st), priceChangedAt: today, priceLog: [...(p.priceLog || []), { at: today, typeId: act.typeId, from: null, to: act.rent }] };
+    });
+  }, [project, data, sel?.key, today]);
+  const stakes = track && baseline ? stakeItems(project, track, baseline, today) : null;
   const types = typeMetrics(project, data, today, { planPace: track?.planPace });
   const focusType = types.find((t) => t.id === sel?.typeId) || types.find((t) => t.suggestion) || null;
   const comps = listingBuildings(data.rents, project.town)
@@ -51,6 +66,22 @@ export function TodayConsole(ops) {
   return (
     <div className="cpage">
       <Head code="F1 · Today" name={project.name} hint={dateLong(today)} />
+      {stakes && (
+        <>
+          <div className="band">
+            <span>Lease-up · {track.stabilized ? "stabilized" : `${Math.round(track.actualLeased)} of ${track.target} to stabilize`}</span>
+            <button className="linkbtn small" onClick={() => setShowChart((v) => !v)}>
+              {showChart ? "Hide the curve" : "Show the curve"}
+            </button>
+          </div>
+          <KStrip items={stakes} />
+          {showChart && (
+            <div className="wrap20 curve">
+              <LeaseChart startMs={track.inputs.start} path={track.base.leasedPath} existing={track.inputs.existingLeased} target={track.target} totalUnits={track.totalUnits} weeks={track.weeks} reforecast={track.stabilized ? null : track.reforecast} />
+            </div>
+          )}
+        </>
+      )}
       <Digest project={project} />
       {!(project.prospects || []).length && <PracticeCall {...ops} />}
       <div className="split">
@@ -73,6 +104,7 @@ export function TodayConsole(ops) {
               {open === i && (
                 <div className="dbody2">
                   {d.body && <p>{d.body}</p>}
+                  {forecast && sel?.key === d.key && <Forecast f={forecast} />}
                   <div className="row wrap">
                     {d.actions.map((a) => (
                       <button key={a.label} className={`btn small ${a.primary ? "primary" : ""}`} onClick={() => run(a.act)}>
@@ -170,4 +202,57 @@ export function TodayConsole(ops) {
       </div>
     </div>
   );
+}
+
+/** Eight weeks ahead, with and without the change, from the same random seed. */
+function Forecast({ f }) {
+  const d = (k) => f.after[k] - f.before[k];
+  const sign = (v) => (v > 0 ? "+" : "");
+  return (
+    <div className="forecast">
+      <div className="sect">Next {f.weeks} weeks, simulated both ways</div>
+      <table className="mini">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Hold</th>
+            <th>Cut</th>
+            <th>Change</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Inquiries</td><td className="mono">{f.before.leads}</td><td className="mono">{f.after.leads}</td><td className={`mono ${d("leads") > 0 ? "pos" : d("leads") < 0 ? "neg" : ""}`}>{sign(d("leads"))}{d("leads")}</td></tr>
+          <tr><td>Leases signed</td><td className="mono">{f.before.leases}</td><td className="mono">{f.after.leases}</td><td className={`mono ${d("leases") > 0 ? "pos" : d("leases") < 0 ? "neg" : ""}`}>{sign(d("leases"))}{d("leases")}</td></tr>
+          <tr><td>Monthly rent on them</td><td className="mono">{money(f.before.rent)}</td><td className="mono">{money(f.after.rent)}</td><td className={`mono ${d("rent") > 0 ? "pos" : d("rent") < 0 ? "neg" : ""}`}>{sign(d("rent"))}{money(d("rent"))}</td></tr>
+          <tr><td>Units still open</td><td className="mono">{f.before.open}</td><td className="mono">{f.after.open}</td><td className={`mono ${d("open") < 0 ? "pos" : d("open") > 0 ? "neg" : ""}`}>{sign(d("open"))}{d("open")}</td></tr>
+        </tbody>
+      </table>
+      <p className="muted small" style={{ margin: "8px 0 0" }}>
+        {d("rent") > 0
+          ? "The cut signs more rent than it gives up: units that would sit empty start paying."
+          : d("leases") > 0
+            ? "More units lease, but the rent roll on them is lower. Worth it if carry is the bigger cost."
+            : "The cut does not move leasing enough to pay for itself over this window. Hold, or try a concession."}
+      </p>
+    </div>
+  );
+}
+
+/** The numbers that matter this morning: where leasing stands against the plan and what delay costs. */
+function stakeItems(project, track, baseline, today) {
+  const st = unitStatuses(project.units || [], project.prospects || [], today);
+  const open = st.filter((u) => u.status === "available");
+  const burn = open.reduce((s, u) => s + (u.rent || 0), 0);
+  const ahead = track.daysAhead;
+  const fc = track.reforecast;
+  const baseDate = track.base?.stabilizeDate;
+  const slip = fc?.reached && baseDate ? Math.round((parseDate(fc.stabilizeDate) - parseDate(baseDate)) / DAY_MS) : null;
+  const free = (project.prospects || []).filter((p) => p.stage === "leased").reduce((s, p) => s + (Number(p.leaseRent) || 0) * (Number(p.freeMonths) || 0), 0);
+  return [
+    ["Leased", `${Math.round(track.actualLeased)} / ${track.target}`, `${open.length} open · ${st.filter((u) => u.status === "applied").length} in application`, track.stabilized ? "good" : "plain"],
+    ["Against plan", ahead === null ? "–" : ahead >= -3 && ahead <= 3 ? "On schedule" : `${Math.abs(Math.round(ahead / 7))} wk ${ahead < 0 ? "behind" : "ahead"}`, `${track.trailingPace.toFixed(1)} a week against ${track.planPace.toFixed(1)} planned`, ahead === null ? "plain" : ahead < -7 ? "bad" : ahead > 7 ? "good" : "plain"],
+    ["Vacancy", `${money(Math.round(burn / 30.44))}/day`, `${money(burn)} a month on open units`, burn > 0 ? "bad" : "good"],
+    ["Stabilizes", track.stabilized ? dateLong(fc.stabilizeDate) : fc?.reached ? dateLong(fc.stabilizeDate) : "Not at this pace", track.stabilized ? "done" : slip === null ? `plan: ${baseDate ? dateLong(baseDate) : "–"}` : slip > 0 ? `${slip} days after the plan` : slip < 0 ? `${-slip} days before the plan` : "on the plan date", track.stabilized ? "good" : slip === null ? "bad" : slip > 14 ? "bad" : slip < -7 ? "good" : "plain"],
+    ["Free rent given", money(free), "under concessions so far", "plain"],
+  ];
 }
