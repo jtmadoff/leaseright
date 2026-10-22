@@ -1,20 +1,21 @@
 import React, { useMemo, useState } from "react";
-import { Drawer, Icon, Field, Chip } from "../ui/atoms.jsx";
+import { Drawer, Field, Chip } from "../ui/atoms.jsx";
 import { useStore, newProspect } from "../store/store.jsx";
-import { PSTAGES, STAGE_LABEL, OPEN_STAGES, SOURCES, LOST_REASONS, UNIT_STATUS, moveProspect, generateUnits, unitStatuses, todayTasks, stageCounts, want, time12, shortDay } from "../core/leasing.js";
+import { STAGE_LABEL, SOURCES, LOST_REASONS, UNIT_STATUS, moveProspect, generateUnits, unitStatuses, time12, shortDay } from "../core/leasing.js";
 import { normalizeMix } from "../core/model.js";
+import { activeConcession } from "../core/ops.js";
 import { money, number, dateLong, localToday, bedLabel } from "../core/format.js";
 
 const TONE = { lead: "", tour: "warn", toured: "warn", applied: "warn", approved: "good", leased: "good", lost: "bad" };
 const BEDS = [["", "Any"], ["0", "Studio"], ["1", "1 BR"], ["2", "2 BR"], ["3", "3 BR"], ["4", "4 BR"]];
 
 /** What the prospect can do next from their stage, as buttons. */
-function StageActions({ p, units, onMove }) {
+function StageActions({ p, units, onMove, defaultFree = "" }) {
   const [mode, setMode] = useState(null);
   const [tourAt, setTourAt] = useState(p.tourAt || `${localToday()}T14:00`);
   const [unitId, setUnitId] = useState(p.unitId || "");
   const [rent, setRent] = useState(p.leaseRent || "");
-  const [free, setFree] = useState(p.freeMonths || "");
+  const [free, setFree] = useState(p.freeMonths || defaultFree);
   const [reason, setReason] = useState(LOST_REASONS[0]);
   const today = localToday();
   const open = units.filter((u) => u.status === "available" || u.status === "coming" || u.id === p.unitId);
@@ -187,7 +188,7 @@ export function ProspectDrawer({ project, prospect, units, onClose }) {
             {p.stage === "leased" ? `Lease signed ${dateLong(p.leasedAt)} at ${money(Number(p.leaseRent))}${Number(p.freeMonths) ? ` with ${p.freeMonths} month${Number(p.freeMonths) === 1 ? "" : "s"} free` : ""}.` : ""}
             {p.stage === "lost" ? `Lost ${dateLong(p.lostAt)}${p.lostReason ? `: ${p.lostReason}` : ""}.` : ""}
           </p>
-          <StageActions key={`${p.stage}-${(p.history || []).length}`} p={p} units={units} onMove={(stage, at, extra) => save(moveProspect(p, stage, at, extra))} />
+          <StageActions key={`${p.stage}-${(p.history || []).length}`} p={p} units={units} defaultFree={activeConcession(project, unit ? unit.beds : p.beds, localToday())?.months || ""} onMove={(stage, at, extra) => save(moveProspect(p, stage, at, extra))} />
 
           <div className="sect" style={{ marginTop: 22 }}>
             Notes and history
@@ -244,147 +245,6 @@ export function ProspectDrawer({ project, prospect, units, onClose }) {
 
 function useUnits(project) {
   return useMemo(() => unitStatuses(project.units || [], project.prospects || [], localToday()), [project.units, project.prospects]);
-}
-
-export function Today({ project, track, onOpen, onNew, onTab }) {
-  const today = localToday();
-  const tasks = useMemo(() => todayTasks(project, today), [project.prospects, today]);
-  const units = useUnits(project);
-  const counts = stageCounts(project.prospects || []);
-  const idle = units.filter((u) => u.status === "available").length;
-  const toursToday = tasks.filter((t) => t.kind === "tour").length;
-  const [y, m, d] = today.split("-").map(Number);
-  const weekday = new Date(y, m - 1, d).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
-  return (
-    <>
-      <div className="todayhead">
-        <div>
-          <h1>{weekday}</h1>
-        </div>
-        <button className="btn primary" onClick={onNew}>
-          <Icon.plus /> Add a lead
-        </button>
-      </div>
-      <div className="statline">
-        <span>
-          <b>{tasks.length}</b> to do
-        </span>
-        <span>
-          <b>{toursToday}</b> tour{toursToday === 1 ? "" : "s"} today
-        </span>
-        <span>
-          <b>{counts.applied + counts.approved}</b> in application
-        </span>
-        <span>
-          <b>{counts.lead + counts.tour + counts.toured}</b> active prospects
-        </span>
-        {units.length > 0 && (
-          <span>
-            <b>{idle}</b> units available
-          </span>
-        )}
-        {track?.weeks.length > 0 && (
-          <button className="linkbtn" onClick={() => onTab("performance")}>
-            {track.stabilized ? "Stabilized" : `${Math.round(track.actualLeased)} of ${track.target} leased · ${track.variance >= 0 ? "+" : ""}${Math.round(track.variance)} against plan`}
-          </button>
-        )}
-      </div>
-
-      <section className="card">
-        <h2>
-          To do <small>{tasks.length ? "most urgent first" : ""}</small>
-        </h2>
-        {!tasks.length && <p className="muted">Nothing due. New leads, tours, applications and follow-ups will show up here as they come in.</p>}
-        <ul className="tasks">
-          {tasks.map((t, i) => (
-            <li key={`${t.p.id}-${t.kind}-${i}`}>
-              <button className="taskrow" onClick={() => onOpen(t.p)}>
-                <span className={`kind ${t.kind}`} />
-                <span className="what">
-                  <b>{t.title}</b>
-                  <span className="muted">{t.p.name}</span>
-                </span>
-                <span className="muted small detail">{t.detail}</span>
-                <Icon.arrow size={13} />
-              </button>
-            </li>
-          ))}
-        </ul>
-      </section>
-    </>
-  );
-}
-
-export function Prospects({ project, onOpen, onNew }) {
-  const [filter, setFilter] = useState("open");
-  const [q, setQ] = useState("");
-  const list = project.prospects || [];
-  const counts = stageCounts(list);
-  const units = useUnits(project);
-  const unitNo = (id) => units.find((u) => u.id === id)?.number;
-  const shown = list
-    .filter((p) => (filter === "open" ? OPEN_STAGES.includes(p.stage) : filter === "all" ? true : p.stage === filter))
-    .filter((p) => !q || `${p.name} ${p.phone} ${p.email} ${p.source}`.toLowerCase().includes(q.toLowerCase()));
-  const next = (p) => (p.stage === "tour" && p.tourAt ? `Tour ${shortDay(p.tourAt.slice(0, 10))} ${time12(p.tourAt)}` : p.nextAt ? `Follow up ${shortDay(p.nextAt)}` : "–");
-  const openCount = OPEN_STAGES.reduce((n, k) => n + counts[k], 0);
-  return (
-    <>
-      <div className="todayhead">
-        <div>
-          <h1>{number(list.length)} prospects</h1>
-        </div>
-        <button className="btn primary" onClick={onNew}>
-          <Icon.plus /> Add a lead
-        </button>
-      </div>
-      <div className="row wrap" style={{ marginBottom: 14 }}>
-        {[["open", `Active ${openCount}`], ...PSTAGES.map((s) => [s.key, `${s.label} ${counts[s.key]}`]), ["all", `All ${list.length}`]].map(([k, l]) => (
-          <button key={k} className={`chip ${filter === k ? "on" : ""}`} onClick={() => setFilter(k)}>
-            {l}
-          </button>
-        ))}
-        <span className="spacer" />
-        <input className="input search" placeholder="Search name, phone, source" value={q} onChange={(e) => setQ(e.target.value)} />
-      </div>
-      <section className="card">
-        {!shown.length ? (
-          <p className="muted">{list.length ? "No prospects match." : "No prospects yet. Add each lead as it comes in; LeaseRight keeps the week's numbers from them."}</p>
-        ) : (
-          <div className="tablewrap">
-            <table className="t click">
-              <thead>
-                <tr>
-                  <th>Prospect</th>
-                  <th>Looking for</th>
-                  <th>Stage</th>
-                  <th>Next</th>
-                  <th className="n">Unit</th>
-                  <th className="n">Added</th>
-                </tr>
-              </thead>
-              <tbody>
-                {shown.slice(0, 300).map((p) => (
-                  <tr key={p.id} onClick={() => onOpen(p)} tabIndex={0} onKeyDown={(e) => e.key === "Enter" && onOpen(p)}>
-                    <td className="strong">
-                      {p.name}
-                      <span className="sub">{p.source || "No source"}</span>
-                    </td>
-                    <td>{want(p)}</td>
-                    <td>
-                      <Chip tone={TONE[p.stage]}>{STAGE_LABEL[p.stage]}</Chip>
-                    </td>
-                    <td>{next(p)}</td>
-                    <td className="n">{unitNo(p.unitId) || "–"}</td>
-                    <td className="n">{shortDay(p.createdAt)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-    </>
-  );
 }
 
 function UnitDrawer({ project, unit, onClose, onOpenProspect }) {

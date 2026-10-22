@@ -23,12 +23,13 @@ remains the controlling business source.
 Built, front end only: project overview with a next-step prompt; the Model (guided intake for
 36 Rhode Island towns, scheduled rent data, similarity-ranked comparables, the lease-up reserve
 model, baseline approval); the lender package from the saved baseline, printable to PDF; the
-leasing workspace (Today, Prospects, Units, Plan against actual) with weekly numbers derived
-from the prospect pipeline; a fictional sample project. Planning-agenda data appears as market
-activity only, never as a way to start a project.
+operating console in the old prototype's look (Today decisions, Pipeline board, Inbox, Rents
+and concessions, Applications, Listings syndication, Units, Market, Reports) running on the
+project's own prospects and units, with weekly numbers derived from the pipeline; a fictional sample project.
+Planning-agenda data appears as market activity only, never as a way to start a project.
 
 Not built: accounts and sync (deliberately deferred until the workflow is settled), inbound
-lead capture, screening and applications, lease documents, payments, roles, broker versus
+lead capture, posting to listing sites, credit checks and online applications, lease documents, payments, roles, broker versus
 in-house economics, a second state.
 
 ## Conventions
@@ -46,7 +47,7 @@ in-house economics, a second state.
 ```bash
 npm install
 npm run dev                          # http://localhost:5173
-npm test                             # 96 unit tests
+npm test                             # 105 unit tests
 npm run test:live                    # 40 checks against live Rhode Island services
 python3 tools/test_harvest.py
 python3 tools/build_data.py --check

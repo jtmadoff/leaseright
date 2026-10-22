@@ -1,11 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { Tile, Icon, Field } from "../ui/atoms.jsx";
 import { LeaseChart } from "../ui/charts.jsx";
-import { useStore, currentBaseline, newActual } from "../store/store.jsx";
-import { trackLeasing, weeklySummary, weekEndingFor, TRAILING_WEEKS } from "../core/tracking.js";
-import { unitStatuses, trackProject, leasingSource } from "../core/leasing.js";
-import { localToday } from "../core/format.js";
-import { Today, Prospects, Units, ProspectDrawer, newProspect } from "./LeasingWork.jsx";
+import { useStore, newActual } from "../store/store.jsx";
+import { weeklySummary, weekEndingFor, TRAILING_WEEKS } from "../core/tracking.js";
 import { parseDate, isoDate, DAY_MS } from "../core/model.js";
 import { dateLong, number } from "../core/format.js";
 
@@ -77,7 +74,7 @@ function LogForm({ project, editing, onDone }) {
   );
 }
 
-function Performance({ project, baseline, t, source, onSource }) {
+export function Performance({ project, baseline, t, source, onSource }) {
   const { dispatch } = useStore();
   const [editing, setEditing] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -234,68 +231,5 @@ function Performance({ project, baseline, t, source, onSource }) {
           </section>
         )}
     </>
-  );
-}
-
-const TABS = [
-  ["today", "Today"],
-  ["prospects", "Prospects"],
-  ["units", "Units"],
-  ["performance", "Plan against actual"],
-];
-
-export function Leasing({ project, onStep, onPatch }) {
-  const { baseline } = currentBaseline(project);
-  const [prospect, setProspect] = useState(null);
-  const today = localToday();
-  const t = useMemo(() => (baseline ? trackProject(project, baseline, today) : null), [project, baseline, today]);
-  const source = leasingSource(project);
-  const units = useMemo(() => unitStatuses(project.units || [], project.prospects || [], today), [project.units, project.prospects, today]);
-
-  if (!baseline) {
-    return (
-      <div className="page wide">
-        <div className="main">
-          <div className="head">
-            <div className="eyebrow">Leasing</div>
-            <h1>Run the lease-up against a saved plan</h1>
-            <p>Leasing is where the team works every day: today's tours and follow-ups, every prospect from first contact to signed lease, and each unit's status. The week's numbers add themselves up and are measured against the baseline. Save a baseline first so there is a plan to measure against.</p>
-          </div>
-          <button className="btn primary" onClick={() => onStep(3)}>
-            Review the plan and save a baseline <Icon.arrow />
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  const tab = TABS.some(([k]) => k === project.leasingTab) ? project.leasingTab : "today";
-  const go = (k) => onPatch({ leasingTab: k });
-  const openNew = () => setProspect(newProspect());
-  return (
-    <div className="page wide">
-      <div className="main">
-        <nav className="subtabs" aria-label="Leasing">
-          {TABS.map(([k, label]) => (
-            <button key={k} className={tab === k ? "on" : ""} aria-current={tab === k ? "page" : undefined} onClick={() => go(k)}>
-              {label}
-            </button>
-          ))}
-        </nav>
-        {tab === "today" && <Today project={project} track={t} onOpen={setProspect} onNew={openNew} onTab={go} />}
-        {tab === "prospects" && <Prospects project={project} onOpen={setProspect} onNew={openNew} />}
-        {tab === "units" && <Units project={project} onOpenProspect={setProspect} />}
-        {tab === "performance" && <Performance project={project} baseline={baseline} t={t} source={source} onSource={(v) => onPatch({ leasingSource: v })} />}
-      </div>
-      {prospect && (
-        <ProspectDrawer
-          key={prospect.id}
-          project={project}
-          prospect={(project.prospects || []).find((x) => x.id === prospect.id) || prospect}
-          units={units}
-          onClose={() => setProspect(null)}
-        />
-      )}
-    </div>
   );
 }

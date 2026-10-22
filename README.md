@@ -16,35 +16,44 @@ harvesters write a ledger, a validator publishes it, the app reads it.
 
 ## What a user does
 
-A project has four places, one navigation bar.
+The app is a dark operating console: a top bar with the project picker, a tab row for the
+daily screens, and a sidebar (the menu button at the left of the tabs) with every module.
 
-- **Overview.** Where the project stands, the one thing to do next, the headline numbers and
-  its rents against local listings. A project with a saved baseline opens here.
-- **Plan** (four steps). Property: any Rhode Island address, with parcel, building and zoning
-  from public records. Units and rents: the mix by unit type, priced against the market.
-  Lease-up plan: start date, a pace or a target date, carry and budgets. Review:
-  stabilization, the lease-up reserve, pace cases, the free-rent test, and Save baseline.
-- **Lender package.** The saved baseline as a document a lender can underwrite: summary,
-  rents against the market, monthly cash and reserve, pace sensitivity, comparable and
-  listed buildings, proposed supply, property record, assumptions and sources. Print or
-  save as PDF from the browser.
-- **Leasing.** Where the team works every day once a baseline is saved.
-  - *Today:* tours, applications to decide, leases to sign, follow-ups due and new leads to
-    contact, most urgent first.
-  - *Prospects:* every lead from first contact through tour, application, approval and signed
-    lease (or lost, with a reason), with notes and a history of each move.
-  - *Units:* one tile per apartment by floor, colored by status, built from the unit mix; asking
-    rents, holds and delivery dates per unit; plan rent against average signed rent by type.
-  - *Plan against actual:* the week's numbers add themselves up from the prospects (or from a
-    hand-entered weekly log), measured against the baseline, with the trailing four-week pace,
-    a re-forecast stabilization date, the pace needed to hold the baseline date, and a
-    one-paragraph update to copy into an email.
+- **Model.** Overview (where the project stands and what to do next), the four plan steps,
+  and the lender package.
+  - *Plan steps.* Property: any Rhode Island address, with parcel, building and zoning from
+    public records. Units and rents: the mix by unit type, priced against the market.
+    Lease-up plan: start date, a pace or a target date, carry and budgets. Review:
+    stabilization, the lease-up reserve, pace cases, the free-rent test, and Save baseline.
+  - *Lender package.* The saved baseline as a document a lender can underwrite: summary,
+    rents against the market, monthly cash and reserve, pace sensitivity, comparable and
+    listed buildings, proposed supply, property record, assumptions and sources. Print or
+    save as PDF from the browser.
+- **Today.** Decisions ranked by what they cost: a unit type stalling above market (with a
+  priced step down, accept, add a concession or hold a week), leasing behind the baseline,
+  leads not contacted or waiting on a reply, applications and signed leases that are late,
+  concessions about to end. Below them, today's tours, follow-ups and same-day replies.
+- **Pipeline.** A board from new lead to signed lease. Drag a card to move it; moving into
+  tour, application or lease opens the prospect so the date and unit get filled in.
+- **Inbox.** Every prospect's messages as a thread, with suggested replies by stage. Messages
+  are logged by hand for now; Send opens the user's own mail or messages app.
+- **Rents and concessions.** Asking against effective rent, the town's listing median, the gap,
+  days on market and leasing velocity per unit type, with a price stepper, suggested cuts and
+  Publish. A type that was repriced in the last two weeks gets no new cut. Concession programs
+  with their cost and end dates.
+- **Applications.** A queue screened against the project's policy (credit floor, income
+  multiple), with approve, decline and a policy editor.
+- **Listings.** The syndication desk: each platform (Zillow, Apartments.com, Zumper,
+  Realtor.com, Facebook Marketplace, the website) with leads, tours, leases, cost per lead,
+  units live and issues such as a listing not updated since a price change; listing copy per
+  unit type to paste. LeaseRight does not post to the sites yet.
+- **Units, Market, Reports.** Unit tiles by floor and status; the market page (rent index,
+  listing medians, comparable buildings, market activity from planning agendas); plan against
+  actual with a re-forecast, plus the rent change log.
 
 "Explore a sample project" on the home screen creates a fictional building eight weeks into
-leasing, with made-up prospects at every stage, so every screen can be tried.
-
-The market view (rent index, listing medians, comparable buildings, market activity from
-planning agendas) opens from the navigation bar on every screen.
+leasing, with made-up prospects, messages, applications, platforms and a concession, so every
+screen can be tried.
 
 Projects live in the browser (localStorage) with JSON export and restore. Projects from the
 first build are carried over automatically the first time the new version opens.
@@ -135,7 +144,7 @@ and pace. Pace is an input.
 ```bash
 npm install
 npm run dev          # http://localhost:5173
-npm test             # model, comps, market data, parsing (96 tests)
+npm test             # model, comps, market data, parsing (105 tests)
 npm run test:live    # 40 checks against the live Rhode Island services
 python3 tools/test_harvest.py
 python3 tools/build_data.py --check
@@ -155,10 +164,11 @@ uses Google at all.
 ## Layout
 
 ```
-src/core/      model, comps ranking, market data helpers, CSV import, formatting
+src/core/      model, comps, market data, leasing pipeline, tracking, operations (ops.js), formatting
 src/ri/        town registry, ArcGIS adapter (parcels, zoning, E-911 address search)
 src/store/     projects, persistence, migration from the first build
-src/views/     the four steps, market drawer, project list
+src/views/     plan steps, overview, lender package, market, project list
+src/views/console/  Today, Pipeline, Inbox, Rents, Applications, Listings, Reports
 src/ui/        fields, drawer, charts, parcel sketch and satellite map
 tools/         harvesters, validator, town registry builder, harvest tests
 pipeline/      source ledgers (committed)
@@ -171,7 +181,7 @@ tests/         unit tests, plus tests/live for the public services
 - Accounts and sync. Work is per browser until there is a backend; use Export to move a project.
   Deliberate for now: the product is being worked out on the front end first.
 - Leads arriving by themselves (listing-site email, web form, text). Today they are typed in.
-- Screening, online applications, lease documents and payments.
+- Posting to listing sites, online applications, credit checks, lease documents and payments.
 - Owner, leasing agent and broker roles.
 - Broker versus in-house economics.
 - Joins for Newport and South Kingstown, where units live on a second layer.

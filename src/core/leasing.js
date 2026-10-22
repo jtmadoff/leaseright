@@ -144,6 +144,13 @@ export function todayTasks(project, todayIso) {
     else if (p.stage === "tour" && tourDay && tourDay < todayIso) tasks.push({ rank: 0, kind: "outcome", p, title: "Record how the tour went", detail: `Toured ${shortDay(tourDay)}?` });
     if (p.stage === "applied" && daysBetween(day(p.appliedAt), todayIso) >= 2) tasks.push({ rank: 2, kind: "decide", p, title: "Decide the application", detail: `Waiting ${daysBetween(day(p.appliedAt), todayIso)} days` });
     if (p.stage === "approved" && daysBetween(day(p.approvedAt), todayIso) >= 2) tasks.push({ rank: 2, kind: "sign", p, title: "Get the lease signed", detail: `Approved ${daysBetween(day(p.approvedAt), todayIso)} days ago` });
+    const msgs = p.messages || [];
+    const lastIn = msgs.filter((m) => m.dir === "in").map((m) => m.at).sort().pop();
+    const lastOut = msgs.filter((m) => m.dir === "out").map((m) => m.at).sort().pop();
+    if (lastIn && day(lastIn) === todayIso && (!lastOut || lastOut < lastIn)) {
+      tasks.push({ rank: 2, kind: "reply", p, title: "Reply", detail: `"${msgs.filter((m) => m.dir === "in").pop().text.slice(0, 60)}"` });
+      continue;
+    }
     if (p.nextAt && day(p.nextAt) <= todayIso && p.stage !== "tour") tasks.push({ rank: 3, kind: "follow", p, title: day(p.nextAt) < todayIso ? "Follow-up overdue" : "Follow up today", detail: p.nextNote || want(p) });
     else if (p.stage === "lead" && !p.nextAt && !p.tourAt) {
       const age = daysBetween(day(p.createdAt), todayIso);

@@ -69,6 +69,11 @@ export function newProject(seed = {}) {
     prospects: [],
     leasingTab: "today",
     leasingSource: "auto",
+    concessions: [],
+    platforms: defaultPlatforms(),
+    policy: { minCredit: 620, incomeMultiple: 3 },
+    dismissed: [],
+    priceChangedAt: "",
     view: "plan",
     step: 0,
     createdAt: at,
@@ -77,7 +82,12 @@ export function newProject(seed = {}) {
   };
 }
 
-export const VIEWS = ["home", "plan", "package", "leasing"];
+export const VIEWS = ["home", "plan", "package", "leasing", "today", "pipeline", "inbox", "rents", "applications", "reports", "listings", "concessions", "market", "units"];
+
+const PLATFORM_NAMES = ["Zillow", "Apartments.com", "Zumper", "Realtor.com", "Facebook Marketplace", "Website"];
+export function defaultPlatforms() {
+  return PLATFORM_NAMES.map((name) => ({ id: name.toLowerCase().replace(/[^a-z]+/g, "-"), name, active: false, cost: "", url: "", syncedAt: "" }));
+}
 const STAGE_KEYS = ["lead", "tour", "toured", "applied", "approved", "leased", "lost"];
 
 /** One week of leasing activity. Counts are kept as typed so blanks stay blank. */
@@ -94,7 +104,12 @@ export function upgradeProject(p) {
     prospects: Array.isArray(p.prospects) ? p.prospects : [],
     leasingTab: p.leasingTab || "today",
     leasingSource: p.leasingSource || "auto",
-    view: VIEWS.includes(p.view) ? p.view : p.baselines?.length ? "home" : "plan",
+    concessions: Array.isArray(p.concessions) ? p.concessions : [],
+    platforms: Array.isArray(p.platforms) ? p.platforms : defaultPlatforms(),
+    policy: p.policy && typeof p.policy === "object" ? p.policy : { minCredit: 620, incomeMultiple: 3 },
+    dismissed: Array.isArray(p.dismissed) ? p.dismissed : [],
+    priceChangedAt: p.priceChangedAt || "",
+    view: p.view === "leasing" ? "today" : VIEWS.includes(p.view) ? p.view : p.baselines?.length ? "home" : "plan",
   };
 }
 
@@ -126,6 +141,8 @@ export function newProspect(seed = {}) {
     nextNote: "",
     notes: [],
     history: [],
+    messages: [],
+    app: {},
     ...seed,
   };
 }
@@ -198,10 +215,16 @@ export function sanitizeProject(p) {
       .slice(0, 20000)
       .map((x) => {
         const base = newProspect();
-        const clean = Object.fromEntries(Object.keys(base).filter((k) => k !== "notes" && k !== "history").map((k) => [k, str(x[k])]));
+        const clean = Object.fromEntries(Object.keys(base).filter((k) => !["notes", "history", "messages", "app"].includes(k)).map((k) => [k, str(x[k])]));
         const list = (v) => (Array.isArray(v) ? v.filter((h) => h && typeof h.text === "string").slice(0, 500).map((h) => ({ at: str(h.at), text: str(h.text) })) : []);
-        return { ...clean, stage: STAGE_KEYS.includes(x.stage) ? x.stage : "lead", notes: list(x.notes), history: list(x.history) };
+        const msgs = Array.isArray(x.messages) ? x.messages.filter((m) => m && typeof m.text === "string").slice(0, 1000).map((m) => ({ id: str(m.id) || uid(), at: str(m.at), dir: m.dir === "in" ? "in" : "out", channel: ["sms", "email", "call", "note"].includes(m.channel) ? m.channel : "note", text: str(m.text) })) : [];
+        const a = x.app && typeof x.app === "object" ? x.app : {};
+        const app = { credit: str(a.credit), background: str(a.background), income: str(a.income), incomeVerified: !!a.incomeVerified, deposit: str(a.deposit), cosigner: !!a.cosigner, note: str(a.note) };
+        return { ...clean, stage: STAGE_KEYS.includes(x.stage) ? x.stage : "lead", notes: list(x.notes), history: list(x.history), messages: msgs, app };
       }),
+    concessions: (Array.isArray(p.concessions) ? p.concessions : []).filter((c) => c && typeof c.id === "string").slice(0, 100).map((c) => ({ id: str(c.id), name: str(c.name), months: str(c.months), beds: Array.isArray(c.beds) ? c.beds.map(Number).filter(Number.isFinite) : [], startsAt: str(c.startsAt), endsAt: str(c.endsAt), note: str(c.note) })),
+    platforms: (Array.isArray(p.platforms) ? p.platforms : defaultPlatforms()).filter((f) => f && typeof f.name === "string").slice(0, 40).map((f) => ({ id: str(f.id) || uid(), name: str(f.name), active: !!f.active, cost: str(f.cost), url: /^https?:\/\//.test(f.url || "") ? str(f.url) : "", syncedAt: str(f.syncedAt) })),
+    policy: { minCredit: Number(p.policy?.minCredit) || 620, incomeMultiple: Number(p.policy?.incomeMultiple) || 3 },
     view: p.baselines.length ? "home" : "plan",
     step: Number.isInteger(p.step) && p.step >= 0 && p.step <= 3 ? p.step : 0,
     // The parcel and zoning are looked up again from the address rather than trusted from the file.

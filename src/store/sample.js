@@ -21,7 +21,8 @@ function rng(seed) {
 
 const FIRST = ["Maya", "Jordan", "Priya", "Marcus", "Elena", "Sam", "Olivia", "Diego", "Hannah", "Kwame", "Grace", "Leo", "Nina", "Owen", "Sofia", "Andre", "Claire", "Mateo", "Ivy", "Theo", "Rosa", "Ben", "Lena", "Felix", "Amara", "Jonah", "Tess", "Ravi", "Zoe", "Caleb"];
 const LAST = "ABCDFGHJKLMNPRSTVWY";
-const SOURCES = [["Zillow", 30], ["Apartments.com", 22], ["Website", 18], ["Walk-in", 8], ["Referral", 10], ["Social", 7], ["Broker", 5]];
+const SOURCES = [["Zillow", 30], ["Apartments.com", 22], ["Website", 18], ["Walk-in", 8], ["Referral", 10], ["Facebook Marketplace", 7], ["Zumper", 3]];
+const ASK = ["Is this still available?", "Do you allow pets?", "Is parking included?", "Can I see it this weekend?", "What utilities are included?", "Is there in-unit laundry?"];
 const REASONS = ["Price", "Timing", "Chose another building", "No response", "Unit or layout"];
 
 export function sampleProject(todayIso = localToday()) {
@@ -108,7 +109,8 @@ export function sampleProject(todayIso = localToday()) {
             p = moveProspect(p, "lost", d(t), { lostReason: "No response" });
           } else {
             p = moveProspect(p, "toured", d(t));
-            if (r() < 0.6) {
+            // Two-bedrooms are priced well over the Pawtucket median, so fewer of them apply.
+            if (r() < (beds === 2 ? 0.25 : 0.6)) {
               step(0, 3);
               const unit = unitFor(beds);
               if (!unit) {
@@ -167,12 +169,43 @@ export function sampleProject(todayIso = localToday()) {
   });
   prospects.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
+  // Conversations: a first reply on most leads, questions back and forth, a few waiting on us.
+  const at = (ms, hh) => `${d(ms)}T${hh}`;
+  prospects.forEach((p, i) => {
+    const c = parseDate(p.createdAt);
+    const msgs = [{ id: `m${i}a`, at: at(c, "09:12"), dir: "in", channel: p.source === "Walk-in" ? "note" : "email", text: pick(ASK) }];
+    const replied = !(p.stage === "lead" && !p.nextAt && c >= today - DAY_MS);
+    if (replied && p.stage !== "lost") msgs.push({ id: `m${i}b`, at: at(Math.min(c + (r() < 0.7 ? 0 : DAY_MS), today), "11:40"), dir: "out", channel: "sms", text: `Hi ${p.name.split(" ")[0]}, thanks for reaching out about Riverside Lofts. Yes, it's available. Would you like to tour this week?` });
+    if (p.tourAt && p.stage === "tour") msgs.push({ id: `m${i}c`, at: at(Math.min(c + DAY_MS, today), "08:30"), dir: "out", channel: "sms", text: `Confirming your tour ${p.tourAt.slice(5, 10).replace("-", "/")} at ${p.tourAt.slice(11, 16)}. Text this number when you arrive.` });
+    if (p.stage === "toured" && r() < 0.6) msgs.push({ id: `m${i}d`, at: at(Math.min(parseDate(p.touredAt) + DAY_MS, today), "16:05"), dir: "in", channel: "sms", text: pick(["Loved the unit. What's the application fee?", "Can you hold the corner unit until Friday?", "Is the price negotiable on a 13-month lease?"]) });
+    if (p.stage === "applied" || p.stage === "approved" || p.stage === "leased") {
+      const credit = String(640 + Math.floor(r() * 140));
+      const income = String(Math.round((Number(p.leaseRent) || 1950) * (2.6 + r() * 1.2) / 100) * 100);
+      p.app = { credit, background: r() < 0.85 ? "clear" : "minor", income, incomeVerified: p.stage !== "applied" || r() < 0.5, deposit: p.stage === "applied" ? "" : "paid", cosigner: false, note: "" };
+    }
+    p.messages = msgs;
+  });
+
+  const ago = (n) => d(today - n * DAY_MS);
+  const platforms = [
+    { id: "zillow", name: "Zillow", active: true, cost: "299", url: "https://www.zillow.com/", syncedAt: ago(3) },
+    { id: "apartments-com", name: "Apartments.com", active: true, cost: "450", url: "", syncedAt: ago(20) },
+    { id: "zumper", name: "Zumper", active: true, cost: "0", url: "https://www.zumper.com/", syncedAt: ago(9) },
+    { id: "realtor-com", name: "Realtor.com", active: false, cost: "", url: "", syncedAt: "" },
+    { id: "facebook-marketplace", name: "Facebook Marketplace", active: true, cost: "0", url: "https://www.facebook.com/marketplace/", syncedAt: ago(2) },
+    { id: "website", name: "Website", active: true, cost: "", url: "", syncedAt: ago(30) },
+  ];
+
   return {
     ...project,
+    platforms,
+    concessions: [{ id: "c-half", name: "Half month free", months: "0.5", beds: [], startsAt: d(start), endsAt: ago(-5), note: "Launch special on every unit type" }],
+    policy: { minCredit: 640, incomeMultiple: 3 },
+    priceChangedAt: ago(10),
     baselines: [baseline],
     units,
     prospects,
-    view: "leasing",
+    view: "today",
     leasingTab: "today",
   };
 }

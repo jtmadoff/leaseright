@@ -265,10 +265,10 @@ function ListingFeedNote({ listings }) {
   );
 }
 
-export function MarketDrawer({ project, data, market, onClose }) {
+export function MarketBody({ project, data, market }) {
   const zori = sourceById(data.rents, "zori");
   return (
-    <Drawer eyebrow={`${project.town || "Rhode Island"} market`} title="Rents, comparable buildings and market activity" onClose={onClose}>
+    <>
       <div className="sect">Town rent index</div>
       <div className="card">
         <IndexTile index={market.index} />
@@ -395,6 +395,14 @@ export function MarketDrawer({ project, data, market, onClose }) {
           From Rhode Island planning and zoning agendas in {project.town} and towns within six miles. Proposed units, not deliveries; most are a year or more from leasing.
         </p>
       </div>
+    </>
+  );
+}
+
+export function MarketDrawer({ project, data, market, onClose }) {
+  return (
+    <Drawer eyebrow={`${project.town || "Rhode Island"} market`} title="Rents, comparable buildings and market activity" onClose={onClose}>
+      <MarketBody project={project} data={data} market={market} />
     </Drawer>
   );
 }

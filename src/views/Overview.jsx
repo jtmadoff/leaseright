@@ -14,10 +14,10 @@ function nextAction(project, result, baseline, current, track) {
   // Once leasing is under way, the day's work comes before anything else.
   if (baseline && (project.prospects || []).length) {
     const tasks = todayTasks(project, localToday());
-    if (track?.stabilized) return { title: "Stabilized", body: `Leasing reached its ${track.target}-unit target ${dateLong(track.reforecast.stabilizeDate)}.`, label: "Open leasing", go: { view: "leasing" } };
+    if (track?.stabilized) return { title: "Stabilized", body: `Leasing reached its ${track.target}-unit target ${dateLong(track.reforecast.stabilizeDate)}.`, label: "Open Today", go: { view: "today" } };
     return tasks.length
-      ? { title: `${tasks.length} thing${tasks.length === 1 ? "" : "s"} to do today`, body: tasks.slice(0, 3).map((t) => `${t.title} (${t.p.name})`).join(", ") + (tasks.length > 3 ? ", and more." : "."), label: "Open today", go: { view: "leasing" } }
-      : { title: "Nothing due today", body: "Every tour, application and follow-up is handled. New leads go in on the leasing page.", label: "Open leasing", go: { view: "leasing" } };
+      ? { title: `${tasks.length} thing${tasks.length === 1 ? "" : "s"} to do today`, body: tasks.slice(0, 3).map((t) => `${t.title} (${t.p.name})`).join(", ") + (tasks.length > 3 ? ", and more." : "."), label: "Open today", go: { view: "today" } }
+      : { title: "Nothing due today", body: "Every tour, application and follow-up is handled. New leads go in on the leasing page.", label: "Open Today", go: { view: "today" } };
   }
 
   if (!project.address || !project.town || !isIncluded(project.town)) return { title: "Find the property", body: "Search the address so the parcel, zoning and local market load.", label: "Open property", go: { step: 0 } };
@@ -27,7 +27,7 @@ function nextAction(project, result, baseline, current, track) {
   if (!baseline) return { title: "Review the plan and save a baseline", body: "The baseline freezes this plan as the version of record. The lender package and leasing tracker both work from it.", label: "Review and save", go: { step: 3 }, save: result.ready && result.base.reached };
   if (!current) return { title: "The plan changed since the baseline", body: `Inputs were edited after version ${project.baselines.length}. Review the results and save a new baseline when this is the plan.`, label: "Review changes", go: { step: 3 } };
   const logged = track?.weeks.length || 0;
-  if (track?.stabilized) return { title: "Stabilized", body: `Leasing reached its ${track.target}-unit target ${dateLong(track.reforecast.stabilizeDate)}.`, label: "Open leasing", go: { view: "leasing" } };
+  if (track?.stabilized) return { title: "Stabilized", body: `Leasing reached its ${track.target}-unit target ${dateLong(track.reforecast.stabilizeDate)}.`, label: "Open Today", go: { view: "today" } };
   const startMs = parseDate(project.plan.startDate);
   const today = parseDate(isoDate(Date.now()));
   // Pre-funding plans often carry a start date that has passed; only a funded or leasing project is prompted to log.
@@ -35,8 +35,8 @@ function nextAction(project, result, baseline, current, track) {
   if (leasingLive) {
     const last = logged ? parseDate(track.asOf) : null;
     if (last === null || today - last > 7 * DAY_MS)
-      return { title: "Log this week's leasing", body: last === null ? "Leasing has started. Enter the first week's leases to start measuring against the plan." : `The last week logged ended ${dateLong(track.asOf)}.`, label: "Open leasing", go: { view: "leasing" } };
-    return { title: "Leasing is up to date", body: "This week is logged. The update for your lender or partners is on the leasing page.", label: "Open leasing", go: { view: "leasing" } };
+      return { title: "Log this week's leasing", body: last === null ? "Leasing has started. Enter the first week's leases to start measuring against the plan." : `The last week logged ended ${dateLong(track.asOf)}.`, label: "Open Today", go: { view: "today" } };
+    return { title: "Leasing is up to date", body: "This week is logged. The update for your lender or partners is on the leasing page.", label: "Open Today", go: { view: "today" } };
   }
   return { title: "Send the lender package", body: "The baseline is saved. The package presents it to a lender: plan, reserve, pace cases, rents against the market and the assumptions behind them.", label: "Open lender package", go: { view: "package" } };
 }
@@ -93,7 +93,7 @@ export function Overview({ project, result, data, onStep, onView, onMarket, onAp
     ["Lease-up plan", !result.issues.some((i) => i.blocking && i.step === 2), result.ready ? `${result.inputs.pace.toFixed(1)} leases a week from ${dateLong(project.plan.startDate)}` : "Not complete", () => onStep(2)],
     ["Baseline", current, baseline ? `Version ${project.baselines.length}, ${dateLong(baseline.approvedAt.slice(0, 10))}${current ? "" : ", edited since"}` : "Not saved", () => onStep(3)],
     ["Lender package", !!baseline, baseline ? "Ready to print or save as PDF" : "Needs a baseline", () => onView("package")],
-    ["Leasing", (track?.weeks.length || 0) > 0, (project.prospects || []).length ? `${number(project.prospects.length)} prospects, ${(project.units || []).length ? `${number(project.units.length)} units tracked` : "no unit list yet"}` : track?.weeks.length ? `${track.weeks.length} week${track.weeks.length === 1 ? "" : "s"} logged, through ${dateLong(track.asOf)}` : "Not started", () => onView("leasing")],
+    ["Leasing", (track?.weeks.length || 0) > 0, (project.prospects || []).length ? `${number(project.prospects.length)} prospects, ${(project.units || []).length ? `${number(project.units.length)} units tracked` : "no unit list yet"}` : track?.weeks.length ? `${track.weeks.length} week${track.weeks.length === 1 ? "" : "s"} logged, through ${dateLong(track.asOf)}` : "Not started", () => onView("today")],
   ];
   return (
     <div className="page wide">
